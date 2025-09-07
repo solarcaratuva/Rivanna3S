@@ -23,9 +23,9 @@ const Pin PA_6 = {GPIOA, 1 << 6, 1 << 41};
 const Pin PA_7 = {GPIOA, 1 << 7, 1 << 42};
 
 // B's
-const Pin PB_0 = {GPIOB, 1, 1 << 46};
-const Pin PB_1 = {GPIOB, 1 << 1, 1 << 47};
-const Pin PB_2 = {GPIOB, 1 << 2, 1 << 48};
+const Pin PB_0 = {GPIOB, 1 << 0, 1 << 45};
+const Pin PB_1 = {GPIOB, 1 << 1, 1 << 46};
+const Pin PB_2 = {GPIOB, 1 << 2, 1 << 47};
 
 // C's
 const Pin PC_0 = {GPIOC, 1 << 0, 1 << 25};
@@ -35,15 +35,15 @@ const Pin PC_5 = {GPIOC, 1 << 5, 1 << 44};
 const Pin PC_13 = {GPIOC, 1 << 13, 1 << 6};
 
 // E's
-const Pin PE_2 = {GPIOE, 1 << 2, 1 << 1};
-const Pin PE_3 = {GPIOE, 1 << 3, 1 << 2};
-const Pin PE_4 = {GPIOE, 1 << 4, 1 << 3};
-const Pin PE_5 = {GPIOE, 1 << 5, 1 << 4};
-const Pin PE_6 = {GPIOE, 1 << 6, 1 << 5};
-const Pin PE_7 = {GPIOE, 1 << 7, 1 << 58};
-const Pin PE_8 = {GPIOE, 1 << 8, 1 << 59};
-const Pin PE_9 = {GPIOE, 1 << 9, 1 << 60};
-const Pin PE_10 = {GPIOE, 1 << 10, 1 << 63};
+const Pin PE_2 = {GPIOE, 1 << 2, 1 << 0};
+const Pin PE_3 = {GPIOE, 1 << 3, 1 << 1};
+const Pin PE_4 = {GPIOE, 1 << 4, 1 << 2};
+const Pin PE_5 = {GPIOE, 1 << 5, 1 << 3};
+const Pin PE_6 = {GPIOE, 1 << 6, 1 << 4};
+const Pin PE_7 = {GPIOE, 1 << 7, 1 << 57};
+const Pin PE_8 = {GPIOE, 1 << 8, 1 << 58};
+const Pin PE_9 = {GPIOE, 1 << 9, 1 << 59};
+const Pin PE_10 = {GPIOE, 1 << 10, 1 << 62};
 
 // F's
 const Pin PF_0 = {GPIOF, 1 << 0, 1 << 9};
@@ -64,5 +64,5 @@ const Pin PF_14 = {GPIOF, 1 << 14, 1 << 53};
 const Pin PF_15 = {GPIOF, 1 << 15, 1 << 54};
 
 // G's
-const Pin PG_0 = {GPIOG, 1 << 0, 1 << 56};
-const Pin PG_1 = {GPIOG, 1 << 1, 1 << 57};
+const Pin PG_0 = {GPIOG, 1 << 0, 1 << 55};
+const Pin PG_1 = {GPIOG, 1 << 1, 1 << 56};
