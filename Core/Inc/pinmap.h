@@ -7,8 +7,9 @@ typedef struct {
     GPIO_TypeDef* block;       // Pointer to GPIO peripheral block
     uint16_t block_mask;       // Mask for pins within the block
     uint64_t universal_mask;   // Unique global pin mask
-} GPIO_PinDescriptor;
+} Pin;
 
 // constgruct
 
 // define
+const Pin PB_0 {GPIOB, 1, 1 << 46};
