@@ -1,5 +1,10 @@
+#ifndef PERIPHERALMAP_H
+#define PERIPHERALMAP_H
+
+
 #include "pinmap.h"
 #include "stm32h743xx.h"
+#include <stdbool.h>
 
 // I2C peripheral struct
 typedef struct {
@@ -23,5 +28,15 @@ typedef struct {
     // Queue[float] return_value_queue
 } UART_Peripheral;
 
+
 // Define UART peripherals
-// Use #defines in stm32h743xx.h file for USART_TypeDef handle;
+#define USART_2 (UART_Peripheral){USART2, PA_3.universal_mask, PA_2.universal_mask, nullptr, nullptr, false}
+#define UART_4 (UART_Peripheral){UART4, PA_1.universal_mask, PA_0.universal_mask, nullptr, nullptr, false}
+#define UART_7 (UART_Peripheral){UART7, (PF_6.universal_mask | PE_7.universal_mask), (PF_7.universal_mask | PE_8.universal_mask), nullptr, nullptr, false}
+
+// Define I2C peripherals
+#define I2C_2 (I2C_Peripheral){I2C2, PF_0.universal_mask, PF_1.universal_mask, nullptr, nullptr, false}
+#define I2C_4 (I2C_Peripheral){I2C4, PF_15.universal_mask, PF_14.universal_mask, nullptr, nullptr, false}
+
+
+#endif /* PERIPHERALMAP */

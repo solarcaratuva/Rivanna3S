@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "pinmap.h"
+#include "peripheralmap.h"
 
 /* USER CODE END Includes */
 
