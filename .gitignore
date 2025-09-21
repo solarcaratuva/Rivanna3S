@@ -3,3 +3,7 @@
 [Rr]elease
 [Dd]ebug
 .launch
+.cproject
+.mxproject
+.vscode
+.project
