@@ -17,7 +17,8 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "DigitalPin.h"
+#include "DigitalIn.h"
+#include "DigitalOut.h"
 #include "main.h"
 #include "usart.h"
 #include "gpio.h"

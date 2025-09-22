@@ -12,14 +12,14 @@
 
 // Default: active-high, no pull
 DigitalOut::DigitalOut(Pin pin)
-    : pin_(pin), active_high_(true), pull_(Pull::None)
+    : pin_(pin), active_high_(true)
 {
     configure_pin();
 }
 
 // Full constructor
-DigitalOut::DigitalOut(Pin pin, bool active_high, Pull pull)
-    : pin_(pin), active_high_(active_high), pull_(pull)
+DigitalOut::DigitalOut(Pin pin, bool active_high)
+    : pin_(pin), active_high_(active_high)
 {
     configure_pin();
 }
@@ -73,18 +73,7 @@ void DigitalOut::configure_pin() {
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW; // adjust if needed
 
     // Set pull configuration
-    switch (pull_) {
-        case Pull::Up:
-            GPIO_InitStruct.Pull = GPIO_PULLUP;
-            break;
-        case Pull::Down:
-            GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-            break;
-        case Pull::None:
-        default:
-            GPIO_InitStruct.Pull = GPIO_NOPULL;
-            break;
-    }
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
 
     HAL_GPIO_Init(pin_.block, &GPIO_InitStruct);
 }
