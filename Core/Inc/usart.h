@@ -1,9 +1,9 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
+  * @file    usart.h
+  * @brief   This file contains all the function prototypes for
+  *          the usart.c file
   ******************************************************************************
   * @attention
   *
@@ -17,54 +17,57 @@
   ******************************************************************************
   */
 /* USER CODE END Header */
-
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H
-#define __MAIN_H
+#ifndef __USART_H__
+#define __USART_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32h7xx_hal.h"
-#include "pinmap.h"
+#include "main.h"
 
-/* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
-/* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
+extern UART_HandleTypeDef huart4;
 
-/* USER CODE END ET */
+extern UART_HandleTypeDef huart5;
 
-/* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
+extern UART_HandleTypeDef huart7;
 
-/* USER CODE END EC */
+extern UART_HandleTypeDef huart8;
 
-/* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
+extern UART_HandleTypeDef huart1;
 
-/* USER CODE END EM */
+extern UART_HandleTypeDef huart2;
 
-/* Exported functions prototypes ---------------------------------------------*/
-void Error_Handler(void);
+extern UART_HandleTypeDef huart3;
 
-/* USER CODE BEGIN EFP */
-
-/* USER CODE END EFP */
-
-/* Private defines -----------------------------------------------------------*/
+extern UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
+void MX_UART4_Init(void);
+void MX_UART5_Init(void);
+void MX_UART7_Init(void);
+void MX_UART8_Init(void);
+void MX_USART1_UART_Init(void);
+void MX_USART2_UART_Init(void);
+void MX_USART3_UART_Init(void);
+void MX_USART6_UART_Init(void);
+
+/* USER CODE BEGIN Prototypes */
+
+/* USER CODE END Prototypes */
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __MAIN_H */
+#endif /* __USART_H__ */
+
