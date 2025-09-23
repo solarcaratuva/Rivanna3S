@@ -17,8 +17,6 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "DigitalIn.h"
-#include "DigitalOut.h"
 #include "main.h"
 #include "usart.h"
 #include "gpio.h"
@@ -26,6 +24,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "pinmap.h"
+#include "peripheralmap.h"
+#include "DigitalIn.h"
+#include "DigitalOut.h"
 
 /* USER CODE END Includes */
 

@@ -4,7 +4,7 @@
  *  Created on: Sep 21, 2025
  *      Author: rrx7xw
  */
-#include "../Inc/DigitalPin.h"
+#include "../Inc/DigitalOut.h"
 
 #include "stm32h7xx_hal.h"
 

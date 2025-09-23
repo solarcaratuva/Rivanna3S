@@ -5,7 +5,7 @@
  *      Author: rrx7xw
  */
 
-#include "../Inc/DigitalPin.h"
+#include "../Inc/DigitalIn.h"
 
 #include "stm32h7xx_hal.h"
 
