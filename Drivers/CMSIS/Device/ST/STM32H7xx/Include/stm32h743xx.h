@@ -2198,7 +2198,7 @@ typedef struct
 #define SPDIFRX_BASE          (D2_APB1PERIPH_BASE + 0x4000UL)
 #define USART2_BASE           (D2_APB1PERIPH_BASE + 0x4400UL)
 #define USART3_BASE           (D2_APB1PERIPH_BASE + 0x4800UL)
-#define UART4_BASE           (D2_APB1PERIPH_BASE + 0x4C00UL)
+#define UART4_BASE            (D2_APB1PERIPH_BASE + 0x4C00UL)
 #define UART5_BASE            (D2_APB1PERIPH_BASE + 0x5000UL)
 #define I2C1_BASE             (D2_APB1PERIPH_BASE + 0x5400UL)
 #define I2C2_BASE             (D2_APB1PERIPH_BASE + 0x5800UL)
