@@ -12,10 +12,10 @@ public:
 
     /* Create the task, storing the handle. */
     xReturned =
-        xTaskCreate(my_c_function, /* Function that implements the task. */
+        xTaskCreate(functionName, /* Function that implements the task. */
                     "HELPER",      /* Text name for the task. */
                     STACK_SIZE,    /* Stack size in words, not bytes. */
-                    (void *)functionName, /* Parameter passed into the task. */
+                    NULL, /* Parameter passed into the task. */
                     PRIORITY,  /* Priority at which the task is created. */
                     &xHandle); /* Used to pass out the created task's handle. */
   }
