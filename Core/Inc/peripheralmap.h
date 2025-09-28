@@ -8,7 +8,7 @@
 
 // I2C peripheral struct
 typedef struct {
-    I2C_TypeDef handle;
+    I2C_TypeDef* handle;
     uint64_t sda_valid_pins;
     uint64_t scl_valid_pins;
     Pin sda_used;
@@ -19,7 +19,7 @@ typedef struct {
 
 // UART peripheral struct
 typedef struct {
-    USART_TypeDef handle;
+    USART_TypeDef* handle;
     uint64_t rxd_valid_pins;
     uint64_t txd_valid_pins;
     Pin rxd_used;
@@ -28,15 +28,22 @@ typedef struct {
     // Queue[float] return_value_queue
 } UART_Peripheral;
 
+// Global array of UART peripherals
+UART_Peripheral UART_Peripherals[] = {
+    {USART2, PA_3.universal_mask, PA_2.universal_mask, NC, NC, false},
+    {UART4, PA_1.universal_mask, PA_0.universal_mask, NC, NC, false},
+    {UART7, (PF_6.universal_mask | PE_7.universal_mask), (PF_7.universal_mask | PE_8.universal_mask), NC, NC, false}
+};
 
-// Define UART peripherals
-#define USART_2 (UART_Peripheral){USART2, PA_3.universal_mask, PA_2.universal_mask, nullptr, nullptr, false}
-#define UART_4 (UART_Peripheral){UART4, PA_1.universal_mask, PA_0.universal_mask, nullptr, nullptr, false}
-#define UART_7 (UART_Peripheral){UART7, (PF_6.universal_mask | PE_7.universal_mask), (PF_7.universal_mask | PE_8.universal_mask), nullptr, nullptr, false}
+#define UART_PERIPHERAL_COUNT (sizeof(UART_Peripherals) / sizeof(UART_Peripherals[0]))
 
-// Define I2C peripherals
-#define I2C_2 (I2C_Peripheral){I2C2, PF_0.universal_mask, PF_1.universal_mask, nullptr, nullptr, false}
-#define I2C_4 (I2C_Peripheral){I2C4, PF_15.universal_mask, PF_14.universal_mask, nullptr, nullptr, false}
+// Global array of I2C peripherals
+I2C_Peripheral I2C_Peripherals[] = {
+    {I2C2, PF_0.universal_mask, PF_1.universal_mask, NC, NC, false},
+    {I2C4, PF_15.universal_mask, PF_14.universal_mask, NC, NC, false}
+};
+
+#define I2C_PERIPHERAL_COUNT (sizeof(I2C_Peripherals) / sizeof(I2C_Peripherals[0]))
 
 
 #endif /* PERIPHERALMAP */
