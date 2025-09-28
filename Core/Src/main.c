@@ -22,7 +22,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "thread.cpp"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,12 +50,28 @@
 void SystemClock_Config(void);
 static void MPU_Config(void);
 /* USER CODE BEGIN PFP */
-
+static void MX_GPIO_Init(void);
+static void TaskBlinkLD1(void *arg);
+static void TaskBlinkLD2(void *arg);
+static void TaskBlinkLD3(void *arg);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+typedef struct {
+  GPIO_TypeDef *port;
+  uint16_t      pin;
+  TickType_t    period;
+} BlinkArgs;
 
+static void BlinkBody(const BlinkArgs *a)
+{
+  HAL_GPIO_WritePin(a->port, a->pin, GPIO_PIN_RESET);
+  for(;;) {
+    HAL_GPIO_TogglePin(a->port, a->pin);
+    vTaskDelay(a->period);
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -90,7 +106,29 @@ int main(void)
 
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
+  MX_GPIO_Init();
 
+  /* Create three LED blinker tasks (stack = 256 words ~ 1KB) */
+  static BlinkArgs a1, a2, a3;
+
+	#if USE_LD1_ON_PB0
+	  a1.port = GPIOB; a1.pin = GPIO_PIN_0;
+	#else
+	  a1.port = GPIOA; a1.pin = GPIO_PIN_5;
+	#endif
+	  a1.period = pdMS_TO_TICKS(200);   // LD1: 200 ms
+
+	  a2.port = GPIOE; a2.pin = GPIO_PIN_1;
+	  a2.period = pdMS_TO_TICKS(500);   // LD2: 500 ms
+
+	  a3.port = GPIOB; a3.pin = GPIO_PIN_14;
+	  a3.period = pdMS_TO_TICKS(1000);  // LD3: 1 s
+
+  configASSERT(xTaskCreate(TaskBlinkLD1, "BLK1", 256, &a1, tskIDLE_PRIORITY+1, NULL) == pdPASS);
+  configASSERT(xTaskCreate(TaskBlinkLD2, "BLK2", 256, &a2, tskIDLE_PRIORITY+1, NULL) == pdPASS);
+  configASSERT(xTaskCreate(TaskBlinkLD3, "BLK3", 256, &a3, tskIDLE_PRIORITY+1, NULL) == pdPASS);
+
+  vTaskStartScheduler();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -155,6 +193,40 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+static void TaskBlinkLD1(void *arg) { BlinkBody((const BlinkArgs*)arg); }
+static void TaskBlinkLD2(void *arg) { BlinkBody((const BlinkArgs*)arg); }
+static void TaskBlinkLD3(void *arg) { BlinkBody((const BlinkArgs*)arg); }
+
+static void MX_GPIO_Init(void)
+{
+  /* Enable port clocks used by LEDs */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull  = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+#if USE_LD1_ON_PB0
+  GPIO_InitStruct.Pin = GPIO_PIN_0; HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);  // LD1 on PB0
+#else
+  GPIO_InitStruct.Pin = GPIO_PIN_5; HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);  // LD1 on PA5
+#endif
+
+  GPIO_InitStruct.Pin = GPIO_PIN_1;  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct); // LD2 on PE1
+  GPIO_InitStruct.Pin = GPIO_PIN_14; HAL_GPIO_Init(GPIOB, &GPIO_InitStruct); // LD3 on PB14
+
+  /* Start LOW */
+#if USE_LD1_ON_PB0
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+#else
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+#endif
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+}
 
 /* USER CODE END 4 */
 
