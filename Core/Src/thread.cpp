@@ -1,9 +1,10 @@
-#include ".h" // FIND .H FILE!!!
+#include "FreeRTOS.h"
+#include "task.h"
 
 #define STACK_SIZE 1000
 #define PRIORITY 1
 class Thread {
-  // Thread() { semaphoreHandler = xSemaphoreCreateBinary(); }
+  Thread() { semaphoreHandler = xSemaphoreCreateBinary(); }
 
 public:
 //   int start(void *functionName) {
@@ -29,7 +30,7 @@ public:
                 vTaskDelete(nullptr);
             },
             "HELPER", STACK_SIZE,
-            reinterpret_cast<void*>(fn),  // pass function pointer as pv
+            NULL, 
             PRIORITY, &handle_);
     }
 // private:
@@ -42,4 +43,4 @@ public:
 // };
 // extern "C" void my_c_function(void *functionName) {
 //   MyClass::startHelper(functionName);
-// }
+};
