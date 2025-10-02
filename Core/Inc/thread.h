@@ -3,6 +3,9 @@
 
 class Thread {
 public:
+    Thread();
     BaseType_t start(void(*fn)());
 
+private:
+    TaskHandle_t handle_;
 };

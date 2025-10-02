@@ -4,10 +4,11 @@
 
 #define STACK_SIZE 1000
 #define PRIORITY 1
-class Thread {
-  Thread() { semaphoreHandler = xSemaphoreCreateBinary(); }
 
-public:
+Thread::Thread() {
+    handle_ = nullptr;
+}
+
 //   int start(void *functionName) {
 //     BaseType_t xReturned;
 //     TaskHandle_t xHandle = NULL;
@@ -22,7 +23,7 @@ public:
 //                     &xHandle); /* Used to pass out the created task's handle. */
 //   }
 //   int join() { xSemaphoreTake(semaphoreHandler, 100); }
-    BaseType_t start(void (*fn)()) {
+BaseType_t Thread::start(void (*fn)()) {
         return xTaskCreate(
             +[](void* pv) {
                 auto fn = reinterpret_cast<void(*)()>(pv);
@@ -44,4 +45,4 @@ public:
 // };
 // extern "C" void my_c_function(void *functionName) {
 //   MyClass::startHelper(functionName);
-};
+
