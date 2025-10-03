@@ -73,7 +73,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	UART testUART(PF_7, PF_6, 9600);
+	UART testUART(PF_7, PF_6, 115200);
 
   /* USER CODE END 1 */
 
@@ -109,7 +109,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // String literal → constant array
-  uint8_t msg[] = "A";
+  uint8_t msg[] = "Hello";
 
 
   // Length (does NOT include null terminator unless you want it)
@@ -124,7 +124,8 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  testUART.write(msg, 1);
+	  testUART.write(msg, 5);
+	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }

@@ -15,7 +15,7 @@ UART::UART(Pin tx, Pin rx, uint32_t baud)
 
 // Initialize GPIO for TX/RX
 void UART::initGPIO(Pin tx, Pin rx) {
-    __HAL_RCC_GPIOA_CLK_ENABLE(); // ⚠️ Change this depending on the port
+    __HAL_RCC_GPIOF_CLK_ENABLE(); // ⚠️ Change this depending on the port
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -23,7 +23,7 @@ void UART::initGPIO(Pin tx, Pin rx) {
     GPIO_InitStruct.Pin       = tx.block_mask;
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull      = GPIO_NOPULL;
-    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF7_UART7; // ⚠️ depends on which USART you’re using
     HAL_GPIO_Init(tx.block, &GPIO_InitStruct);
 
@@ -37,7 +37,7 @@ void UART::initGPIO(Pin tx, Pin rx) {
 
 // Initialize UART peripheral
 void UART::initUART(uint32_t baud) {
-    __HAL_RCC_USART1_CLK_ENABLE(); // ⚠️ match peripheral to your pins
+    __HAL_RCC_UART7_CLK_ENABLE(); // ⚠️ match peripheral to your pins
 
     huart.Instance          = UART7; // ⚠️ change to USART2, USART3, etc.
     huart.Init.BaudRate     = baud;
@@ -47,6 +47,7 @@ void UART::initUART(uint32_t baud) {
     huart.Init.Mode         = UART_MODE_TX_RX;
     huart.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
     huart.Init.OverSampling = UART_OVERSAMPLING_16;
+    HAL_UART_Init(&huart);
 
 }
 
