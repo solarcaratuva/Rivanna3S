@@ -27,6 +27,7 @@
 #include "peripheralmap.h"
 #include "DigitalIn.h"
 #include "DigitalOut.h"
+#include "UART.h"
 
 /* USER CODE END Includes */
 
@@ -61,6 +62,7 @@ static void MPU_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
 /* USER CODE END 0 */
 
 /**
@@ -71,6 +73,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+	UART testUART(PF_7, PF_6, 9600);
 
   /* USER CODE END 1 */
 
@@ -94,16 +97,23 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_UART4_Init();
-  MX_UART5_Init();
-  MX_UART7_Init();
-  MX_UART8_Init();
-  MX_USART1_UART_Init();
-  MX_USART2_UART_Init();
-  MX_USART3_UART_Init();
-  MX_USART6_UART_Init();
+//  MX_GPIO_Init();
+//  MX_UART4_Init();
+//  MX_UART5_Init();
+//  MX_UART7_Init();
+//  MX_UART8_Init();
+//  MX_USART1_UART_Init();
+//  MX_USART2_UART_Init();
+//  MX_USART3_UART_Init();
+//  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  // String literal → constant array
+  uint8_t msg[] = "A";
+
+
+  // Length (does NOT include null terminator unless you want it)
+  size_t msg_length = 5;
 
   /* USER CODE END 2 */
 
@@ -114,6 +124,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  testUART.write(msg, 1);
   }
   /* USER CODE END 3 */
 }

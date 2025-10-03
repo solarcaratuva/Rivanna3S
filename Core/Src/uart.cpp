@@ -1,20 +1,64 @@
 
+#include "UART.h"
 #include "stm32h7xx_hal.h"
 #include "pinmap.h"
 
-extern UART_HandleTypeDef huart4;
+extern UART_HandleTypeDef huart;
 
-class uart{
-    public:
-        void read(uint8_t *buffer, size_t length){
-            HAL_UART_Receive(&huart4, buffer, length, HAL_MAX_DELAY);
-        }
-        void write(uint8_t* buffer, size_t length) {
-            HAL_UART_Transmit(&huart4, buffer, length, HAL_MAX_DELAY);
-        }
-        uart(Pin pin1,  Pin pin2, uint32_t baud){
-            
-        }
-        
-        
+
+// Constructor
+UART::UART(Pin tx, Pin rx, uint32_t baud)
+    : tx(tx), rx(rx), baud(baud) {
+    initGPIO(tx, rx);
+    initUART(baud);
 }
+
+// Initialize GPIO for TX/RX
+void UART::initGPIO(Pin tx, Pin rx) {
+    __HAL_RCC_GPIOA_CLK_ENABLE(); // ⚠️ Change this depending on the port
+
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    // TX
+    GPIO_InitStruct.Pin       = tx.block_mask;
+    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF7_UART7; // ⚠️ depends on which USART you’re using
+    HAL_GPIO_Init(tx.block, &GPIO_InitStruct);
+
+    // RX
+    GPIO_InitStruct.Pin       = rx.block_mask;
+    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    GPIO_InitStruct.Alternate = GPIO_AF7_UART7; // ⚠️ match same USART
+    HAL_GPIO_Init(rx.block, &GPIO_InitStruct);
+}
+
+// Initialize UART peripheral
+void UART::initUART(uint32_t baud) {
+    __HAL_RCC_USART1_CLK_ENABLE(); // ⚠️ match peripheral to your pins
+
+    huart.Instance          = UART7; // ⚠️ change to USART2, USART3, etc.
+    huart.Init.BaudRate     = baud;
+    huart.Init.WordLength   = UART_WORDLENGTH_8B;
+    huart.Init.StopBits     = UART_STOPBITS_1;
+    huart.Init.Parity       = UART_PARITY_NONE;
+    huart.Init.Mode         = UART_MODE_TX_RX;
+    huart.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
+    huart.Init.OverSampling = UART_OVERSAMPLING_16;
+
+}
+
+void UART::read(uint8_t *buffer, size_t length){
+	HAL_UART_Receive(&huart, buffer, length, HAL_MAX_DELAY);
+}
+
+void UART::write(uint8_t* buffer, size_t length) {
+	HAL_UART_Transmit(&huart, buffer, length, HAL_MAX_DELAY);
+}
+        
+        
+
+
+
