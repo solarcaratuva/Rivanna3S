@@ -89,11 +89,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-    Thread thread1;
-    thread1.start(flashPin1);
-    Thread thread2;
-    thread2.start(flashPin2);
-    vTaskStartScheduler();
+
   /* USER CODE END 1 */
 
   /* MPU Configuration--------------------------------------------------------*/
@@ -126,7 +122,28 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  
+  // Create and start FreeRTOS tasks AFTER system initialization
+  Thread thread1;
+  BaseType_t result1 = thread1.start(flashPin1);
+  if (result1 != pdPASS) {
+    // Task creation failed - handle error
+    Error_Handler();
+  }
+  
+  Thread thread2;
+  BaseType_t result2 = thread2.start(flashPin2);
+  if (result2 != pdPASS) {
+    // Task creation failed - handle error  
+    Error_Handler();
+  }
+  
+  // Start the FreeRTOS scheduler - this should never return
+  vTaskStartScheduler();
+  
+  // If we reach here, the scheduler failed to start
+  Error_Handler();
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -136,6 +153,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    // This should never be reached if FreeRTOS is working properly
   }
   /* USER CODE END 3 */
 }
@@ -191,6 +209,25 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+// FreeRTOS error hooks for debugging
+extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
+    // Stack overflow detected - handle error
+    (void)xTask;
+    (void)pcTaskName;
+    __disable_irq();
+    while(1) {
+        // Blink an LED or trigger a breakpoint here for debugging
+    }
+}
+
+extern "C" void vApplicationMallocFailedHook(void) {
+    // Memory allocation failed - handle error
+    __disable_irq();
+    while(1) {
+        // Blink an LED or trigger a breakpoint here for debugging
+    }
+}
 
 /* USER CODE END 4 */
 
