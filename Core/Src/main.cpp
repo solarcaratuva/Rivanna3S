@@ -28,6 +28,11 @@
 #include "DigitalIn.h"
 #include "DigitalOut.h"
 
+#include "thread.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -64,13 +69,13 @@ static void MPU_Config(void);
 /* USER CODE END 0 */
 DigitalOut pin1(PA_0);
 DigitalOut pin2(PA_1);
-static flashPin1() {
+static void flashPin1() {
     const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
     vTaskDelay( xDelay );
     if (pin1.read() == true) { pin1.write(false); }
     else { pin1.write(true); }
 }
-static flashPin2() {
+static void flashPin2() {
     const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
     vTaskDelay( xDelay );
     if (pin2.read() == true) { pin2.write(false); }
@@ -84,10 +89,10 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-    Thread thread1();
+    Thread thread1;
     thread1.start(flashPin1);
-    Thread thread2();
-    thread1.start(flashPin2);
+    Thread thread2;
+    thread2.start(flashPin2);
     vTaskStartScheduler();
   /* USER CODE END 1 */
 

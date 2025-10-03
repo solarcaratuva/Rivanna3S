@@ -1,3 +1,6 @@
+#include "FreeRTOS.h"
+#include "task.h"
+
 #define STACK_SIZE 1000
 #define PRIORITY 1
 
