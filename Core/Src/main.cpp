@@ -70,14 +70,10 @@ static void MPU_Config(void);
 DigitalOut pin1(PA_6);
 DigitalOut pin2(PA_5);
 static void flashPin1() {
-    const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
-    vTaskDelay( xDelay );
     if (pin1.read() == true) { pin1.write(false); }
     else { pin1.write(true); }
 }
 static void flashPin2() {
-    const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
-    vTaskDelay( xDelay );
     if (pin2.read() == true) { pin2.write(false); }
     else { pin2.write(true); }
 }
@@ -124,25 +120,16 @@ int main(void)
   /* USER CODE BEGIN 2 */
   
   // Create and start FreeRTOS tasks AFTER system initialization
-  Thread thread1;
-  BaseType_t result1 = thread1.start(flashPin1);
-  if (result1 != pdPASS) {
-    // Task creation failed - handle error
-    Error_Handler();
+  while (1) {
+    Time::sleep_for(500);
+    flashPin1();
   }
+//   Time timer;
+//   while (1) {
+//     Timer.sleep_since(500);
+//     flashPin1();
+//   }
   
-  Thread thread2;
-  BaseType_t result2 = thread2.start(flashPin2);
-  if (result2 != pdPASS) {
-    // Task creation failed - handle error  
-    Error_Handler();
-  }
-  
-  // Start the FreeRTOS scheduler - this should never return
-  vTaskStartScheduler();
-  
-  // If we reach here, the scheduler failed to start
-  Error_Handler();
   
   /* USER CODE END 2 */
 
