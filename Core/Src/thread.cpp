@@ -9,20 +9,6 @@ Thread::Thread() {
     handle_ = NULL;
 }
 
-//   int start(void *functionName) {
-//     BaseType_t xReturned;
-//     TaskHandle_t xHandle = NULL;
-// 
-//     /* Create the task, storing the handle. */
-//     xReturned =
-//         xTaskCreate(+[](void* functionName) {}, /* Function that implements the task. */
-//                     "HELPER",      /* Text name for the task. */
-//                     STACK_SIZE,    /* Stack size in words, not bytes. */
-//                     NULL, /* Parameter passed into the task. */
-//                     PRIORITY,  /* Priority at which the task is created. */
-//                     &xHandle); /* Used to pass out the created task's handle. */
-//   }
-//   int join() { xSemaphoreTake(semaphoreHandler, 100); }
 BaseType_t Thread::start(void (*fn)()) {
         return xTaskCreate(
             +[](void* pv) {
@@ -38,14 +24,3 @@ BaseType_t Thread::start(void (*fn)()) {
             reinterpret_cast<void*>(fn), // Pass the function pointer as parameter
             PRIORITY, &handle_);
     }
-// private:
-//   SemaphoreHandle_t semaphoreHandler;
-//   int startHelper(void *functionName) {
-//     xSemaphoreTake(semaphoreHandler, 100);
-//     functionName();
-//     xSemaphoreGive(semaphoreHandler);
-//   }
-// };
-// extern "C" void my_c_function(void *functionName) {
-//   MyClass::startHelper(functionName);
-
