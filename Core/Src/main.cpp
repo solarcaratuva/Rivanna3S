@@ -112,10 +112,7 @@ int main(void)
 
   // String literal → constant array
   uint8_t msg[] = "Hello";
-
-
-  // Length (does NOT include null terminator unless you want it)
-  size_t msg_length = 5;
+  uint8_t recieved_msg[5];
 
   /* USER CODE END 2 */
 
@@ -126,8 +123,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  //Read Message "Hello" with AD2
 	  testUART.write(msg, 5);
-	  HAL_Delay(100);
+
+	  //Send Message with AD2
+	  testUART.read(recieved_msg, 5);
+
   }
   /* USER CODE END 3 */
 }

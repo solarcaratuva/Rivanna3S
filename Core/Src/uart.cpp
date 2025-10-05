@@ -52,11 +52,11 @@ void UART::initUART(uint32_t baud) {
     huart.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
     HAL_UART_Init(&huart);
 
-    HAL_UARTEx_SetTxFifoThreshold(&huart, UART_TXFIFO_THRESHOLD_1_8);
-
-    HAL_UARTEx_SetRxFifoThreshold(&huart, UART_RXFIFO_THRESHOLD_1_8);
-
-    HAL_UARTEx_DisableFifoMode(&huart);
+//    HAL_UARTEx_SetTxFifoThreshold(&huart, UART_TXFIFO_THRESHOLD_1_8);
+//
+//    HAL_UARTEx_SetRxFifoThreshold(&huart, UART_RXFIFO_THRESHOLD_1_8);
+//
+//    HAL_UARTEx_DisableFifoMode(&huart);
 
 
 
