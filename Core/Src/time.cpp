@@ -1,7 +1,12 @@
 #include "time.h"
 
-Time::sleep_since(uint32_t time_ms) {
-    // TODO   
+Time::Time() {
+    xLastSleepSinceCall = xTaskGetTickCount;
+}
+Time::void sleep_since(uint32_t time_ms) {
+    TickType_t tickCount = time_ms / portTICK_PERIOD_MS; // this converts the ms into ticks
+    vTaskDelayUntil(&xLastSleepSinceCall, tickCount); // xLastSleepSinceCall is updated here
+    return;
 }
 
 Time::void sleep_for(uint32_t time_ms) {
@@ -11,6 +16,6 @@ Time::void sleep_for(uint32_t time_ms) {
 }
 
 Time::uint32_t get_current_time() {
-    // TODO
-    return portTick_Period_MS;
+    TickType_t tickCount = xTaskGetTickCount();
+    return static_cast<uint32_t>(tickCount * portTICK_PERIOD_MS); 
 }

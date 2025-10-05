@@ -28,6 +28,11 @@
 #include "DigitalIn.h"
 #include "DigitalOut.h"
 
+#include "thread.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "semphr.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,7 +67,16 @@ static void MPU_Config(void);
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
-
+DigitalOut pin1(PA_6);
+DigitalOut pin2(PA_5);
+static void flashPin1() {
+    if (pin1.read() == true) { pin1.write(false); }
+    else { pin1.write(true); }
+}
+static void flashPin2() {
+    if (pin2.read() == true) { pin2.write(false); }
+    else { pin2.write(true); }
+}
 /**
   * @brief  The application entry point.
   * @retval int
@@ -104,7 +118,19 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  
+  // Create and start FreeRTOS tasks AFTER system initialization
+  while (1) {
+    Time::sleep_for(500);
+    flashPin1();
+  }
+//   Time timer;
+//   while (1) {
+//     Timer.sleep_since(500);
+//     flashPin1();
+//   }
+  
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -114,6 +140,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    // This should never be reached if FreeRTOS is working properly
   }
   /* USER CODE END 3 */
 }
@@ -169,6 +196,25 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+// FreeRTOS error hooks for debugging
+extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
+    // Stack overflow detected - handle error
+    (void)xTask;
+    (void)pcTaskName;
+    __disable_irq();
+    while(1) {
+        // Blink an LED or trigger a breakpoint here for debugging
+    }
+}
+
+extern "C" void vApplicationMallocFailedHook(void) {
+    // Memory allocation failed - handle error
+    __disable_irq();
+    while(1) {
+        // Blink an LED or trigger a breakpoint here for debugging
+    }
+}
 
 /* USER CODE END 4 */
 
