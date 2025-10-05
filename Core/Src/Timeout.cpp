@@ -62,7 +62,7 @@ int Timeout::stop(){
 
 void Timeout::timer_callback(TimerHandle_t xTimer){
     Timeout* instance = static_cast<Timeout*>(pvTimerGetTimerID(xTimer));
-    if(instance && instance -> callback){
+    if(instance && instance->callback){
         instance->callback();
     }
 }
