@@ -67,8 +67,8 @@ static void MPU_Config(void);
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
-DigitalOut pin1(PA_0);
-DigitalOut pin2(PA_1);
+DigitalOut pin1(PA_6);
+DigitalOut pin2(PA_5);
 static void flashPin1() {
     const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
     vTaskDelay( xDelay );
