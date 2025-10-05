@@ -28,6 +28,7 @@
 #include "DigitalIn.h"
 #include "DigitalOut.h"
 
+#include "Clock.h"
 #include "thread.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -69,11 +70,14 @@ static void MPU_Config(void);
 /* USER CODE END 0 */
 DigitalOut pin1(PA_6);
 DigitalOut pin2(PA_5);
+Clock Timer;
 static void flashPin1() {
+	Clock::sleep_for(500);
     if (pin1.read() == true) { pin1.write(false); }
     else { pin1.write(true); }
 }
 static void flashPin2() {
+	Timer.sleep_since(500);
     if (pin2.read() == true) { pin2.write(false); }
     else { pin2.write(true); }
 }
@@ -120,17 +124,11 @@ int main(void)
   /* USER CODE BEGIN 2 */
   
   // Create and start FreeRTOS tasks AFTER system initialization
-  while (1) {
-    Time::sleep_for(500);
-    flashPin1();
-  }
-//   Time timer;
-//   while (1) {
-//     Timer.sleep_since(500);
-//     flashPin1();
-//   }
-  
-  
+  Thread thread1;
+  thread1.start(flashPin1);
+  Thread thread2;
+  thread2.start(flashPin2);
+  vTaskStartScheduler();
   /* USER CODE END 2 */
 
   /* Infinite loop */
