@@ -73,7 +73,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	UART testUART(PF_7, PF_6, 115200);
+
 
   /* USER CODE END 1 */
 
@@ -107,6 +107,8 @@ int main(void)
 //  MX_USART3_UART_Init();
 //  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  UART testUART(PF_7, PF_6, 115200);
 
   // String literal → constant array
   uint8_t msg[] = "Hello";

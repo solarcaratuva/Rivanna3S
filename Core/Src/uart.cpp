@@ -47,7 +47,18 @@ void UART::initUART(uint32_t baud) {
     huart.Init.Mode         = UART_MODE_TX_RX;
     huart.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
     huart.Init.OverSampling = UART_OVERSAMPLING_16;
+    huart.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+    huart.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+    huart.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
     HAL_UART_Init(&huart);
+
+    HAL_UARTEx_SetTxFifoThreshold(&huart, UART_TXFIFO_THRESHOLD_1_8);
+
+    HAL_UARTEx_SetRxFifoThreshold(&huart, UART_RXFIFO_THRESHOLD_1_8);
+
+    HAL_UARTEx_DisableFifoMode(&huart);
+
+
 
 }
 
