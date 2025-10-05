@@ -10,7 +10,7 @@ public:
      * Function that starts a task in a thread
      * Tasks started with this function will not start until vTaskStartScheduler() is ran in main
      * Usage: BaseType_t <result_name> = <thread object>.start(<function name>)
-     * Takes in a function that has returns nothing (void function) and has no parameters
+     * Takes in a function that returns nothing (void function) and has no parameters
      */
     BaseType_t start(void(*fn)());
 
