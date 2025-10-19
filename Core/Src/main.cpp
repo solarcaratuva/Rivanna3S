@@ -34,6 +34,9 @@
 #include "task.h"
 #include "semphr.h"
 
+#include "lock.h"
+#include <cstdio>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -136,7 +139,22 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	    Lock m;
 
+	    bool r1 = m.lock();                       // should be true (acquire)
+	    std::printf("First lock(): %s\n", r1 ? "true" : "false");
+
+	    bool r2 = m.try_lock();                   // should be false (already held)
+	    std::printf("Second try_lock(): %s\n", r2 ? "true" : "false");
+
+	    bool r3 = m.unlock();                     // should be true (release)
+	    std::printf("Third unlock(): %s\n", r3 ? "true" : "false");
+
+	    bool r4 = m.lock();                       // should be true again (re-acquire)
+	    std::printf("Fourth lock(): %s\n", r4 ? "true" : "false");
+
+	    // tidy up
+	    if (r4) m.unlock();
     /* USER CODE BEGIN 3 */
     // This should never be reached if FreeRTOS is working properly
   }
