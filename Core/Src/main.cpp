@@ -84,6 +84,13 @@ static void flashPin2() {
     if (pin2.read() == true) { pin2.write(false); }
     else { pin2.write(true); }
 }
+void test_get_current_time() {
+    while (1) {
+        uint32_t t1 = Timer.get_current_time();
+        if (t1 > 10000) { pin1.write(true); }
+        else { pin1.write(false); }
+    }
+}
 /**
   * @brief  The application entry point.
   * @retval int
@@ -128,9 +135,7 @@ int main(void)
   
   // Create and start FreeRTOS tasks AFTER system initialization
   Thread thread1;
-  thread1.start(flashPin1);
-  Thread thread2;
-  thread2.start(flashPin2);
+  thread1.start(test_get_current_time);
   vTaskStartScheduler();
   /* USER CODE END 2 */
 
