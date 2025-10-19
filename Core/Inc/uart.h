@@ -3,6 +3,7 @@
 
 #include "stm32h7xx_hal.h"
 #include "pinmap.h"
+#include "peripheralmap.h"
 
 extern UART_HandleTypeDef huart;
 
@@ -16,14 +17,14 @@ public:
 
 private:
     UART_HandleTypeDef huart;
-    void initGPIO(Pin tx, Pin rx);
+    void initGPIO(UART_Peripheral* uart_peripheral);
     void initUART(uint32_t baud);
     UART_Peripheral* findUARTPins(Pin tx, Pin rx);
 
     Pin tx, rx;
     uint32_t baud;
     bool initialized = false; 
-    UART_Peripheral* uart_peripheral;
+    UART_Peripheral* uart_periph;
 
     
 

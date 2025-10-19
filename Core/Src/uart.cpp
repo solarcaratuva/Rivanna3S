@@ -5,55 +5,62 @@
 #include "peripheralmap.h"
 
 extern UART_HandleTypeDef huart;
-extern UART_Peripheral* uart_peripheral;
+extern UART_Peripheral* uart_periph;
 
 
 // Constructor
 UART::UART(Pin tx, Pin rx, uint32_t baud)
     : tx(tx), rx(rx), baud(baud) {
-    uart_peripheral = findUARTPins();
-    if(uart_peripheral != nullptr) {
-        uart_peripheral->rxd_used = rx;
-        uart_peripheral->txd_used = tx;
-        initGPIO(tx, rx);
+	uart_periph = findUARTPins(tx, rx);
+    if(uart_periph != nullptr) {
+    	uart_periph->rxd_used = rx;
+    	uart_periph->txd_used = tx;
+        initGPIO(uart_periph);
         initUART(baud);
         initialized = true; 
     }
 }
 
 // Initialize GPIO for TX/RX
-void UART::initGPIO(Pin tx, Pin rx) {
+void UART::initGPIO(UART_Peripheral* uart_periph) {
+    Pin rx_pin = uart_periph->rxd_used;
+    Pin tx_pin = uart_periph->txd_used;
+
+    //Turn on clocks for every port
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOE_CLK_ENABLE();
-    __HAL_RCC_GPIOF_CLK_ENABLE(); // ⚠️ Change this depending on the port
+    __HAL_RCC_GPIOF_CLK_ENABLE(); 
     __HAL_RCC_GPIOG_CLK_ENABLE();
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
     // TX
-    GPIO_InitStruct.Pin       = tx.block_mask;
+    GPIO_InitStruct.Pin       = tx_pin.block_mask;
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull      = GPIO_NOPULL;
     GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF7_UART7; // ⚠️ depends on which USART you’re using
+    GPIO_InitStruct.Alternate = uart_periph->alternate_function;
     HAL_GPIO_Init(tx.block, &GPIO_InitStruct);
 
     // RX
-    GPIO_InitStruct.Pin       = rx.block_mask;
+    GPIO_InitStruct.Pin       = rx_pin.block_mask;
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull      = GPIO_NOPULL;
-    GPIO_InitStruct.Alternate = GPIO_AF7_UART7; // ⚠️ match same USART
+    GPIO_InitStruct.Alternate =  uart_periph->alternate_function;
     HAL_GPIO_Init(rx.block, &GPIO_InitStruct);
 }
 
 // Initialize UART peripheral
 void UART::initUART(uint32_t baud) {
-    __HAL_RCC_UART7_CLK_ENABLE(); // ⚠️ match peripheral to your pins
+    //Turn on clocks for all possible UART
+    __HAL_RCC_USART2_CLK_ENABLE();
+    __HAL_RCC_UART4_CLK_ENABLE();
+    __HAL_RCC_UART7_CLK_ENABLE(); 
 
-    huart.Instance          = UART7; // ⚠️ change to USART2, USART3, etc.
+    huart.Instance          = uart_periph-> handle;
     huart.Init.BaudRate     = baud;
     huart.Init.WordLength   = UART_WORDLENGTH_8B;
     huart.Init.StopBits     = UART_STOPBITS_1;
@@ -66,6 +73,7 @@ void UART::initUART(uint32_t baud) {
     huart.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
     HAL_UART_Init(&huart);
 
+// Functions that was used in Embedded UART example
 //    HAL_UARTEx_SetTxFifoThreshold(&huart, UART_TXFIFO_THRESHOLD_1_8);
 //
 //    HAL_UARTEx_SetRxFifoThreshold(&huart, UART_RXFIFO_THRESHOLD_1_8);
