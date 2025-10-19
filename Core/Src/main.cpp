@@ -27,6 +27,8 @@
 #include "peripheralmap.h"
 #include "DigitalIn.h"
 #include "DigitalOut.h"
+#include "Timeout.h"
+#include <stdio.h>
 
 /* USER CODE END Includes */
 
@@ -60,7 +62,36 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+Timeout t;
+DigitalOut pin(PB_0);
+DigitalOut pin1(PA_1);
 
+void onTimeout() {
+  printf("Timeout occurred!\n");
+  pin.write(true); // Turn pin on
+}
+
+void timeout_test_task(void *argument) {
+  //pin1.write(true);
+  printf("Starting timeout test...\n");
+  // Attach a 2 second timeout
+  t.attach(onTimeout, 2000);
+
+  // Wait 1 second, then refresh
+  vTaskDelay(pdMS_TO_TICKS(1000));
+  printf("Refreshing timer after 1 second...\n");
+  t.refresh();
+
+  // Wait 3 seconds, callback should trigger
+  vTaskDelay(pdMS_TO_TICKS(3000));
+
+  // Stop timer
+  t.stop();
+  printf("Stopped timer.\n");
+
+  // End task
+  vTaskDelete(NULL);
+}
 /* USER CODE END 0 */
 
 /**
@@ -104,7 +135,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  //xTaskCreate(timeout_test_task, "Timeout Test", 128, NULL, 2, NULL);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -114,6 +145,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    pin.write(true);
   }
   /* USER CODE END 3 */
 }

@@ -17,7 +17,7 @@ int Timeout::attach(std::function<void()> cb, uint32_t time_ms){
     timer_handle = xTimerCreate(
         "TimeoutTimer",
         pdMS_TO_TICKS(time_ms),
-        pdFalse,        // one-shot timer
+        pdFALSE,        // one-shot timer
         this,           // timer ID = this instance
         Timeout::timer_callback
     );
