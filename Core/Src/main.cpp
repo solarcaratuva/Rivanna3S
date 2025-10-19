@@ -27,6 +27,7 @@
 #include "peripheralmap.h"
 #include "DigitalIn.h"
 #include "DigitalOut.h"
+#include "Timeout.h"
 
 /* USER CODE END Includes */
 
@@ -60,7 +61,33 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+Timeout t;
+DigitalOut pin(PB_0);
 
+void onTimeout() {
+  // Turn pin on for 3 seconds
+  pin.write(true);
+  vTaskDelay(pdMS_TO_TICKS(3000));
+  pin.write(false);
+}
+
+void timeout_test_task(void *argument) {
+  // Attach a 2 second timeout
+  t.attach(onTimeout, 2000);
+
+  // Wait 1 second, then refresh
+  vTaskDelay(pdMS_TO_TICKS(1000));
+  t.refresh();
+
+  // Wait 3 seconds, callback should trigger
+  vTaskDelay(pdMS_TO_TICKS(3000));
+
+  // Stop timer
+  t.stop();
+
+  // End task
+  vTaskDelete(NULL);
+}
 /* USER CODE END 0 */
 
 /**
@@ -104,7 +131,8 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  xTaskCreate(timeout_test_task, "Timeout Test", 128, NULL, 2, NULL);
+  vTaskStartScheduler();
   /* USER CODE END 2 */
 
   /* Infinite loop */
