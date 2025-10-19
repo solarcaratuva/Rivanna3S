@@ -22,6 +22,7 @@ private:
     Pin tx, rx;
     uint32_t baud;
 
+    UART_Peripheral* findUARTPins(Pin tx, Pin rx);
 };
 
 

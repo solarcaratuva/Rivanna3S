@@ -2,6 +2,7 @@
 #include "UART.h"
 #include "stm32h7xx_hal.h"
 #include "pinmap.h"
+#include "peripheralmap.h"
 
 extern UART_HandleTypeDef huart;
 
@@ -58,8 +59,6 @@ void UART::initUART(uint32_t baud) {
 //
 //    HAL_UARTEx_DisableFifoMode(&huart);
 
-
-
 }
 
 void UART::read(uint8_t *buffer, size_t length){
@@ -70,6 +69,19 @@ void UART::write(uint8_t* buffer, size_t length) {
 	HAL_UART_Transmit(&huart, buffer, length, HAL_MAX_DELAY);
 }
         
+UART_Peripheral* UART::findUARTPins(Pin tx, Pin rx) {
+    for (size_t i = 0; i < UART_PERIPHERAL_COUNT; ++i) {
+        UART_Peripheral* peripheral = &UART_Peripherals[i];
+        if (((*peripheral).txd_valid_pins & tx.universal_mask) &&
+            ((*peripheral).rxd_valid_pins & rx.universal_mask)) {
+            if (peripheral->isClaimed) {
+                (*peripheral).isClaimed = true;
+                return peripheral;
+            }
+        }
+    }
+    return nullptr; // No matching peripheral found
+}
         
 
 
