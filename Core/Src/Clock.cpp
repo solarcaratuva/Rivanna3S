@@ -6,7 +6,7 @@ Clock::Clock() {
 
 void Clock::sleep_since(uint32_t time_ms) {
     TickType_t tick_count = time_ms / portTICK_PERIOD_MS; // this converts the ms into ticks
-    vTaskDelayUntil(&xLastSleepSinceCall, tick_count); // xLastSleepSinceCall is updated here
+    vTaskDelayUntil(&lastSleepSinceCall, tick_count); // xLastSleepSinceCall is updated here
     return;
 }
 
