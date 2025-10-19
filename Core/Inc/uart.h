@@ -18,11 +18,16 @@ private:
     UART_HandleTypeDef huart;
     void initGPIO(Pin tx, Pin rx);
     void initUART(uint32_t baud);
+    UART_Peripheral* findUARTPins(Pin tx, Pin rx);
 
     Pin tx, rx;
     uint32_t baud;
+    bool initialized = false; 
+    UART_Peripheral* uart_peripheral;
 
-    UART_Peripheral* findUARTPins(Pin tx, Pin rx);
+    
+
+
 };
 
 

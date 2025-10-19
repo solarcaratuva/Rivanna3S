@@ -5,18 +5,31 @@
 #include "peripheralmap.h"
 
 extern UART_HandleTypeDef huart;
+extern UART_Peripheral* uart_peripheral;
 
 
 // Constructor
 UART::UART(Pin tx, Pin rx, uint32_t baud)
     : tx(tx), rx(rx), baud(baud) {
-    initGPIO(tx, rx);
-    initUART(baud);
+    uart_peripheral = findUARTPins();
+    if(uart_peripheral != nullptr) {
+        uart_peripheral->rxd_used = rx;
+        uart_peripheral->txd_used = tx;
+        initGPIO(tx, rx);
+        initUART(baud);
+        initialized = true; 
+    }
 }
 
 // Initialize GPIO for TX/RX
 void UART::initGPIO(Pin tx, Pin rx) {
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+    __HAL_RCC_GPIOE_CLK_ENABLE();
     __HAL_RCC_GPIOF_CLK_ENABLE(); // ⚠️ Change this depending on the port
+    __HAL_RCC_GPIOG_CLK_ENABLE();
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
