@@ -74,7 +74,7 @@ UART_Peripheral* UART::findUARTPins(Pin tx, Pin rx) {
         UART_Peripheral* peripheral = &UART_Peripherals[i];
         if (((*peripheral).txd_valid_pins & tx.universal_mask) &&
             ((*peripheral).rxd_valid_pins & rx.universal_mask)) {
-            if (peripheral->isClaimed) {
+            if (!peripheral->isClaimed) {
                 (*peripheral).isClaimed = true;
                 return peripheral;
             }
