@@ -43,14 +43,14 @@ void UART::initGPIO(UART_Peripheral* uart_periph) {
     GPIO_InitStruct.Pull      = GPIO_NOPULL;
     GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = uart_periph->alternate_function;
-    HAL_GPIO_Init(tx.block, &GPIO_InitStruct);
+    HAL_GPIO_Init(tx_pin.block, &GPIO_InitStruct);
 
     // RX
     GPIO_InitStruct.Pin       = rx_pin.block_mask;
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull      = GPIO_NOPULL;
     GPIO_InitStruct.Alternate =  uart_periph->alternate_function;
-    HAL_GPIO_Init(rx.block, &GPIO_InitStruct);
+    HAL_GPIO_Init(rx_pin.block, &GPIO_InitStruct);
 }
 
 // Initialize UART peripheral
