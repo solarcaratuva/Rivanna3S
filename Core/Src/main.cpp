@@ -28,6 +28,8 @@
 #include "DigitalIn.h"
 #include "DigitalOut.h"
 
+#include "lock.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -60,7 +62,15 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+DigitalOut pin1(PB_0); // LED
 
+static void LedOn() {
+  pin1.write(true);
+}
+
+static void LedOff() {
+  pin1.write(false);
+}
 /* USER CODE END 0 */
 
 /**
@@ -112,7 +122,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+    LedOn();
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
