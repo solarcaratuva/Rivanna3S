@@ -108,11 +108,16 @@ int main(void)
 //  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  UART testUART(PF_7, PF_6, 115200);
+  UART testUART(PB_0, PF_6, 115200);
+  DigitalOut LED(PB_0);
+//  UART testUART_2(PA_2, PA_3, 115200);
 
   // String literal → constant array
   uint8_t msg[] = "Hello";
-  uint8_t recieved_msg[5];
+  uint8_t msg2[] = "Alvin";
+  uint8_t recieved_msg[6];
+  uint8_t recieved_msg_2[6];
+  uint8_t test_variable = 0;
 
   /* USER CODE END 2 */
 
@@ -123,11 +128,24 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  //Read Message "Hello" with AD2
-	  testUART.write(msg, 5);
 
 	  //Send Message with AD2
-	  testUART.read(recieved_msg, 5);
+
+	  testUART.read(recieved_msg, 6);
+//	  testUART_2.read(recieved_msg_2, 6);
+
+
+	  //Read Message "Hello" with AD2
+
+	  testUART.write(recieved_msg, 6);
+//	  testUART_2.write(msg2, 6);
+
+	  if(testUART.initialized == 0) {
+		  LED.write(1);
+	  }
+
+
+
 
   }
   /* USER CODE END 3 */

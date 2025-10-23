@@ -83,11 +83,15 @@ void UART::initUART(uint32_t baud) {
 }
 
 void UART::read(uint8_t *buffer, size_t length){
-	HAL_UART_Receive(&huart, buffer, length, HAL_MAX_DELAY);
+	if(initialized != 0) {
+		HAL_UART_Receive(&huart, buffer, length, HAL_MAX_DELAY);
+	}
 }
 
 void UART::write(uint8_t* buffer, size_t length) {
-	HAL_UART_Transmit(&huart, buffer, length, HAL_MAX_DELAY);
+	if(initialized != 0) {
+		HAL_UART_Transmit(&huart, buffer, length, HAL_MAX_DELAY);
+	}
 }
         
 UART_Peripheral* UART::findUARTPins(Pin tx, Pin rx) {

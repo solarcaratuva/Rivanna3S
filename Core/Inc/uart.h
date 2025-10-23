@@ -9,6 +9,8 @@ extern UART_HandleTypeDef huart;
 
 class UART {
 public:
+	bool initialized = false;
+
     explicit UART(Pin tx, Pin rx, uint32_t baud);
 
     void read(uint8_t *buffer, size_t length);
@@ -23,7 +25,6 @@ private:
 
     Pin tx, rx;
     uint32_t baud;
-    bool initialized = false; 
     UART_Peripheral* uart_periph;
 
     
