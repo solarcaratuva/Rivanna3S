@@ -30,6 +30,7 @@
 #include "Timeout.h"
 #include "Clock.h"
 #include "Timeout.h"
+#include "lock.h"
 
 /* USER CODE END Includes */
 
