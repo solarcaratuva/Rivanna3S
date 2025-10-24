@@ -28,6 +28,8 @@
 #include "DigitalIn.h"
 #include "DigitalOut.h"
 #include "Timeout.h"
+#include "Clock.h"
+#include "Timeout.h"
 
 /* USER CODE END Includes */
 
