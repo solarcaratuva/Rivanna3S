@@ -28,6 +28,8 @@
 #include "DigitalIn.h"
 #include "DigitalOut.h"
 #include "Timeout.h"
+#include "Clock.h"
+#include "Timeout.h"
 
 /* USER CODE END Includes */
 
@@ -89,7 +91,26 @@ void timeout_test_task(void *argument) {
   vTaskDelete(NULL);
 }
 /* USER CODE END 0 */
-
+DigitalOut pin1(PB_0);
+DigitalOut pin2(PA_5);
+Clock Timer;
+static void flashPin1() {
+	Clock::sleep_for(500);
+    if (pin1.read() == true) { pin1.write(false); }
+    else { pin1.write(true); }
+}
+static void flashPin2() {
+	Timer.sleep_since(500);
+    if (pin2.read() == true) { pin2.write(false); }
+    else { pin2.write(true); }
+}
+void test_get_current_time() {
+    while (1) {
+        uint32_t t1 = Timer.get_current_time();
+        if (t1 > 10000) { pin1.write(true); }
+        else { pin1.write(false); }
+    }
+}
 /**
   * @brief  The application entry point.
   * @retval int
@@ -140,8 +161,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
+    // This should never be reached if FreeRTOS is working properly
   }
   /* USER CODE END 3 */
 }
@@ -197,6 +218,25 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+// FreeRTOS error hooks for debugging
+extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
+    // Stack overflow detected - handle error
+    (void)xTask;
+    (void)pcTaskName;
+    __disable_irq();
+    while(1) {
+        // Blink an LED or trigger a breakpoint here for debugging
+    }
+}
+
+extern "C" void vApplicationMallocFailedHook(void) {
+    // Memory allocation failed - handle error
+    __disable_irq();
+    while(1) {
+        // Blink an LED or trigger a breakpoint here for debugging
+    }
+}
 
 /* USER CODE END 4 */
 

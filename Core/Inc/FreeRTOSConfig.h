@@ -64,11 +64,13 @@
 #define configSUPPORT_DYNAMIC_ALLOCATION         1
 #define configUSE_IDLE_HOOK                      0
 #define configUSE_TICK_HOOK                      0
+#define configUSE_MALLOC_FAILED_HOOK             1
+#define configCHECK_FOR_STACK_OVERFLOW           2
 #define configCPU_CLOCK_HZ                       ( SystemCoreClock )
 #define configTICK_RATE_HZ                       ((TickType_t)1000)
 #define configMAX_PRIORITIES                     ( 56 )
 #define configMINIMAL_STACK_SIZE                 ((uint16_t)128)
-#define configTOTAL_HEAP_SIZE                    ((size_t)15360)
+#define configTOTAL_HEAP_SIZE                    ((size_t)32768)
 #define configMAX_TASK_NAME_LEN                  ( 16 )
 #define configUSE_TRACE_FACILITY                 1
 #define configUSE_16_BIT_TICKS                   0
@@ -94,7 +96,7 @@
 #define configTIMER_TASK_STACK_DEPTH             256
 
 /* The following flag must be enabled only when using newlib */
-#define configUSE_NEWLIB_REENTRANT          1
+#define configUSE_NEWLIB_REENTRANT          0
 
 /* CMSIS-RTOS V2 flags */
 #define configUSE_OS2_THREAD_SUSPEND_RESUME  1
