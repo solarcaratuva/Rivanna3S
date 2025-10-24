@@ -28,14 +28,11 @@
 #include "DigitalIn.h"
 #include "DigitalOut.h"
 
-#include "Clock.h"
 #include "thread.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "semphr.h"
 
 #include "lock.h"
-#include <cstdio>
 
 /* USER CODE END Includes */
 
@@ -69,28 +66,80 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+DigitalOut pin1(PB_0); // LED
 
-/* USER CODE END 0 */
-DigitalOut pin1(PA_6);
-DigitalOut pin2(PA_5);
-Clock Timer;
-static void flashPin1() {
-	Clock::sleep_for(500);
-    if (pin1.read() == true) { pin1.write(false); }
-    else { pin1.write(true); }
+static void LedOn() {
+  pin1.write(true);
 }
-static void flashPin2() {
-	Timer.sleep_since(500);
-    if (pin2.read() == true) { pin2.write(false); }
-    else { pin2.write(true); }
+
+static void LedOff() {
+  pin1.write(false);
 }
-void test_get_current_time() {
-    while (1) {
-        uint32_t t1 = Timer.get_current_time();
-        if (t1 > 10000) { pin1.write(true); }
-        else { pin1.write(false); }
+
+static Lock gLock;
+static volatile char gBuf = 0;
+
+static inline void msDelay(uint32_t ms) { vTaskDelay(pdMS_TO_TICKS(ms)); }
+
+static void writerA()
+{
+    gLock.lock();
+    gBuf = 'a';
+    msDelay(2000);
+    gLock.unlock();
+    for(;;) { msDelay(1000); }
+}
+
+// Writer B: will block forever since A already owns the lock
+static void writerB()
+{
+    msDelay(200);
+    gLock.lock();
+    gBuf = 'b';
+    msDelay(1000);
+    gLock.unlock();
+    for(;;) { msDelay(1000); }
+}
+
+static void writerC()
+{
+    msDelay(1500);
+    bool didlock;
+
+    didlock = gLock.try_lock();
+    if (didlock) {
+        gBuf = 'c';
+        gLock.unlock();
+    }
+    for(;;) { msDelay(1000); }
+}
+
+static void monitor()
+{
+    for (;;)
+    {
+        char snap = gBuf;
+        if (snap == 'a') {
+        	LedOn();
+        }
+        else if (snap == 'b') {
+        	LedOff();
+        }
+        else if (snap == 'c') {
+        	for(;;) {
+        		LedOn();
+        		msDelay(300);
+        		LedOff();
+        		msDelay(300);
+        	}
+
+        }
+        msDelay(20);
     }
 }
+
+/* USER CODE END 0 */
+
 /**
   * @brief  The application entry point.
   * @retval int
@@ -132,10 +181,11 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  
-  // Create and start FreeRTOS tasks AFTER system initialization
-  Thread thread1;
-  thread1.start(test_get_current_time);
+  Thread tA, tB, tC, tMon;
+  tA.start(writerA);
+  tB.start(writerB);
+  tC.start(writerC);
+  tMon.start(monitor);
   vTaskStartScheduler();
   /* USER CODE END 2 */
 
@@ -144,22 +194,7 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	    Lock m;
 
-	    bool r1 = m.lock();                       // should be true (acquire)
-	    std::printf("First lock(): %s\n", r1 ? "true" : "false");
-
-	    bool r2 = m.try_lock();                   // should be false (already held)
-	    std::printf("Second try_lock(): %s\n", r2 ? "true" : "false");
-
-	    bool r3 = m.unlock();                     // should be true (release)
-	    std::printf("Third unlock(): %s\n", r3 ? "true" : "false");
-
-	    bool r4 = m.lock();                       // should be true again (re-acquire)
-	    std::printf("Fourth lock(): %s\n", r4 ? "true" : "false");
-
-	    // tidy up
-	    if (r4) m.unlock();
     /* USER CODE BEGIN 3 */
     // This should never be reached if FreeRTOS is working properly
   }
