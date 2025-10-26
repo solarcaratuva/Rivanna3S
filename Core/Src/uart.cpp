@@ -84,6 +84,12 @@ void UART::read(uint8_t *buffer, uint16_t length){
 	}
 }
 
+void UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
+	if(initialized != 0) {
+		HAL_UART_Receive(&huart, buffer, length, timeout_ms);
+	}
+}
+
 void UART::write(uint8_t* buffer, uint16_t length) {
 	if(initialized != 0) {
 		HAL_UART_Transmit(&huart, buffer, length, HAL_MAX_DELAY);

@@ -131,13 +131,13 @@ int main(void)
 
 	  //Send Message with AD2
 
-	  testUART.read(recieved_msg, 6);
+	  testUART.read(recieved_msg, 6, 1000);
 //	  testUART_2.read(recieved_msg_2, 6);
 
 
 	  //Read Message "Hello" with AD2
 
-	  testUART.write(recieved_msg, 6);
+	  testUART.write(msg, 6);
 //	  testUART_2.write(msg2, 6);
 
 //	  if(testUART.initialized == 0) {

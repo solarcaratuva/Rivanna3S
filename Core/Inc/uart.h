@@ -13,6 +13,8 @@ public:
 
     void read(uint8_t *buffer, uint16_t  length);
 
+    void read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms);
+
     void write(uint8_t *buffer, uint16_t  length);
 
 
