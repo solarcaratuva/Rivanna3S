@@ -23,14 +23,10 @@ void UART::init_gpio(UART_Peripheral* uart_periph) {
     Pin rx_pin = uart_periph->rxd_used;
     Pin tx_pin = uart_periph->txd_used;
 
-    //Turn on clocks for every port
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_GPIOD_CLK_ENABLE();
-    __HAL_RCC_GPIOE_CLK_ENABLE();
-    __HAL_RCC_GPIOF_CLK_ENABLE(); 
-    __HAL_RCC_GPIOG_CLK_ENABLE();
+    //Turn on clocks for each gpio port
+    gpio_clock_enable(rx_pin.block);
+    gpio_clock_enable(tx_pin.block);
+
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
