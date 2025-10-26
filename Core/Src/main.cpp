@@ -131,12 +131,18 @@ int main(void)
 
 	  //Send Message with AD2
 
-	  testUART.read(recieved_msg, 6, 1000);
+//	  testUART.read(recieved_msg, 6, 1000);
 //	  testUART_2.read(recieved_msg_2, 6);
 
 
 	  //Read Message "Hello" with AD2
-
+	  if(LED.read() == 0){
+		  LED.write(1);
+	  }
+	  else {
+		  LED.write(0);
+	  }
+	  HAL_Delay(1000);
 	  testUART.write(msg, 6);
 //	  testUART_2.write(msg2, 6);
 
