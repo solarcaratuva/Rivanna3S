@@ -27,7 +27,10 @@
 #include "peripheralmap.h"
 #include "DigitalIn.h"
 #include "DigitalOut.h"
-#include "UART.h"
+#include "Timeout.h"
+#include "Clock.h"
+#include "Timeout.h"
+#include "lock.h"
 
 /* USER CODE END Includes */
 
@@ -61,10 +64,54 @@ static void MPU_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+Timeout t;
+DigitalOut pin(PB_0);
 
+void onTimeout() {
+  // Turn pin on for 3 seconds
+  pin.write(true);
+  vTaskDelay(pdMS_TO_TICKS(3000));
+  pin.write(false);
+}
 
+void timeout_test_task(void *argument) {
+  // Attach a 2 second timeout
+  t.attach(onTimeout, 2000);
+
+  // Wait 1 second, then refresh
+  vTaskDelay(pdMS_TO_TICKS(1000));
+  t.refresh();
+
+  // Wait 3 seconds, callback should trigger
+  vTaskDelay(pdMS_TO_TICKS(3000));
+
+  // Stop timer
+  t.stop();
+
+  // End task
+  vTaskDelete(NULL);
+}
 /* USER CODE END 0 */
-
+DigitalOut pin1(PB_0);
+DigitalOut pin2(PA_5);
+Clock Timer;
+static void flashPin1() {
+	Clock::sleep_for(500);
+    if (pin1.read() == true) { pin1.write(false); }
+    else { pin1.write(true); }
+}
+static void flashPin2() {
+	Timer.sleep_since(500);
+    if (pin2.read() == true) { pin2.write(false); }
+    else { pin2.write(true); }
+}
+void test_get_current_time() {
+    while (1) {
+        uint32_t t1 = Timer.get_current_time();
+        if (t1 > 10000) { pin1.write(true); }
+        else { pin1.write(false); }
+    }
+}
 /**
   * @brief  The application entry point.
   * @retval int
@@ -107,18 +154,8 @@ int main(void)
 //  MX_USART3_UART_Init();
 //  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-
-  UART testUART(PF_7, PF_6, 115200);
-  DigitalOut LED(PB_0);
-//  UART testUART_2(PA_2, PA_3, 115200);
-
-  // String literal → constant array
-  uint8_t msg[] = "Hello";
-  uint8_t msg2[] = "Alvin";
-  uint8_t recieved_msg[6];
-  uint8_t recieved_msg_2[6];
-  uint8_t test_variable = 0;
-
+  xTaskCreate(timeout_test_task, "Timeout Test", 128, NULL, 2, NULL);
+  vTaskStartScheduler();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -126,33 +163,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
     /* USER CODE BEGIN 3 */
-
-	  //Send Message with AD2
-
-//	  testUART.read(recieved_msg, 6, 1000);
-//	  testUART_2.read(recieved_msg_2, 6);
-
-
-	  //Read Message "Hello" with AD2
-	  if(LED.read() == 0){
-		  LED.write(1);
-	  }
-	  else {
-		  LED.write(0);
-	  }
-	  HAL_Delay(1000);
-	  testUART.write(msg, 6);
-//	  testUART_2.write(msg2, 6);
-
-//	  if(testUART.initialized == 0) {
-//		  LED.write(1);
-//	  }
-
-
-
-
+    // This should never be reached if FreeRTOS is working properly
   }
   /* USER CODE END 3 */
 }
@@ -208,6 +220,25 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+// FreeRTOS error hooks for debugging
+extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
+    // Stack overflow detected - handle error
+    (void)xTask;
+    (void)pcTaskName;
+    __disable_irq();
+    while(1) {
+        // Blink an LED or trigger a breakpoint here for debugging
+    }
+}
+
+extern "C" void vApplicationMallocFailedHook(void) {
+    // Memory allocation failed - handle error
+    __disable_irq();
+    while(1) {
+        // Blink an LED or trigger a breakpoint here for debugging
+    }
+}
 
 /* USER CODE END 4 */
 
