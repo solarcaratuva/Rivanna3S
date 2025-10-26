@@ -108,7 +108,7 @@ int main(void)
 //  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  UART testUART(PB_0, PF_6, 115200);
+  UART testUART(PF_7, PF_6, 115200);
   DigitalOut LED(PB_0);
 //  UART testUART_2(PA_2, PA_3, 115200);
 
@@ -140,9 +140,9 @@ int main(void)
 	  testUART.write(recieved_msg, 6);
 //	  testUART_2.write(msg2, 6);
 
-	  if(testUART.initialized == 0) {
-		  LED.write(1);
-	  }
+//	  if(testUART.initialized == 0) {
+//		  LED.write(1);
+//	  }
 
 
 
