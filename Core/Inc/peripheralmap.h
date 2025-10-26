@@ -24,26 +24,23 @@ typedef struct {
     uint64_t txd_valid_pins;
     Pin rxd_used;
     Pin txd_used;
+    uint8_t alternate_function; 
+
     bool isClaimed;
     // Queue[float] return_value_queue
 } UART_Peripheral;
 
-// Global array of UART peripherals
-UART_Peripheral UART_Peripherals[] = {
-    {USART2, PA_3.universal_mask, PA_2.universal_mask, NC, NC, false},
-    {UART4, PA_1.universal_mask, PA_0.universal_mask, NC, NC, false},
-    {UART7, (PF_6.universal_mask | PE_7.universal_mask), (PF_7.universal_mask | PE_8.universal_mask), NC, NC, false}
-};
+// Declare global arrays
+extern UART_Peripheral UART_Peripherals[];
+extern const uint8_t UART_PERIPHERAL_COUNT;
 
-#define UART_PERIPHERAL_COUNT (sizeof(UART_Peripherals) / sizeof(UART_Peripherals[0]))
+extern I2C_Peripheral I2C_Peripherals[];
+extern const uint8_t I2C_PERIPHERAL_COUNT;
 
-// Global array of I2C peripherals
-I2C_Peripheral I2C_Peripherals[] = {
-    {I2C2, PF_0.universal_mask, PF_1.universal_mask, NC, NC, false},
-    {I2C4, PF_15.universal_mask, PF_14.universal_mask, NC, NC, false}
-};
+void uart_clock_enable(USART_TypeDef* handle);
 
-#define I2C_PERIPHERAL_COUNT (sizeof(I2C_Peripherals) / sizeof(I2C_Peripherals[0]))
+void gpio_clock_enable(GPIO_TypeDef* handle);
+
 
 
 #endif /* PERIPHERALMAP */

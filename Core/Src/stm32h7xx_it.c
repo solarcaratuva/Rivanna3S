@@ -176,3 +176,17 @@ void TIM1_UP_IRQHandler(void)
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
+
+/*
+ * Ensure the HAL tick is incremented when the TIM1 timebase fires.
+ * The TIM-based HAL timebase implementation requires this callback
+ * to call HAL_IncTick() so that HAL_GetTick()/HAL_Delay() work.
+ */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* Check which timer triggered the callback. Compare handle pointer to avoid
+     depending on the TIMx macro being visible here. */
+  if (htim != NULL && htim == &htim1) {
+    HAL_IncTick();
+  }
+}
