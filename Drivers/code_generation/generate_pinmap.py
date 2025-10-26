@@ -8,7 +8,7 @@ def parseXML(dir):
 
     pin_map = {}
 
-    for pin in root.findall('Pin'):
+    for pin in root.findall('{http://dummy.com}Pin'): # xmlns="http://dummy.com" attribute in XML's root tag makes all tags in XML have this "http://dummy.com" string before the tag name
         pin_name = pin.attrib['Name']
         position = int(pin.attrib['Position'])
 

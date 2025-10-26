@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Copyright (c) 2025 STMicroelectronics. All rights reserved. -->
-<!-- Removed xmlns="http://dummy.com" from Mcu tag -->
-<Mcu ClockTree="STM32H7" DBVersion="V3.0" Family="STM32H7" HasPowerPad="false" IOType="" Line="STM32H743/753" Package="LQFP144" RefName="STM32H743ZITx">
+<Mcu ClockTree="STM32H7" DBVersion="V3.0" Family="STM32H7" HasPowerPad="false" IOType="" Line="STM32H743/753" Package="LQFP144" RefName="STM32H743ZITx" xmlns="http://dummy.com">
     <Core>ARM Cortex-M7</Core>
     <Frequency>480</Frequency>
     <CCMRam>192</CCMRam>
