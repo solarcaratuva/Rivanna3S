@@ -32,7 +32,7 @@ typedef struct {
 typedef struct {
    ADC_TypeDef *instance;    // ADC1, ADC2, ...
    uint32_t channel;         // ADC_CHANNEL_0, ...
-   uint32_t pin_mask;        // PA_0.universal_mask
+   uint64_t pin_mask;        // PA_0.universal_mask
     Pin used_pin;
    bool isClaimed;
 } ADC_Peripheral;

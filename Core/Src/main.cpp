@@ -28,6 +28,7 @@
 #include "DigitalIn.h"
 #include "DigitalOut.h"
 #include "UART.h"
+#include "AnalogIn.h"
 
 /* USER CODE END Includes */
 
@@ -88,67 +89,21 @@ int main(void)
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
-
   /* Configure the system clock */
   SystemClock_Config();
-
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
-//  MX_GPIO_Init();
-//  MX_UART4_Init();
-//  MX_UART5_Init();
-//  MX_UART7_Init();
-//  MX_UART8_Init();
-//  MX_USART1_UART_Init();
-//  MX_USART2_UART_Init();
-//  MX_USART3_UART_Init();
-//  MX_USART6_UART_Init();
-  /* USER CODE BEGIN 2 */
-
-  UART testUART(PB_0, PF_6, 115200);
   DigitalOut LED(PB_0);
-//  UART testUART_2(PA_2, PA_3, 115200);
 
-  // String literal → constant array
-  uint8_t msg[] = "Hello";
-  uint8_t msg2[] = "Alvin";
-  uint8_t recieved_msg[6];
-  uint8_t recieved_msg_2[6];
-  uint8_t test_variable = 0;
-
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+  AnalogIn analogInput(PA_0);
   while (1)
   {
-    /* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
-
-	  //Send Message with AD2
-
-	  testUART.read(recieved_msg, 6);
-//	  testUART_2.read(recieved_msg_2, 6);
-
-
-	  //Read Message "Hello" with AD2
-
-	  testUART.write(recieved_msg, 6);
-//	  testUART_2.write(msg2, 6);
-
-	  if(testUART.initialized == 0) {
-		  LED.write(1);
-	  }
-
-
-
-
+	float value = analogInput.read();
+    if (value > 0.5f){
+        LED.write(true);
+        HAL_Delay(100);
+    }
   }
-  /* USER CODE END 3 */
+
 }
 
 /**

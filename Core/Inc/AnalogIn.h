@@ -3,16 +3,16 @@
 #include "stm32h7xx_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
-extern ADC_HandleTypeDef hadc1;
-extern ADC_Peripheral* adc_periph;
 class AnalogIn {
 public:
     bool initialized = false;
-    explicit AnalogIn(Pin pin, uint32_t baud = 0);
-    void read(uint16_t* value);
+    explicit AnalogIn(Pin pin);
+    float read();
 private:
+    ADC_Peripheral* adc_periph;
     void initGPIO(ADC_Peripheral* adc_peripheral);
     void initADC();
     ADC_Peripheral* findADCPin(Pin pin);
+    ADC_HandleTypeDef hadc1;
 };
 #endif

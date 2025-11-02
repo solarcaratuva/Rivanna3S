@@ -35,6 +35,3 @@ ADC_Peripheral ADC_Peripherals[] = {
 };
 
 const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Peripherals[0]);
-
-
-const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Peripherals[0]);
