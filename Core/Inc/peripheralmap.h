@@ -29,6 +29,15 @@ typedef struct {
     // Queue[float] return_value_queue
 } UART_Peripheral;
 
+typedef struct {
+   ADC_TypeDef *instance;    // ADC1, ADC2, ...
+   uint32_t channel;         // ADC_CHANNEL_0, ...
+   uint32_t pin_mask;        // PA_0.universal_mask
+    Pin used_pin;
+   bool isClaimed;
+} ADC_Peripheral;
+
+
 // Declare global arrays
 extern UART_Peripheral UART_Peripherals[];
 extern const uint8_t UART_PERIPHERAL_COUNT;
@@ -36,5 +45,7 @@ extern const uint8_t UART_PERIPHERAL_COUNT;
 extern I2C_Peripheral I2C_Peripherals[];
 extern const uint8_t I2C_PERIPHERAL_COUNT;
 
+extern ADC_Peripheral ADC_Peripherals[];
+extern const uint8_t ADC_PERIPHERAL_COUNT;
 
 #endif /* PERIPHERALMAP */
