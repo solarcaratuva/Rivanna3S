@@ -46,13 +46,34 @@ void AnalogIn::initGPIO(ADC_Peripheral* adc_periph) {
 ADC_Peripheral* AnalogIn::findADCPin(Pin pin) {
     for (uint8_t i = 0; i < ADC_PERIPHERAL_COUNT; i++) {
         ADC_Peripheral* peripheral = &ADC_Peripherals[i];
-        if (peripherial->pin_mask & pin.universal_mask) {
+        // use !=0 for any-bit overlap, or == pin.universal_mask for full match
+        if ((peripheral->pin_mask & pin.universal_mask) != 0) {
             if (!peripheral->isClaimed) {
-                (*peripheral).isClaimed = true;
+                peripheral->isClaimed = true;
                 return peripheral;
             }
         }
     }
     return nullptr; // No matching ADC peripheral found
 }
+
+// Configure ADC channel for this AnalogIn instance using the global HAL handle
+void AnalogIn::initADC() {
+    if (adc_periph == nullptr) {
+        return;
+    }
+
+    ADC_ChannelConfTypeDef sConfig = {0};
+    sConfig.Channel = adc_periph->channel;
+    sConfig.Rank = ADC_REGULAR_RANK_1;
+    sConfig.SamplingTime = adc_periph->sampling_time;
+
+    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+        // Configuration Error
+        Error_Handler();
+    }
+}
+
+
+
 
