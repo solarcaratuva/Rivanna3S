@@ -1,0 +1,3 @@
+/home/ryan/SolarCar/Rivanna3S/Core/Src/stm32h7xx_hal_timebase_tim.c:41:19:HAL_InitTick	64	static
+/home/ryan/SolarCar/Rivanna3S/Core/Src/stm32h7xx_hal_timebase_tim.c:103:6:HAL_SuspendTick	4	static
+/home/ryan/SolarCar/Rivanna3S/Core/Src/stm32h7xx_hal_timebase_tim.c:115:6:HAL_ResumeTick	4	static
