@@ -29,6 +29,8 @@
 #include "DigitalOut.h"
 #include "UART.h"
 
+#include "log.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -86,7 +88,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  log_configure(debug, PE_8, PF_6, 9600);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -108,16 +110,9 @@ int main(void)
 //  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  UART testUART(PB_0, PF_6, 115200);
-  DigitalOut LED(PB_0);
 //  UART testUART_2(PA_2, PA_3, 115200);
 
   // String literal → constant array
-  uint8_t msg[] = "Hello";
-  uint8_t msg2[] = "Alvin";
-  uint8_t recieved_msg[6];
-  uint8_t recieved_msg_2[6];
-  uint8_t test_variable = 0;
 
   /* USER CODE END 2 */
 
@@ -126,27 +121,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+    log(debug, __FILE__, __LINE__,"testing log %d", 10);
     /* USER CODE BEGIN 3 */
-
-	  //Send Message with AD2
-
-	  testUART.read(recieved_msg, 6);
-//	  testUART_2.read(recieved_msg_2, 6);
-
-
-	  //Read Message "Hello" with AD2
-
-	  testUART.write(recieved_msg, 6);
-//	  testUART_2.write(msg2, 6);
-
-	  if(testUART.initialized == 0) {
-		  LED.write(1);
-	  }
-
-
-
-
   }
   /* USER CODE END 3 */
 }
