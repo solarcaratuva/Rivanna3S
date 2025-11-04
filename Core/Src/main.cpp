@@ -122,6 +122,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
 
+
   /* USER CODE END 1 */
 
   /* MPU Configuration--------------------------------------------------------*/
@@ -133,7 +134,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  log_configure(debug, PE_8, PF_6, 9600);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -144,6 +145,15 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+//  MX_GPIO_Init();
+//  MX_UART4_Init();
+//  MX_UART5_Init();
+//  MX_UART7_Init();
+//  MX_UART8_Init();
+//  MX_USART1_UART_Init();
+//  MX_USART2_UART_Init();
+//  MX_USART3_UART_Init();
+//  MX_USART6_UART_Init();
 //  MX_GPIO_Init();
 //  MX_UART4_Init();
 //  MX_UART5_Init();

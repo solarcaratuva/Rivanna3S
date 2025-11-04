@@ -44,3 +44,4 @@ void gpio_clock_enable(GPIO_TypeDef* handle);
 
 
 #endif /* PERIPHERALMAP */
+

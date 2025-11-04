@@ -19,7 +19,7 @@ typedef struct {
 
 
 // define
-#define NC   (Pin){NULL, 0, 0} // Not connected pin
+#define NC   (Pin){nullptr, 0, 0} // Not connected pin
 
 // A's
 #define PA_0 (Pin){GPIOA, 1 << 0, 1ULL << 33}
