@@ -51,10 +51,10 @@ float AnalogIn::read() {
 
     float value;
     // Poll for conversion completion
-    if (HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY) == HAL_OK) {
+//    if (HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY) == HAL_OK) {
         // Get the converted value
         value = (float) HAL_ADC_GetValue(&hadc1);
-    }
+  //  }
 
     // Stop ADC
     HAL_ADC_Stop(&hadc1);
@@ -112,7 +112,6 @@ void AnalogIn::initADC() {
      sConfig.OffsetSignedSaturation = DISABLE;
 
      HAL_ADC_ConfigChannel(&hadc1, &sConfig);
-
 
 }
 

@@ -27,15 +27,13 @@
 #include "peripheralmap.h"
 #include "DigitalIn.h"
 #include "DigitalOut.h"
-<<<<<<< HEAD
 #include "UART.h"
 #include "AnalogIn.h"
-=======
 #include "Timeout.h"
 #include "Clock.h"
 #include "Timeout.h"
 #include "lock.h"
->>>>>>> main
+
 
 /* USER CODE END Includes */
 
@@ -72,9 +70,6 @@ static void MPU_Config(void);
 Timeout t;
 DigitalOut pin(PB_0);
 
-<<<<<<< HEAD
-
-=======
 void onTimeout() {
   // Turn pin on for 3 seconds
   pin.write(true);
@@ -99,7 +94,6 @@ void timeout_test_task(void *argument) {
   // End task
   vTaskDelete(NULL);
 }
->>>>>>> main
 /* USER CODE END 0 */
 DigitalOut pin1(PB_0);
 DigitalOut pin2(PA_5);
@@ -148,7 +142,6 @@ int main(void)
   SystemClock_Config();
   DigitalOut LED(PB_0);
 
-<<<<<<< HEAD
   AnalogIn analogInput(PA_0);
   while (1)
   {
@@ -158,35 +151,16 @@ int main(void)
         LED.write(true);
         HAL_Delay(100);
     }
-=======
+  }
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_UART4_Init();
-  MX_UART5_Init();
-  MX_UART7_Init();
-  MX_UART8_Init();
-  MX_USART1_UART_Init();
-  MX_USART2_UART_Init();
-  MX_USART3_UART_Init();
-  MX_USART6_UART_Init();
-  /* USER CODE BEGIN 2 */
-  xTaskCreate(timeout_test_task, "Timeout Test", 128, NULL, 2, NULL);
+
+ // xTaskCreate(timeout_test_task, "Timeout Test", 128, NULL, 2, NULL);
   vTaskStartScheduler();
   /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
-    /* USER CODE BEGIN 3 */
-    // This should never be reached if FreeRTOS is working properly
->>>>>>> main
-  }
 
 }
 
