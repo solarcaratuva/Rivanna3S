@@ -83,7 +83,6 @@ void AnalogIn::initADC() {
         return;
     }
 
-
     hadc1.Instance = adc_periph->instance;
     hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
     hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
