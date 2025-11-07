@@ -5,6 +5,7 @@
 #include "peripheralmap.h"
 
 
+
 // Constructor
 UART::UART(Pin tx, Pin rx, uint32_t baud)
     : tx(tx), rx(rx), baud(baud) {
@@ -12,7 +13,7 @@ UART::UART(Pin tx, Pin rx, uint32_t baud)
     if(uart_periph != nullptr) {
     	uart_periph->rxd_used = rx;
     	uart_periph->txd_used = tx;
-        init_gpio(uart_periph);
+    	init_gpio(uart_periph);
         init_uart(baud);
         initialized = true; 
     }
@@ -105,8 +106,6 @@ UART_Peripheral* UART::find_uart_pins(Pin tx, Pin rx) {
     }
     return nullptr; // No matching peripheral found
 }
-        
-
 
 
 

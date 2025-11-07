@@ -37,6 +37,8 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 
+extern int init_test;
+
 /**
  * @class UART
  * @brief Provides UART communication interface using STM32 HAL.
@@ -81,11 +83,7 @@ public:
 private:
     UART_HandleTypeDef huart;   /**< HAL UART handle used for configuration and I/O. */
 
-    /**
-     * @brief Initializes GPIO pins for UART functionality.
-     * @param uart_peripheral Pointer to the UART peripheral mapping structure.
-     */
-    void init_gpio(UART_Peripheral* uart_peripheral);
+    void init_gpio(UART_Peripheral* uart_periph);
 
     /**
      * @brief Initializes the UART peripheral with the specified baud rate.
