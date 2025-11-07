@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import os
 import re
+from generate_pinmap import parse_XML_pinmap
 
 """ 
 Only need these peripherals: I2C, SPI (and QuadSPI), UART (and USART), CAN (they call it FDCAN), ADC
@@ -9,11 +10,10 @@ Currently only implementing UART and USART.
 
 TODO: 
     - Update header file and cpp file to include other peripherals as well.
-    - Add clock enable functions.
     - Add alternate function for UART peripherals.
 """
 
-def parseXML(dir):
+def parse_XML_peripheralmap(dir):
     tree = ET.parse(dir)
     root = tree.getroot()
 
@@ -64,7 +64,7 @@ typedef struct {
     Pin rxd_used;
     Pin txd_used;
     uint8_t alternate_function;
-    Bool isClaimed;
+    bool isClaimed;
     // Queue[float] return_value_queue
 } UART_Peripheral;\n""")
 
@@ -72,13 +72,18 @@ typedef struct {
         f.write(""" 
 // Declare global arrays
 extern UART_Peripheral UART_Peripherals[];
-extern const uint8_t UART_PERIPHERAL_COUNT;\n\n""")
+extern const uint8_t UART_PERIPHERAL_COUNT;\n""")
+        
+        # Clock enable functions
+        f.write("""
+void uart_clock_enable(USART_TypeDef* handle);\n
+void gpio_clock_enable(GPIO_TypeDef* handle);\n\n""")
 
         # End header guard
         f.write("#endif /* PERIPHERALMAP */")
 
 
-def create_cpp_file(file_path, peripheral_map):
+def create_cpp_file(file_path, peripheral_map, pin_map):
     with open(file_path, 'w') as f:
         # Includes
         f.write('#include "peripheralmap.h"\n#include "stm32h7xx_hal.h"\n\n')
@@ -109,13 +114,43 @@ def create_cpp_file(file_path, peripheral_map):
         f.write("const uint8_t UART_PERIPHERAL_COUNT = sizeof(UART_Peripherals) / sizeof(UART_Peripherals[0]);\n\n")
 
 
+        # UART clock enable function
+        f.write("void uart_clock_enable(USART_TypeDef* handle){\n")
+        peripherals = list(peripheral_map["UART"].keys())
+        peripherals.extend(list(peripheral_map["USART"].keys()))
+
+        for index, instance in enumerate(peripherals):
+            if index == 0:
+                f.write(f"    if(handle == {instance}){{\n        __HAL_RCC_{instance}_CLK_ENABLE();\n    }}\n")
+            else:
+                f.write(f"    else if(handle == {instance}){{\n        __HAL_RCC_{instance}_CLK_ENABLE();\n    }}\n")
+        f.write("    return;\n}\n\n")
+
+
+        # GPIO clock enable function
+        f.write("void gpio_clock_enable(GPIO_TypeDef* handle){\n")
+        gpio_blocks = set()
+        for pin_name in pin_map.keys():
+            block = pin_name[1]
+            gpio_blocks.add(block)
+
+        gpio_blocks = list(gpio_blocks)
+        for index, block in enumerate(gpio_blocks):
+            if index == 0:
+                f.write(f"    if(handle == GPIO{block}){{\n        __HAL_RCC_GPIO{block}_CLK_ENABLE();\n    }}\n")
+            else:
+                f.write(f"    else if(handle == GPIO{block}){{\n        __HAL_RCC_GPIO{block}_CLK_ENABLE();\n    }}\n")
+        f.write("    return;\n}\n")
+        
+
 if __name__ == "__main__":    
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'peripheralmap.h')
     create_header_file(file_path)
 
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'input/STM32H743ZITx.xml')
-    peripheral_map = parseXML(dir)
+    peripheral_map = parse_XML_peripheralmap(dir)
+    pin_map = parse_XML_pinmap(dir)
 
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'peripheralmap.cpp')
-    create_cpp_file(file_path, peripheral_map)
+    create_cpp_file(file_path, peripheral_map, pin_map)
 

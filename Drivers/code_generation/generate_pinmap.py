@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import os
 import re
 
-def parseXML(dir):
+def parse_XML_pinmap(dir):
     tree = ET.parse(dir)
     root = tree.getroot()
 
@@ -51,7 +51,7 @@ def create_header_file(file_path, pin_map):
 
 if __name__ == "__main__":
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'input/STM32H743ZITx.xml')
-    pin_map = parseXML(dir)
+    pin_map = parse_XML_pinmap(dir)
 
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pinmap.h')
     create_header_file(file_path, pin_map)
