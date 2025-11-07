@@ -4,36 +4,29 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 
-extern UART_HandleTypeDef huart;
-extern UART_Peripheral* uart_periph;
-
 
 // Constructor
 UART::UART(Pin tx, Pin rx, uint32_t baud)
     : tx(tx), rx(rx), baud(baud) {
-	uart_periph = findUARTPins(tx, rx);
+	uart_periph = find_uart_pins(tx, rx);
     if(uart_periph != nullptr) {
     	uart_periph->rxd_used = rx;
     	uart_periph->txd_used = tx;
-        initGPIO(uart_periph);
-        initUART(baud);
+        init_gpio(uart_periph);
+        init_uart(baud);
         initialized = true; 
     }
 }
 
 // Initialize GPIO for TX/RX
-void UART::initGPIO(UART_Peripheral* uart_periph) {
+void UART::init_gpio(UART_Peripheral* uart_periph) {
     Pin rx_pin = uart_periph->rxd_used;
     Pin tx_pin = uart_periph->txd_used;
 
-    //Turn on clocks for every port
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_GPIOD_CLK_ENABLE();
-    __HAL_RCC_GPIOE_CLK_ENABLE();
-    __HAL_RCC_GPIOF_CLK_ENABLE(); 
-    __HAL_RCC_GPIOG_CLK_ENABLE();
+    //Turn on clocks for each gpio port
+    gpio_clock_enable(rx_pin.block);
+    gpio_clock_enable(tx_pin.block);
+
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -54,11 +47,10 @@ void UART::initGPIO(UART_Peripheral* uart_periph) {
 }
 
 // Initialize UART peripheral
-void UART::initUART(uint32_t baud) {
+void UART::init_uart(uint32_t baud) {
     //Turn on clocks for all possible UART
-    __HAL_RCC_USART2_CLK_ENABLE();
-    __HAL_RCC_UART4_CLK_ENABLE();
-    __HAL_RCC_UART7_CLK_ENABLE(); 
+
+	uart_clock_enable(uart_periph->handle);
 
     huart.Instance          = uart_periph-> handle;
     huart.Init.BaudRate     = baud;
@@ -82,19 +74,25 @@ void UART::initUART(uint32_t baud) {
 
 }
 
-void UART::read(uint8_t *buffer, size_t length){
+void UART::read(uint8_t *buffer, uint16_t length){
 	if(initialized != 0) {
 		HAL_UART_Receive(&huart, buffer, length, HAL_MAX_DELAY);
 	}
 }
 
-void UART::write(uint8_t* buffer, size_t length) {
+void UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
+	if(initialized != 0) {
+		HAL_UART_Receive(&huart, buffer, length, timeout_ms);
+	}
+}
+
+void UART::write(uint8_t* buffer, uint16_t length) {
 	if(initialized != 0) {
 		HAL_UART_Transmit(&huart, buffer, length, HAL_MAX_DELAY);
 	}
 }
         
-UART_Peripheral* UART::findUARTPins(Pin tx, Pin rx) {
+UART_Peripheral* UART::find_uart_pins(Pin tx, Pin rx) {
     for (size_t i = 0; i < UART_PERIPHERAL_COUNT; ++i) {
         UART_Peripheral* peripheral = &UART_Peripherals[i];
         if (((*peripheral).txd_valid_pins & tx.universal_mask) &&
@@ -108,6 +106,7 @@ UART_Peripheral* UART::findUARTPins(Pin tx, Pin rx) {
     return nullptr; // No matching peripheral found
 }
         
+
 
 
 

@@ -25,6 +25,7 @@ typedef struct {
     Pin rxd_used;
     Pin txd_used;
     uint8_t alternate_function; 
+
     bool isClaimed;
     // Queue[float] return_value_queue
 } UART_Peripheral;
@@ -47,5 +48,9 @@ extern const uint8_t I2C_PERIPHERAL_COUNT;
 
 extern ADC_Peripheral ADC_Peripherals[];
 extern const uint8_t ADC_PERIPHERAL_COUNT;
+
+
+void uart_clock_enable(USART_TypeDef* handle);
+void gpio_clock_enable(GPIO_TypeDef* port);
 
 #endif /* PERIPHERALMAP */
