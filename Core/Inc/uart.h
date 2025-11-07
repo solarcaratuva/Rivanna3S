@@ -37,8 +37,6 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 
-extern int init_test;
-
 /**
  * @class UART
  * @brief Provides UART communication interface using STM32 HAL.
