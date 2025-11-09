@@ -27,10 +27,15 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "pinmap.h"
 
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
+
+extern ADC_HandleTypeDef hadc1;
+
+extern ADC_HandleTypeDef hadc2;
 
 extern ADC_HandleTypeDef hadc3;
 
@@ -38,7 +43,12 @@ extern ADC_HandleTypeDef hadc3;
 
 /* USER CODE END Private defines */
 
-void MX_ADC3_Init(void);
+// void MX_ADC1_Init(void);
+// void MX_ADC2_Init(void);
+// void MX_ADC3_Init(void);
+
+ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel);
+void HAL_ADC_MspInit2(ADC_TypeDef* adcHandle, Pin pin);
 
 /* USER CODE BEGIN Prototypes */
 

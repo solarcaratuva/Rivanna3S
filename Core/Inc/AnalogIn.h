@@ -13,6 +13,6 @@ private:
     void initGPIO(ADC_Peripheral* adc_peripheral);
     void initADC();
     ADC_Peripheral* findADCPin(Pin pin);
-    ADC_HandleTypeDef hadc1;
+    ADC_HandleTypeDef* hadc;
 };
 #endif
