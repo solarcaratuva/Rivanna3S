@@ -45,6 +45,28 @@ def parse_XML_peripheralmap(dir):
     return peripheral_map
 
 
+def parse_XML_alternate_functions(dir, peripheral_map):
+    tree = ET.parse(dir)
+    root = tree.getroot()
+
+    # Formatted as { "UART4": { "RX": { "PA0": AF#, "PA1": AF# }, "TX": { "PA2": AF#, "PA3": AF# } }, ... }
+    af_map = {}
+    for peripheral, map in peripheral_map.items():
+        for instance, values in map.items():
+            af_map[instance] = {}
+            for mode, pins in values.items():
+                af_map[instance][mode] = {}
+                for pin in pins:
+                    for pin_entry in root.findall('{http://dummy.com}GPIO_Pin'):
+                        if pin_entry.attrib['Name'] == pin:
+                            for signal in pin_entry.findall('{http://dummy.com}PinSignal'):
+                                if signal.attrib['Name'] == instance + '_' + mode:
+                                    af = signal[0][0].text
+                                    af_map[instance][mode][pin] = af
+    
+    return af_map
+
+
 def create_header_file(file_path):
     with open(file_path, 'w') as f:
         # Header guard and includes
@@ -67,6 +89,20 @@ typedef struct {
     bool isClaimed;
     // Queue[float] return_value_queue
 } UART_Peripheral;\n""")
+        
+        # Alternate function info struct
+        f.write("""
+// Alternate function info struct
+typedef struct {
+    Pin* pin;
+    uint8_t AF;
+} AF_Info;\n""")
+        
+        # Defines
+        f.write("""
+// Define RX and TX modes
+#define RX 0
+#define TX 1\n""")
 
         # Global arrays
         f.write(""" 
@@ -83,7 +119,7 @@ void gpio_clock_enable(GPIO_TypeDef* handle);\n\n""")
         f.write("#endif /* PERIPHERALMAP */")
 
 
-def create_cpp_file(file_path, peripheral_map, pin_map):
+def create_cpp_file(file_path, peripheral_map, pin_map, af_map):
     with open(file_path, 'w') as f:
         # Includes
         f.write('#include "peripheralmap.h"\n#include "stm32h7xx_hal.h"\n\n')
@@ -140,8 +176,40 @@ def create_cpp_file(file_path, peripheral_map, pin_map):
                 f.write(f"    if(handle == GPIO{block}){{\n        __HAL_RCC_GPIO{block}_CLK_ENABLE();\n    }}\n")
             else:
                 f.write(f"    else if(handle == GPIO{block}){{\n        __HAL_RCC_GPIO{block}_CLK_ENABLE();\n    }}\n")
-        f.write("    return;\n}\n")
+        f.write("    return;\n}\n\n")
+
+
+        # UART alternate function method
+        f.write("uint8_t get_UART_AF(UART_HandleTypeDef* handle, Pin* pin, uint8_t mode) {\n")
+        for peripheral, map in af_map.items():
+            for mode, pins in map.items():
+                if pins:
+                    f.write(f"    AF_Info {peripheral}_{mode}[] = {{\n")
+                    for pin_name, af in pins.items():
+                        pin_name = pin_name[:2] + "_" + pin_name[2:]
+                        f.write(f"        {{{pin_name}, {af}}},\n")
+                    f.write("    };\n\n")
+                    f.write(f"    uint8_t {peripheral}_{mode}_len = {len(pins)};\n\n")
         
+        f.write("    AF_Info* array;\n\tuint8_t array_len;\n\n")
+
+        for peripheral, map in af_map.items():
+            f.write(f"""    if(handle == {peripheral}) {{
+        if(mode == RX) {{
+            array = {peripheral}_RX;
+            array_len = {peripheral}_RX_len;
+        }} else if(mode == TX) {{
+            array = {peripheral}_TX;
+            array_len = {peripheral}_TX_len;
+        }}
+    }}\n\n""")
+
+        f.write("""\tfor (uint8_t i = 0; i < array_len; i++) {
+        if(array[i].pin == pin) {
+            return array[i].AF;
+        }
+    }\n""")
+        f.write("}\n\n")
 
 if __name__ == "__main__":    
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'peripheralmap.h')
@@ -151,6 +219,9 @@ if __name__ == "__main__":
     peripheral_map = parse_XML_peripheralmap(dir)
     pin_map = parse_XML_pinmap(dir)
 
+    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'input/GPIO-STM32H747_gpio_v1_0_Modes.xml')
+    af_map = parse_XML_alternate_functions(dir, peripheral_map)
+
     file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'peripheralmap.cpp')
-    create_cpp_file(file_path, peripheral_map, pin_map)
+    create_cpp_file(file_path, peripheral_map, pin_map, af_map)
 
