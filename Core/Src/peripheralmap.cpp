@@ -17,22 +17,30 @@ I2C_Peripheral I2C_Peripherals[] = {
 const uint8_t I2C_PERIPHERAL_COUNT = sizeof(I2C_Peripherals) / sizeof(I2C_Peripherals[0]);
 
 void uart_clock_enable(USART_TypeDef* handle){
+	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
     if (handle == USART2)
     {
         __HAL_RCC_USART2_CLK_ENABLE();
     }
     else if (handle == UART4)
     {
+    	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_UART4;
+    	PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
         __HAL_RCC_UART4_CLK_ENABLE();
     }
     else if (handle == UART7)
     {
+    	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_UART7;
+    	PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
         __HAL_RCC_UART7_CLK_ENABLE();
     }
     else if (handle == USART1)
     {
+    	PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART2;
+    	PeriphClkInitStruct.Usart234578ClockSelection = RCC_USART234578CLKSOURCE_D2PCLK1;
         __HAL_RCC_USART1_CLK_ENABLE();
     }
+    HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
     return;
 }
 
