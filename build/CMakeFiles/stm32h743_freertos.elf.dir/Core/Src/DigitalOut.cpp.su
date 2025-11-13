@@ -1,5 +1,0 @@
-/home/ryan/SolarCar/Rivanna3S/Core/Src/DigitalOut.cpp:14:1:DigitalOut::DigitalOut(Pin)	24	static
-/home/ryan/SolarCar/Rivanna3S/Core/Src/DigitalOut.cpp:21:1:DigitalOut::DigitalOut(Pin, bool)	24	static
-/home/ryan/SolarCar/Rivanna3S/Core/Src/DigitalOut.cpp:30:6:void DigitalOut::write(bool)	24	static
-/home/ryan/SolarCar/Rivanna3S/Core/Src/DigitalOut.cpp:45:6:bool DigitalOut::read()	24	static
-/home/ryan/SolarCar/Rivanna3S/Core/Src/DigitalOut.cpp:55:6:void DigitalOut::configure_pin()	72	static

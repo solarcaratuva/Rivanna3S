@@ -1,4 +1,0 @@
-/home/ryan/SolarCar/Rivanna3S/Core/Src/main.cpp:70:5:int main()	8	static
-/home/ryan/SolarCar/Rivanna3S/Core/Src/main.cpp:125:6:void SystemClock_Config()	120	static
-/home/ryan/SolarCar/Rivanna3S/Core/Src/main.cpp:177:6:void MPU_Config()	24	static
-/home/ryan/SolarCar/Rivanna3S/Core/Src/main.cpp:208:6:void Error_Handler()	4	static

@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/home/ryan/SolarCar/Rivanna3S/build/cmake_install.cmake",
-		"/home/ryan/SolarCar/Rivanna3S/build/Middlewares/Third_Party/FreeRTOS/Source/cmake_install.cmake"
-	],
-	"Parallel" : false
-}

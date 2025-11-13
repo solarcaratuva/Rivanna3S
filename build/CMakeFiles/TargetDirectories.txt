@@ -1,7 +1,0 @@
-/home/ryan/SolarCar/Rivanna3S/build/CMakeFiles/stm32h743_freertos.elf.dir
-/home/ryan/SolarCar/Rivanna3S/build/CMakeFiles/dump.dir
-/home/ryan/SolarCar/Rivanna3S/build/CMakeFiles/edit_cache.dir
-/home/ryan/SolarCar/Rivanna3S/build/CMakeFiles/rebuild_cache.dir
-/home/ryan/SolarCar/Rivanna3S/build/Middlewares/Third_Party/FreeRTOS/Source/CMakeFiles/freertos_kernel.dir
-/home/ryan/SolarCar/Rivanna3S/build/Middlewares/Third_Party/FreeRTOS/Source/CMakeFiles/edit_cache.dir
-/home/ryan/SolarCar/Rivanna3S/build/Middlewares/Third_Party/FreeRTOS/Source/CMakeFiles/rebuild_cache.dir
