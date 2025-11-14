@@ -31,6 +31,7 @@
 #include "Clock.h"
 #include "Timeout.h"
 #include "lock.h"
+#include "I2C.h"
 
 /* USER CODE END Includes */
 
@@ -112,6 +113,9 @@ void test_get_current_time() {
         else { pin1.write(false); }
     }
 }
+
+I2C test_i2c(PF_0, PF_1, 100000);
+
 /**
   * @brief  The application entry point.
   * @retval int
@@ -154,8 +158,8 @@ int main(void)
 //  MX_USART3_UART_Init();
 //  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  xTaskCreate(timeout_test_task, "Timeout Test", 128, NULL, 2, NULL);
-  vTaskStartScheduler();
+  uint8_t test_data = 55;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -164,6 +168,11 @@ int main(void)
   {
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
+	  test_i2c.read(0x11, &test_data, 10);
+
+	  test_i2c.write(0x11, &test_data, 10);
+
+
     // This should never be reached if FreeRTOS is working properly
   }
   /* USER CODE END 3 */

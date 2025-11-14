@@ -15,6 +15,21 @@ I2C::I2C(Pin sda, Pin scl, uint32_t baudrate)
 	    }
 }
 
+
+//TODO: FINISH READ & WRITE
+void I2C::write(uint16_t address, uint8_t *buffer, uint16_t length){
+	if(initialized != 0) {
+		HAL_I2C_Master_Transmit(&hi2c, buffer, length, HAL_MAX_DELAY);
+	}
+}
+
+
+void I2C::read(uint16_t address, uint8_t *buffer, uint16_t length){
+	if(initialized != 0) {
+		HAL_I2C_Master_Receive(&hi2c, buffer, length, HAL_MAX_DELAY);
+	}
+}
+
 void I2C::init_gpio(I2C_Peripheral* i2c_periph) {
     Pin sda_pin = i2c_periph->sda_used;
     Pin scl_pin = i2c_periph->scl_used;
@@ -50,7 +65,7 @@ void I2C::init_i2c(uint32_t baudrate) {
 	i2c_clock_enable(i2c_periph->handle);
 
 	hi2c.Instance = i2c_periph->handle;
-	hi2c.Init.Timing = 0x00707CBB;
+	hi2c.Init.Timing = compute_timing(baudrate);
 	hi2c.Init.OwnAddress1 = 0;
 	hi2c.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
 	hi2c.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -60,8 +75,17 @@ void I2C::init_i2c(uint32_t baudrate) {
 	hi2c.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
     HAL_I2C_Init(&hi2c);
 
+    /** Configure Analogue filter
+      */
+    HAL_I2CEx_ConfigAnalogFilter(&hi2c, I2C_ANALOGFILTER_ENABLE);
+
+    /** Configure Digital filter
+      */
+    HAL_I2CEx_ConfigDigitalFilter(&hi2c, 0);
+
 
 }
+
 
 
 I2C_Peripheral* I2C::find_i2c_pins(Pin sda, Pin scl) {
@@ -76,4 +100,31 @@ I2C_Peripheral* I2C::find_i2c_pins(Pin sda, Pin scl) {
 	        }
 	    }
 	    return nullptr; // No matching peripheral found
+}
+
+uint32_t I2C::compute_timing(uint32_t freq_hz)
+{
+    // I2C kernel clock = 64 MHz for STM32H743 (D2PCLK1)
+    constexpr uint32_t I2C_CLK = 64000000;
+
+    // ======== 100 kHz ========
+    if (freq_hz <= 100000) {
+        // Standard mode, Rise ≈ 100ns, Fall ≈ 10ns
+        return 0x10805D89;
+    }
+
+    // ======== 400 kHz ========
+    else if (freq_hz <= 400000) {
+        // Fast mode, Rise ≈ 100ns, Fall ≈ 10ns
+        return 0x00C0216C;
+    }
+
+    // ======== 1 MHz ========
+    else if (freq_hz <= 1000000) {
+        // Fast mode plus, Rise ≈ 60ns, Fall ≈ 10ns
+        return 0x00707CBB;
+    }
+
+    // Unsupported speed — return safe default (100 kHz)
+    return 0x10805D89;
 }
