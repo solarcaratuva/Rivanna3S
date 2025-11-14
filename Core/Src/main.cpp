@@ -158,7 +158,7 @@ int main(void)
 //  MX_USART3_UART_Init();
 //  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t test_data = 55;
+  uint8_t test_data[5] = {1, 2, 3, 4, 5};
 
   /* USER CODE END 2 */
 
@@ -168,9 +168,9 @@ int main(void)
   {
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
-	  test_i2c.read(0x11, &test_data, 10);
+	  test_i2c.read(0x11, test_data, 5);
 
-	  test_i2c.write(0x11, &test_data, 10);
+	  test_i2c.write(0x11, test_data, 5);
 
 
     // This should never be reached if FreeRTOS is working properly

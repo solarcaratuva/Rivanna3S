@@ -19,14 +19,14 @@ I2C::I2C(Pin sda, Pin scl, uint32_t baudrate)
 //TODO: FINISH READ & WRITE
 void I2C::write(uint16_t address, uint8_t *buffer, uint16_t length){
 	if(initialized != 0) {
-		HAL_I2C_Master_Transmit(&hi2c, buffer, length, HAL_MAX_DELAY);
+	    HAL_I2C_Master_Transmit(&hi2c, address, buffer, length, HAL_MAX_DELAY);
 	}
 }
 
 
 void I2C::read(uint16_t address, uint8_t *buffer, uint16_t length){
 	if(initialized != 0) {
-		HAL_I2C_Master_Receive(&hi2c, buffer, length, HAL_MAX_DELAY);
+		HAL_I2C_Master_Receive(&hi2c, address, buffer, length, HAL_MAX_DELAY);
 	}
 }
 
