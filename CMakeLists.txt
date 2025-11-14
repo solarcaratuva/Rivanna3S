@@ -50,7 +50,10 @@ target_include_directories(mcu_flags INTERFACE
 # ---- HAL driver subdirectory ----
 # Delegate HAL driver build to its own CMakeLists in the Drivers tree. That
 # file will create the `STM32H7xx_HAL_DRIVER` target and export include dirs.
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver)
+# Add the Drivers umbrella directory which will add individual driver
+# subdirectories (e.g. STM32H7xx_HAL_Driver). This keeps the root file
+# cleaner when multiple driver packages exist.
+add_subdirectory(Drivers)
 
 # If you also build your app here (example):
 # enable_language(ASM)    # already implied by LANGUAGES C ASM
