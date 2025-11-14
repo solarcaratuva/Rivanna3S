@@ -205,7 +205,7 @@ void MX_ADC3_Init(uint32_t channel)
   sConfig.Channel = channel;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
-  sConfig.SingleDiff = ADC_DIFFERENTIAL_ENDED;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
   sConfig.OffsetSignedSaturation = DISABLE;
