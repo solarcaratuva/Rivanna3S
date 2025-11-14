@@ -18,7 +18,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "i2c.h"
+#include "i2c_ex.h"
 
 /* USER CODE BEGIN 0 */
 

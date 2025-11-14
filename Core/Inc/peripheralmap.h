@@ -13,6 +13,7 @@ typedef struct {
     uint64_t scl_valid_pins;
     Pin sda_used;
     Pin scl_used;
+    uint8_t alternate_function;
     bool isClaimed;
     // Queue[float] return_value_queue
 } I2C_Peripheral;
@@ -38,6 +39,8 @@ extern I2C_Peripheral I2C_Peripherals[];
 extern const uint8_t I2C_PERIPHERAL_COUNT;
 
 void uart_clock_enable(USART_TypeDef* handle);
+
+void i2c_clock_enable(I2C_TypeDef* handle);
 
 void gpio_clock_enable(GPIO_TypeDef* handle);
 

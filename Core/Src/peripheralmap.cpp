@@ -10,8 +10,8 @@ UART_Peripheral UART_Peripherals[] = {
 const uint8_t UART_PERIPHERAL_COUNT = sizeof(UART_Peripherals) / sizeof(UART_Peripherals[0]);
 
 I2C_Peripheral I2C_Peripherals[] = {
-    {I2C2, PF_0.universal_mask, PF_1.universal_mask, NC, NC, false},
-    {I2C4, PF_15.universal_mask, PF_14.universal_mask, NC, NC, false}
+    {I2C2, PF_0.universal_mask, PF_1.universal_mask, NC, NC, GPIO_AF4_I2C2, false},
+    {I2C4, PF_15.universal_mask, PF_14.universal_mask, NC, NC, GPIO_AF4_I2C4, false}
 };
 
 const uint8_t I2C_PERIPHERAL_COUNT = sizeof(I2C_Peripherals) / sizeof(I2C_Peripherals[0]);
@@ -42,6 +42,21 @@ void uart_clock_enable(USART_TypeDef* handle){
     }
     HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
     return;
+}
+
+void i2c_clock_enable(I2C_TypeDef* handle) {
+	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+	if (handle == I2C2) {
+		PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C2;
+		PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_D2PCLK1;
+		__HAL_RCC_I2C2_CLK_ENABLE();
+	}
+	else if (handle == I2C4){
+		PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C2;
+		PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C4CLKSOURCE_D3PCLK1;
+		__HAL_RCC_I2C4_CLK_ENABLE();
+	}
+	HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
 }
 
 void gpio_clock_enable(GPIO_TypeDef* port) {
