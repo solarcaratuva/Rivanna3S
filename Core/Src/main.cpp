@@ -142,14 +142,16 @@ int main(void)
   SystemClock_Config();
   DigitalOut LED(PB_0);
 
-  AnalogIn analogInput(PA_0);
+  AnalogIn analogInput(PF_10);
+
+  bool isInitialized = analogInput.initialized;
   while (1)
   {
 
 	float value = analogInput.read();
     if (value > 0.5f){
         LED.write(true);
-        HAL_Delay(100);
+        HAL_Delay(1000);
     }
   }
   /* USER CODE BEGIN SysInit */
