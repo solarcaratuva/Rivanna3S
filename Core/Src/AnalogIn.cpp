@@ -2,11 +2,10 @@
 #include "stm32h7xx_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
-#include "adc.h"
 
 // function declarations for init functions in a hardware-specific adc.c file
-// extern "C" ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, uint32_t rank);
-// extern "C" void HAL_ADC_MspInit_custom(ADC_TypeDef* adcHandle, Pin pin);
+extern "C" ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, uint32_t rank);
+extern "C" void HAL_ADC_MspInit_custom(ADC_TypeDef* adcHandle, Pin pin);
 
 
 AnalogIn::AnalogIn(Pin pin) {

@@ -18,7 +18,6 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "adc.h"
 
 #include "stm32h7xx_hal.h"
 #include "pinmap.h"
