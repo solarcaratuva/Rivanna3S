@@ -55,6 +55,9 @@ target_include_directories(mcu_flags INTERFACE
 # cleaner when multiple driver packages exist.
 add_subdirectory(Drivers)
 
+# Build the PowerBoard module (creates `powerboard` library)
+add_subdirectory(PowerBoard)
+
 # If you also build your app here (example):
 # enable_language(ASM)    # already implied by LANGUAGES C ASM
 # set(startup "${CMAKE_CURRENT_SOURCE_DIR}/Core/Startup/startup_stm32h743zitx.s")
