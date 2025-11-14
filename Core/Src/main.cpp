@@ -152,6 +152,8 @@ int main(void)
     if (value > 0.5f){
         LED.write(true);
         HAL_Delay(1000);
+    } else {
+        LED.write(false);
     }
   }
   /* USER CODE BEGIN SysInit */

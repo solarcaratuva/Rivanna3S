@@ -34,7 +34,7 @@ float AnalogIn::read() {
     HAL_StatusTypeDef check = HAL_ADC_PollForConversion(hadc, HAL_MAX_DELAY);
     if (check == HAL_OK) {
         // Get the converted value
-        value = (HAL_ADC_GetValue(hadc)/ (float)4096 )*(float)3.3;
+        value = (HAL_ADC_GetValue(hadc)/ (float)65536 )*(float)3.3;
     }
 
     // Stop ADC
