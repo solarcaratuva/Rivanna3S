@@ -238,7 +238,7 @@ static uint32_t HAL_RCC_ADC12_CLK_ENABLED=0;
 
 void HAL_ADC_MspInit2(ADC_TypeDef* adcHandle, Pin pin)
 {
-
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC;
   PeriphClkInitStruct.PLL2.PLL2M = 4;
   PeriphClkInitStruct.PLL2.PLL2N = 10;
