@@ -35,24 +35,22 @@ target_compile_definitions(mcu_flags INTERFACE
 )
 
 # ---- Include directories (adjust FreeRTOS portable path for M7!) ----
+# Keep only non-HAL-common includes here; the HAL driver subdirectory will
+# export its own public include directories so consumers that link the HAL
+# target automatically get them.
 target_include_directories(mcu_flags INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR}/Core/Inc
-  ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc
-  ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy
   ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Include
   ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/CMSIS/Include
 
   ${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include
   ${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
-  # Prefer the CM7 port path below:
   ${CMAKE_CURRENT_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F)
 
-# ---- HAL static library ----
-file(GLOB HAL_SOURCES CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/*.c"
-)
-add_library(STM32H7xx_HAL_DRIVER STATIC ${HAL_SOURCES})
-target_link_libraries(STM32H7xx_HAL_DRIVER PUBLIC mcu_flags)
+# ---- HAL driver subdirectory ----
+# Delegate HAL driver build to its own CMakeLists in the Drivers tree. That
+# file will create the `STM32H7xx_HAL_DRIVER` target and export include dirs.
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver)
 
 # If you also build your app here (example):
 # enable_language(ASM)    # already implied by LANGUAGES C ASM

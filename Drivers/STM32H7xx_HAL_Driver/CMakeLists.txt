@@ -1,30 +1,21 @@
-add_library(STM32H7xx_HAL_DRIVER-lib
-    Src/stm32h7xx_hal_adc.c
-    Src/stm32h7xx_hal_flash_ex.c
-    Src/stm32h7xx_hal_rcc_ex.c
-    Src/stm32h7xx_hal_adc_ex.c
-    Src/stm32h7xx_hal_gpio.c
-    Src/stm32h7xx_hal_spi.c
-    Src/stm32h7xx_hal.c
-    Src/stm32h7xx_hal_hsem.c
-    Src/stm32h7xx_hal_spi_ex.c
-    Src/stm32h7xx_hal_cortex.c
-    Src/stm32h7xx_hal_i2c.c
-    Src/stm32h7xx_hal_tim.c
-    Src/stm32h7xx_hal_dma.c
-    Src/stm32h7xx_hal_i2c_ex.c
-    Src/stm32h7xx_hal_tim_ex.c
-    Src/stm32h7xx_hal_dma_ex.c
-    Src/stm32h7xx_hal_mdma.c
-    Src/stm32h7xx_hal_uart.c
-    Src/stm32h7xx_hal_exti.c
-    Src/stm32h7xx_hal_pwr.c
-    Src/stm32h7xx_hal_uart_ex.c
-    Src/stm32h7xx_hal_fdcan.c
-    Src/stm32h7xx_hal_pwr_ex.c
-    Src/stm32h7xx_hal_flash.c
-    Src/stm32h7xx_hal_rcc.c
+## Build STM HAL as a static library and export include paths.
+# Use a canonical target name so the root and other consumers can link to it
+# as `STM32H7xx_HAL_DRIVER`.
+
+file(GLOB HAL_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/Src/*.c"
 )
 
+add_library(STM32H7xx_HAL_DRIVER STATIC ${HAL_SOURCES})
 
-target_include_directories(STM32H7xx_HAL_DRIVER-lib PUBLIC include)
+target_include_directories(STM32H7xx_HAL_DRIVER PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/Inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Inc/Legacy
+)
+
+# If the parent defines a convenience 'mcu_flags' interface target, link it so
+# the HAL target inherits compile/link flags and definitions. The if() check
+# keeps this file usable standalone as well.
+if(TARGET mcu_flags)
+    target_link_libraries(STM32H7xx_HAL_DRIVER PUBLIC mcu_flags)
+endif()
