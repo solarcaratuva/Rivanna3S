@@ -27,9 +27,9 @@ void log_configure(LogLevel level, Pin tx, Pin rx, uint32_t baudrate);
 
 void log(LogLevel level, const char* file, int line, const char* fmt, ...) LOG_PRINTF_ATTR(4,5);
 
-#define log_debug(...) do { if (g_log_level <= debug) log(debug, __FILE__, __LINE__, __VA_ARGS__); } while (0)
-#define log_info(...)  do { if (g_log_level <= info ) log(info,  __FILE__, __LINE__, __VA_ARGS__); } while (0)
-#define log_warn(...)  do { if (g_log_level <= warn ) log(warn,  __FILE__, __LINE__, __VA_ARGS__); } while (0)
-#define log_fault(...) do { if (g_log_level <= fault) log(fault, __FILE__, __LINE__, __VA_ARGS__); } while (0)
+#define log_debug(...) log(debug, __FILE__, __LINE__, __VA_ARGS__)
+#define log_info(...)  log(info,  __FILE__, __LINE__, __VA_ARGS__)
+#define log_warn(...)  log(warn,  __FILE__, __LINE__, __VA_ARGS__)
+#define log_fault(...) log(fault, __FILE__, __LINE__, __VA_ARGS__)
 
 #endif
