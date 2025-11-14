@@ -20,8 +20,8 @@ const uint8_t I2C_PERIPHERAL_COUNT = sizeof(I2C_Peripherals) / sizeof(I2C_Periph
 
 ADC_Peripheral ADC_Peripherals[] = {
     // ---- ADC1 ----
-    { ADC1, ADC_CHANNEL_16,  PA_0.universal_mask, NC, false},  // INP0  → PA0_C
-	{ ADC3, ADC_CHANNEL_6, PF_10.universal_mask, NC, false},
+    { ADC1, ADC_CHANNEL_16,  PA_0.universal_mask, NC, false, 0},  // INP0  → PA0_C
+	{ ADC3, ADC_CHANNEL_6, PF_10.universal_mask, NC, false, 2},
 //    { ADC1, ADC_CHANNEL_1,  PA_1.universal_mask, NC, false },  // INP1  → PA1_C
 //    { ADC1, ADC_CHANNEL_2,  PF_11.universal_mask, NC, false }, // INP2  → PF11
 //    { ADC1, ADC_CHANNEL_3,  PA_6.universal_mask, NC, false },  // INP3  → PA6
@@ -36,6 +36,30 @@ ADC_Peripheral ADC_Peripherals[] = {
 };
 
 const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Peripherals[0]);
+
+uint8_t adc_channels_claimed[] = {0, 0, 0};
+
+uint32_t adc_get_rank(ADC_Peripheral* peripheral) {
+	uint8_t index = peripheral->instance_num;
+
+	uint32_t rank;
+	switch (adc_channels_claimed[index]) {
+		case 0: rank = ADC_REGULAR_RANK_1; break;
+		case 1: rank = ADC_REGULAR_RANK_2; break;
+		case 2: rank = ADC_REGULAR_RANK_3; break;
+		case 3: rank = ADC_REGULAR_RANK_4; break;
+		case 4: rank = ADC_REGULAR_RANK_5; break;
+		case 5: rank = ADC_REGULAR_RANK_6; break;
+		case 6: rank = ADC_REGULAR_RANK_7; break;
+		case 7: rank = ADC_REGULAR_RANK_8; break;
+		case 8: rank = ADC_REGULAR_RANK_9; break;
+		case 9: rank = ADC_REGULAR_RANK_10; break;
+		default: rank = ADC_REGULAR_RANK_1; break;
+	}
+
+	adc_channels_claimed[index] += 1;
+	return rank;
+}
 
 
 void uart_clock_enable(USART_TypeDef* handle){

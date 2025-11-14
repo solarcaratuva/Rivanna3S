@@ -1,9 +1,13 @@
-
 #include "AnalogIn.h"
 #include "stm32h7xx_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "adc.h"
+
+// function declarations for init functions in a hardware-specific adc.c file
+// extern "C" ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, uint32_t rank);
+// extern "C" void HAL_ADC_MspInit_custom(ADC_TypeDef* adcHandle, Pin pin);
+
 
 AnalogIn::AnalogIn(Pin pin) {
     adc_periph = findADCPin(pin);
@@ -13,8 +17,9 @@ AnalogIn::AnalogIn(Pin pin) {
     }
     adc_periph->used_pin = pin;
     gpio_clock_enable(pin.block);
-    HAL_ADC_MspInit2(adc_periph->instance, pin);
-    hadc = ADC_init(adc_periph->instance, adc_periph->channel);
+    HAL_ADC_MspInit_custom(adc_periph->instance, pin);
+    uint32_t rank = adc_get_rank(adc_periph);
+    hadc = ADC_init(adc_periph->instance, adc_periph->channel, rank);
     initialized = true;
 }
 

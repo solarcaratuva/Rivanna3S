@@ -47,8 +47,8 @@ extern ADC_HandleTypeDef hadc3;
 // void MX_ADC2_Init(void);
 // void MX_ADC3_Init(void);
 
-ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel);
-void HAL_ADC_MspInit2(ADC_TypeDef* adcHandle, Pin pin);
+ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, uint32_t rank);
+void HAL_ADC_MspInit_custom(ADC_TypeDef* adcHandle, Pin pin);
 
 /* USER CODE BEGIN Prototypes */
 

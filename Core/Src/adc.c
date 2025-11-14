@@ -33,7 +33,7 @@ ADC_HandleTypeDef hadc2;
 ADC_HandleTypeDef hadc3;
 
 /* ADC1 init function */
-void MX_ADC1_Init(uint32_t channel)
+void MX_ADC1_Init(uint32_t channel, uint32_t rank)
 {
 
   /* USER CODE BEGIN ADC1_Init 0 */
@@ -85,7 +85,7 @@ void MX_ADC1_Init(uint32_t channel)
   /** Configure Regular Channel
   */
   sConfig.Channel = channel;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.Rank = rank;
   sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
@@ -101,7 +101,7 @@ void MX_ADC1_Init(uint32_t channel)
 
 }
 /* ADC2 init function */
-void MX_ADC2_Init(uint32_t channel)
+void MX_ADC2_Init(uint32_t channel, uint32_t rank)
 {
 
   /* USER CODE BEGIN ADC2_Init 0 */
@@ -144,7 +144,7 @@ void MX_ADC2_Init(uint32_t channel)
   /** Configure Regular Channel
   */
   sConfig.Channel = channel;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.Rank = rank;
   sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
@@ -160,7 +160,7 @@ void MX_ADC2_Init(uint32_t channel)
 
 }
 /* ADC3 init function */
-void MX_ADC3_Init(uint32_t channel)
+void MX_ADC3_Init(uint32_t channel, uint32_t rank)
 {
 
   /* USER CODE BEGIN ADC3_Init 0 */
@@ -203,7 +203,7 @@ void MX_ADC3_Init(uint32_t channel)
   /** Configure Regular Channel
   */
   sConfig.Channel = channel;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.Rank = rank;
   sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
@@ -219,15 +219,15 @@ void MX_ADC3_Init(uint32_t channel)
 
 }
 
-ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel) {
+ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, uint32_t rank) {
   if (hadc == ADC1) {
-    MX_ADC1_Init(channel);
+    MX_ADC1_Init(channel, rank);
     return &hadc1;
   } else if (hadc == ADC2) {
-    MX_ADC2_Init(channel);
+    MX_ADC2_Init(channel, rank);
     return &hadc2;
   } else if (hadc == ADC3) {
-    MX_ADC3_Init(channel);
+    MX_ADC3_Init(channel, rank);
     return &hadc3;
   }
 
@@ -236,7 +236,7 @@ ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel) {
 
 static uint32_t HAL_RCC_ADC12_CLK_ENABLED=0;
 
-void HAL_ADC_MspInit2(ADC_TypeDef* adcHandle, Pin pin)
+void HAL_ADC_MspInit_custom(ADC_TypeDef* adcHandle, Pin pin)
 {
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC;
