@@ -140,21 +140,21 @@ int main(void)
   /* USER CODE END Init */
   /* Configure the system clock */
   SystemClock_Config();
-  DigitalOut LED(PB_0);
+  DigitalOut LED1(PB_0);
 
-  AnalogIn analogInput(PF_10);
+  AnalogIn analogInput1(PF_5);
+  AnalogIn analogInput2(PF_10);
 
-  bool isInitialized = analogInput.initialized;
   while (1)
   {
 
-	float value = analogInput.read();
-    if (value > 0.5f){
-        LED.write(true);
+	float value1 = analogInput1.readVoltage();
+	float value2 = analogInput2.readVoltage();
+    if (value1 > 1.0f && value1 < 4.0f){
+        LED1.write(true);
         HAL_Delay(1000);
-    } else {
-        LED.write(false);
     }
+
   }
   /* USER CODE BEGIN SysInit */
 

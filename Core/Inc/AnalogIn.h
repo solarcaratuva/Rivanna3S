@@ -8,6 +8,7 @@ public:
     bool initialized = false;
     explicit AnalogIn(Pin pin);
     float read();
+    float readVoltage();
 private:
     ADC_Peripheral* adc_periph;
     void initGPIO(ADC_Peripheral* adc_peripheral);

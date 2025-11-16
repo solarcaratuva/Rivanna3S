@@ -67,7 +67,7 @@ void MX_ADC1_Init(uint32_t channel, uint32_t rank)
     Error_Handler();
   }
   hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV4;
-  hadc1.Init.Resolution = ADC_RESOLUTION_16B;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
@@ -134,7 +134,7 @@ void MX_ADC2_Init(uint32_t channel, uint32_t rank)
     Error_Handler();
   }
   hadc2.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV4;
-  hadc2.Init.Resolution = ADC_RESOLUTION_16B;
+  hadc2.Init.Resolution = ADC_RESOLUTION_12B;
   if (HAL_ADC_Init(&hadc2) != HAL_OK)
   {
     Error_Handler();
@@ -193,7 +193,7 @@ void MX_ADC3_Init(uint32_t channel, uint32_t rank)
   {
     Error_Handler();
   }
-  hadc3.Init.Resolution = ADC_RESOLUTION_16B;
+  hadc3.Init.Resolution = ADC_RESOLUTION_12B;
   if (HAL_ADC_Init(&hadc3) != HAL_OK)
   {
     Error_Handler();

@@ -38,12 +38,16 @@ float AnalogIn::read() {
     HAL_StatusTypeDef check = HAL_ADC_PollForConversion(hadc, HAL_MAX_DELAY);
     if (check == HAL_OK) {
         // Get the converted value
-        value = (HAL_ADC_GetValue(hadc)/ (float)65536 )*(float)3.3;
+        value = (HAL_ADC_GetValue(hadc)/(float)4095 );
     }
 
     // Stop ADC
     HAL_ADC_Stop(hadc);
     return value;
+}
+
+float AnalogIn::readVoltage(){
+	return read()*(float)3.3;
 }
 
 
