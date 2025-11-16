@@ -81,36 +81,6 @@ int CAN::write(CanMessage* msg)
     return write(scm);
 }
 
-// Write a raw frame
-int CAN::write(const SerializedCanMessage& msg)
-{
-    if (!m_txMutex) {
-        // Mutex not created – something's wrong with init.
-        Error_Handler();
-    }
-
-    if (xSemaphoreTake(m_txMutex, pdMS_TO_TICKS(10)) != pdTRUE) {
-        // Couldn't get mutex in time
-        Error_Handler();
-    }
-
-    m_txHeader.Identifier = msg.id;
-    m_txHeader.DataLength = bytesToDlc(msg.len);
-
-    // HAL expects a uint8_t* to data
-    HAL_StatusTypeDef status =
-        HAL_FDCAN_AddMessageToTxFifoQ(m_hfdcan, &m_txHeader,
-                                      const_cast<uint8_t*>(msg.data));
-
-    xSemaphoreGive(m_txMutex);
-
-    if (status != HAL_OK) {
-        Error_Handler();
-    }
-
-    return 0;
-}
-
 // Poll RX FIFO0
 int CAN::read(SerializedCanMessage* msg)
 {
