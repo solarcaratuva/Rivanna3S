@@ -40,7 +40,7 @@ float AnalogIn::read() {
     return value;
 }
 
-float AnalogIn::readVoltage(){
+float AnalogIn::read_voltage(){
 	return read()*(float)3.3;
 }
 

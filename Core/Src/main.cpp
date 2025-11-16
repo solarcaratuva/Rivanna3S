@@ -148,8 +148,8 @@ int main(void)
   while (1)
   {
 
-	float value1 = analogInput1.readVoltage();
-	float value2 = analogInput2.readVoltage();
+	float value1 = analogInput1.read_voltage();
+	float value2 = analogInput2.read_voltage();
     if (value1 > 1.0f && value1 < 4.0f){
         LED1.write(true);
         HAL_Delay(1000);
