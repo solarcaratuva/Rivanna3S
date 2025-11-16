@@ -1,11 +1,10 @@
 #ifndef PERIPHERALMAP_H
 #define PERIPHERALMAP_H
 
-#include <stdbool.h>
-#include <stdint.h>
+
 #include "pinmap.h"
 #include "stm32h743xx.h"
-
+#include <stdbool.h>
 
 // I2C peripheral struct
 typedef struct {
@@ -31,15 +30,15 @@ typedef struct {
     // Queue[float] return_value_queue
 } UART_Peripheral;
 
+// FDCAN peripheral struct
 typedef struct {
-    ADC_TypeDef *instance;    // ADC1, ADC2, ...
-    uint32_t channel;         // ADC_CHANNEL_0, ...
-    uint64_t pin_mask;        // PA_0.universal_mask
-    Pin used_pin;
+    FDCAN_GlobalTypeDef* handle;
+    uint64_t rxd_valid_pins;
+    uint64_t txd_valid_pins;
+    Pin rxd_used;
+    Pin txd_used;
     bool isClaimed;
-    uint8_t instance_num;
-} ADC_Peripheral;
-
+} FDCAN_Peripheral;
 
 // Declare global arrays
 extern UART_Peripheral UART_Peripherals[];
@@ -48,11 +47,14 @@ extern const uint8_t UART_PERIPHERAL_COUNT;
 extern I2C_Peripheral I2C_Peripherals[];
 extern const uint8_t I2C_PERIPHERAL_COUNT;
 
-extern ADC_Peripheral ADC_Peripherals[];
-extern const uint8_t ADC_PERIPHERAL_COUNT;
+extern FDCAN_Peripheral FDCAN_Peripherals[];
+extern const uint8_t FDCAN_PERIPHERAL_COUNT;
 
-uint32_t adc_get_rank(ADC_Peripheral* peripheral);
+
 void uart_clock_enable(USART_TypeDef* handle);
-void gpio_clock_enable(GPIO_TypeDef* port);
+
+void gpio_clock_enable(GPIO_TypeDef* handle);
+
+
 
 #endif /* PERIPHERALMAP */
