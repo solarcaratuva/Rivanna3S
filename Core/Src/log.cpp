@@ -43,7 +43,7 @@ void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
 
     if (prefix_size < 0 || buf_prefix_size < 0) { // if -1, error occured
         char err_prefix[LOG_BUF_SIZE];
-        std::snprintf(err_prefix, LOG_BUF_SIZE, "%sLog Prefix Error\n", prefix);
+        std::snprintf(err_prefix, LOG_BUF_SIZE, "%.238sLog Prefix Error\n", prefix); // .238s to explicitly truncate to avoid compiler warnings
 
         log_uart->write(reinterpret_cast<uint8_t*>(err_prefix), strlen(err_prefix));
         return;
@@ -58,7 +58,7 @@ void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
 
     if (message_size < 0) {
         char err_prefix[LOG_BUF_SIZE];
-        std::snprintf(err_prefix, LOG_BUF_SIZE, "%sLog Error\n", prefix);
+        std::snprintf(err_prefix, LOG_BUF_SIZE, "%.245sLog Error\n", prefix);
 
         log_uart->write(reinterpret_cast<uint8_t*>(err_prefix), strlen(err_prefix));
         return;
@@ -73,7 +73,7 @@ void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
     }
     else{ 
         char warn_prefix[LOG_BUF_SIZE];
-        std::snprintf(warn_prefix, LOG_BUF_SIZE, "%sLog Overflow\n", prefix);
+        std::snprintf(warn_prefix, LOG_BUF_SIZE, "%.240sLog Overflow\n", prefix);
 
         log_uart->write(reinterpret_cast<uint8_t*>(warn_prefix), strlen(warn_prefix));
 
