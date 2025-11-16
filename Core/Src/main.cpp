@@ -27,10 +27,13 @@
 #include "peripheralmap.h"
 #include "DigitalIn.h"
 #include "DigitalOut.h"
+#include "UART.h"
+#include "AnalogIn.h"
 #include "Timeout.h"
 #include "Clock.h"
 #include "Timeout.h"
 #include "lock.h"
+
 
 /* USER CODE END Includes */
 
@@ -135,10 +138,24 @@ int main(void)
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
-
   /* Configure the system clock */
   SystemClock_Config();
+  DigitalOut LED1(PB_0);
 
+  AnalogIn analogInput1(PF_5);
+  AnalogIn analogInput2(PF_10);
+
+  while (1)
+  {
+
+	float value1 = analogInput1.read_voltage();
+	float value2 = analogInput2.read_voltage();
+    if (value1 > 1.0f && value1 < 4.0f){
+        LED1.write(true);
+        HAL_Delay(1000);
+    }
+
+  }
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
@@ -158,15 +175,6 @@ int main(void)
   vTaskStartScheduler();
   /* USER CODE END 2 */
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
-    /* USER CODE BEGIN 3 */
-    // This should never be reached if FreeRTOS is working properly
-  }
-  /* USER CODE END 3 */
 }
 
 /**
