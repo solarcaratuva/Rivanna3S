@@ -36,6 +36,8 @@ struct CanMessage {
 
     // For debugging/logging
     virtual void log(int level) const = 0;
+
+    // make sure to always initialize it with static uint16_t get_ID()
 };
 
 // -----------------------------------------------------------------------------
