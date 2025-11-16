@@ -60,7 +60,7 @@ def colorize(text: str) -> str:
 
     if "ERROR" in front or "FAULT" in front:
         return f"\033[91m{text}\033[0m" # red
-    elif "WARNING" in front:
+    elif "WARN" in front:
         return f"\033[93m{text}\033[0m" # yellow
     elif "DEBUG" in front:
         return f"\033[94m{text}\033[0m" # blue
@@ -86,7 +86,7 @@ def get_correct_port() -> str:
 
 
 def log(args, port: str) -> None:
-    ser = Serial(port, baudrate=9600)
+    ser = Serial(port, baudrate=921600)
     print(f"Serial connection to {port} established. Now listening...")
 
     messageCount = 0

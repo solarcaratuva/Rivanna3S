@@ -4,7 +4,7 @@
 #include <cstdarg>
 #include <cstring>
 
-volatile LogLevel global_log_level = info;
+volatile LogLevel global_log_level;
 
 static UART* log_uart = nullptr;
 
@@ -12,16 +12,16 @@ static UART* log_uart = nullptr;
 
 static inline const char* lvl_tag(LogLevel l) { // static inline so only in this file
     switch (l) {
-        case debug: return "DEBUG";
-        case info:  return "INFO";
-        case warn:  return "WARN";
+        case DEBUG_LVL: return "DEBUG";
+        case INFO_LVL:  return "INFO";
+        case WARN_LVL:  return "WARN";
         default:    return "FAULT";
     }
 }
 
 void log_configure(LogLevel level, Pin tx, Pin rx, uint32_t baudrate) {
     global_log_level = level;
-    static UART instance(tx, rx, baudrate); // static global var so that it is only usable in this file
+    static UART instance(tx, rx, baudrate); // static so that it is NOT on the stack, so its not overwritten, etc.
     log_uart = &instance;
 }
 
@@ -38,7 +38,7 @@ void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
     unsigned s =  (time / 1000) % 60;
 
     char prefix[LOG_BUF_SIZE];
-    int prefix_size = std::snprintf(prefix, LOG_BUF_SIZE, "%02u:%02u:%02u %s %s:%d: ", h, m, s, lvl_tag(level), file, line);
+    int prefix_size = std::snprintf(prefix, LOG_BUF_SIZE, "%02u:%02u:%02u %s %s:%d: ", h, m, s, lvl_tag(level), file + 2, line); // '+ 2' skip '..' in file path
     int buf_prefix_size = std::snprintf(buf, LOG_BUF_SIZE, "%s", prefix);
 
     if (prefix_size < 0 || buf_prefix_size < 0) { // if -1, error occured
@@ -66,7 +66,12 @@ void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
 
     int total = prefix_size + message_size;
 
-    if (total > LOG_BUF_SIZE - 2) {
+    if (total <= LOG_BUF_SIZE - 2) {
+        // If no overflow, replace trailing '\0' with '\n\0' if there is space
+        buf[strlen(buf) + 1] = '\0';
+        buf[strlen(buf)] = '\n';
+    }
+    else{ 
         char warn_prefix[LOG_BUF_SIZE];
         std::snprintf(warn_prefix, LOG_BUF_SIZE, "%sLog Overflow\n", prefix);
 
@@ -74,11 +79,6 @@ void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
 
         // If overflow then, overwrite last char (before the trailing '\0') with a '\n'
         buf[strlen(buf) - 1] = '\n';
-    }
-    else{ 
-        // If no overflow, replace trailing '\0' with '\n\0' if there is space
-        buf[strlen(buf) + 1] = '\0';
-        buf[strlen(buf)] = '\n';
     }
 
     log_uart->write(reinterpret_cast<uint8_t*>(buf), strlen(buf));

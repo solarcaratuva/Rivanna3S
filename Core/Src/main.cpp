@@ -107,13 +107,15 @@ void test_get_current_time() {
 }
 
 void test_logging() {
-  int x = 0;
+  float x = 0.55;
+  float y = 10989.021;
   while (1) {
     log_debug("Debug, SHOULD NOT PRINT");
-    log_info("x: %d", x);
+    log_info("Info x: %f y: %f", x, y);
     log_warn("warn level, this is a massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow!");
-
+    log_fault("Fault Level, should Print, y: %f and x: %f", y , x);
     x += 1;
+    y -= 1;
   }
 }
 /**
@@ -136,7 +138,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  log_configure(info, PD_8, PD_9, 9600);
+  log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
   /* USER CODE END Init */
 
   /* Configure the system clock */
