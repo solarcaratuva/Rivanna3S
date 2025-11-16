@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "main.h": "c",
-        "memorymap.h": "c"
+        "memorymap.h": "c",
+        "ios": "c"
     }
 }
