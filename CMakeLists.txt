@@ -16,6 +16,7 @@ target_compile_options(mcu_flags INTERFACE
 
 # Link-time GC of unused sections + newlib-nano specs
 target_link_options(mcu_flags INTERFACE
+  -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard
   -Wl,--gc-sections
   --specs=nano.specs
 )
