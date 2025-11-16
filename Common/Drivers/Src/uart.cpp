@@ -1,5 +1,5 @@
 
-#include "UART.h"
+#include "uart.h"
 #include "stm32h7xx_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"

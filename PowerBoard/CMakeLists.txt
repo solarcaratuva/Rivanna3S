@@ -19,20 +19,10 @@ add_library(powerboard STATIC ${POWERBOARD_SOURCES})
 target_include_directories(powerboard
 	PUBLIC
 		${POWERBOARD_INC_DIR}
-		${CMAKE_CURRENT_LIST_DIR}/../Common/Drivers/Inc  # for DigitalOut.h etc.
 )
 
-# If a global mcu_flags interface exists, inherit cpu/compiler flags
-if(TARGET mcu_flags)
-	target_link_libraries(powerboard PUBLIC mcu_flags)
-endif()
-
-# The PowerBoard code includes STM HAL headers (via Common/Drivers/Inc/DigitalOut.h),
-# so link the HAL driver target so the HAL public include directories are available
-# to consumers of `powerboard`.
-if(TARGET STM32H7xx_HAL_DRIVER)
-	target_link_libraries(powerboard PUBLIC STM32H7xx_HAL_DRIVER)
-endif()
+# PowerBoard depends on common drivers/utilities.
+target_link_libraries(powerboard PUBLIC common)
 
 set_target_properties(powerboard PROPERTIES
 	VERSION 0.1

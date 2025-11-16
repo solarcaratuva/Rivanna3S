@@ -55,6 +55,9 @@ target_include_directories(mcu_flags INTERFACE
 # cleaner when multiple driver packages exist.
 add_subdirectory(Drivers)
 
+# Common shared drivers/modules library
+add_subdirectory(Common)
+
 # Build the PowerBoard module (creates `powerboard` library)
 add_subdirectory(PowerBoard)
 
@@ -67,4 +70,3 @@ add_subdirectory(PowerBoard)
 # set_source_files_properties(${startup} PROPERTIES LANGUAGE ASM)
 # target_compile_options(app.elf PRIVATE -x assembler-with-cpp)
 # # You’ll also add your linker script via: target_link_options(app.elf PRIVATE -T path/to/STM32H743ZI_FLASH.ld)
-
