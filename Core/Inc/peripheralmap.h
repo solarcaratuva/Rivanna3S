@@ -56,3 +56,4 @@ void uart_clock_enable(USART_TypeDef* handle);
 void gpio_clock_enable(GPIO_TypeDef* port);
 
 #endif /* PERIPHERALMAP */
+
