@@ -19,11 +19,11 @@ const uint8_t I2C_PERIPHERAL_COUNT = sizeof(I2C_Peripherals) / sizeof(I2C_Periph
 
 
 ADC_Peripheral ADC_Peripherals[] = {
-    // ---- ADC1 ----
-    { ADC1, ADC_CHANNEL_16,  PA_0.universal_mask, NC, false, 0},  // INP0  → PA0_C
+    { ADC1, ADC_CHANNEL_16,  PA_0.universal_mask, NC, false, 0},
 	{ ADC3, ADC_CHANNEL_6, PF_10.universal_mask, NC, false, 2},
 	{ ADC3, ADC_CHANNEL_5, PF_4.universal_mask, NC, false, 2},
 	{ ADC3, ADC_CHANNEL_4, PF_5.universal_mask, NC, false, 2},
+	//for ranking ADC1 --> 0, ADC2 --> 1 etc.
 };
 
 const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Peripherals[0]);

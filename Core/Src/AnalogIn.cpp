@@ -24,11 +24,6 @@ AnalogIn::AnalogIn(Pin pin) {
 
 
 float AnalogIn::read() {
-	/*
-    if (!initialized || adc_periph == nullptr) {
-        return ; // Not initialized properly
-    }
-    */
 
     // Start ADC conversion
     HAL_ADC_Start(hadc);
@@ -40,7 +35,6 @@ float AnalogIn::read() {
         // Get the converted value
         value = (HAL_ADC_GetValue(hadc)/(float)4095 );
     }
-
     // Stop ADC
     HAL_ADC_Stop(hadc);
     return value;
