@@ -6,30 +6,27 @@
 
 volatile LogLevel global_log_level = info;
 
-static UART* s_uart = nullptr;
+static UART* log_uart = nullptr;
 
-#ifndef LOG_BUF_SIZE
 #define LOG_BUF_SIZE 256
-#endif
 
-// Optional level tag.
-static inline const char* lvl_tag(LogLevel l) {
+static inline const char* lvl_tag(LogLevel l) { // static inline so only in this file
     switch (l) {
         case debug: return "DEBUG";
         case info:  return "INFO";
-        case warn:  return "WARNING";
+        case warn:  return "WARN";
         default:    return "FAULT";
     }
 }
 
 void log_configure(LogLevel level, Pin tx, Pin rx, uint32_t baudrate) {
     global_log_level = level;
-    static UART instance(tx, rx, baudrate);
-    s_uart = &instance;
+    static UART instance(tx, rx, baudrate); // static global var so that it is only usable in this file
+    log_uart = &instance;
 }
 
 void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
-    if (!s_uart || level < global_log_level) 
+    if (!log_uart || level < global_log_level) 
         return;
 
     char buf[LOG_BUF_SIZE];
@@ -44,11 +41,11 @@ void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
     int prefix_size = std::snprintf(prefix, LOG_BUF_SIZE, "%02u:%02u:%02u %s %s:%d: ", h, m, s, lvl_tag(level), file, line);
     int buf_prefix_size = std::snprintf(buf, LOG_BUF_SIZE, "%s", prefix);
 
-    if (prefix_size < 0 || buf_prefix_size < 0) { // check for errors
+    if (prefix_size < 0 || buf_prefix_size < 0) { // if -1, error occured
         char err_prefix[LOG_BUF_SIZE];
         std::snprintf(err_prefix, LOG_BUF_SIZE, "%sLog Prefix Error\n", prefix);
 
-        s_uart->write(reinterpret_cast<uint8_t*>(err_prefix), strlen(err_prefix));
+        log_uart->write(reinterpret_cast<uint8_t*>(err_prefix), strlen(err_prefix));
         return;
     }
 
@@ -63,7 +60,7 @@ void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
         char err_prefix[LOG_BUF_SIZE];
         std::snprintf(err_prefix, LOG_BUF_SIZE, "%sLog Error\n", prefix);
 
-        s_uart->write(reinterpret_cast<uint8_t*>(err_prefix), strlen(err_prefix));
+        log_uart->write(reinterpret_cast<uint8_t*>(err_prefix), strlen(err_prefix));
         return;
     }
 
@@ -73,17 +70,17 @@ void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
         char warn_prefix[LOG_BUF_SIZE];
         std::snprintf(warn_prefix, LOG_BUF_SIZE, "%sLog Overflow\n", prefix);
 
-        s_uart->write(reinterpret_cast<uint8_t*>(warn_prefix), strlen(warn_prefix));
+        log_uart->write(reinterpret_cast<uint8_t*>(warn_prefix), strlen(warn_prefix));
 
-        // overwrite last char (before the '\0') with a '\n'
+        // If overflow then, overwrite last char (before the trailing '\0') with a '\n'
         buf[strlen(buf) - 1] = '\n';
     }
     else{ 
-        // replace '\0' with '\n\0' if there is space
+        // If no overflow, replace trailing '\0' with '\n\0' if there is space
         buf[strlen(buf) + 1] = '\0';
         buf[strlen(buf)] = '\n';
     }
 
-    s_uart->write(reinterpret_cast<uint8_t*>(buf), strlen(buf));
+    log_uart->write(reinterpret_cast<uint8_t*>(buf), strlen(buf));
     return;
 }

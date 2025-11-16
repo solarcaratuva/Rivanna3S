@@ -43,6 +43,10 @@ typedef struct {
 #define PC_5 (Pin){GPIOC, 1 << 5, 1ULL << 44}
 #define PC_13 (Pin){GPIOC, 1 << 13, 1ULL << 6}
 
+// D's
+#define PD_8 (Pin){GPIOD, 1 << 8, 1ULL << 58} // TX
+#define PD_9 (Pin){GPIOD, 1 << 9, 1ULL << 59} // RX
+
 // E's
 #define PE_2 (Pin){GPIOE, 1 << 2, 1ULL << 0}
 #define PE_3 (Pin){GPIOE, 1 << 3, 1ULL << 1}
