@@ -50,8 +50,8 @@ extern const uint8_t I2C_PERIPHERAL_COUNT;
 
 extern ADC_Peripheral ADC_Peripherals[];
 extern const uint8_t ADC_PERIPHERAL_COUNT;
+extern uint8_t adc_channels_claimed[];
 
-uint32_t adc_get_rank(ADC_Peripheral* peripheral);
 void uart_clock_enable(USART_TypeDef* handle);
 void gpio_clock_enable(GPIO_TypeDef* port);
 

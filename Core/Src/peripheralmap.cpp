@@ -31,28 +31,6 @@ const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Periph
 
 uint8_t adc_channels_claimed[] = {0, 0, 0};
 
-uint32_t adc_get_rank(ADC_Peripheral* peripheral) {
-	uint8_t index = peripheral->instance_num;
-
-	uint32_t rank;
-	switch (adc_channels_claimed[index]) {
-		case 0: rank = ADC_REGULAR_RANK_1; break;
-		case 1: rank = ADC_REGULAR_RANK_2; break;
-		case 2: rank = ADC_REGULAR_RANK_3; break;
-		case 3: rank = ADC_REGULAR_RANK_4; break;
-		case 4: rank = ADC_REGULAR_RANK_5; break;
-		case 5: rank = ADC_REGULAR_RANK_6; break;
-		case 6: rank = ADC_REGULAR_RANK_7; break;
-		case 7: rank = ADC_REGULAR_RANK_8; break;
-		case 8: rank = ADC_REGULAR_RANK_9; break;
-		case 9: rank = ADC_REGULAR_RANK_10; break;
-		default: rank = ADC_REGULAR_RANK_1; break;
-	}
-
-	adc_channels_claimed[index] += 1;
-	return rank;
-}
-
 
 void uart_clock_enable(USART_TypeDef* handle){
 	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
