@@ -48,7 +48,7 @@ public:
      * @brief Constructs an I2C object and initializes the I2C peripheral.
      * @param scl  SCL pin (must correspond to valid I2C SCL mapping).
      * @param sda  SDA pin (must correspond to valid I2C SDA mapping).
-     * @param frequency I2C bus frequency (e.g., 100000, 400000, 1000000).
+     * @param frequency I2C bus frequency (Supports (kHz): 100000, 400000, 1000000).
      */
     explicit I2C(Pin scl, Pin sda, uint32_t baudrate);
 
@@ -70,7 +70,7 @@ public:
 
 
 private:
-    I2C_HandleTypeDef hi2c;          /**< HAL I2C handle. */
+    I2C_HandleTypeDef* hi2c;          /**< HAL I2C handle. */
 
     /**
      * @brief Matching peripheral entry from your peripheral map.

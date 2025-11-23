@@ -2,88 +2,43 @@
 #include "peripheralmap.h"
 #include "I2C.h"
 
+// function declarations for init functions in a hardware-specific adc.c file
+extern "C" I2C_HandleTypeDef* I2C_init(I2C_TypeDef* i2cHandle, uint32_t timing_reg);
+extern "C" void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl);
+
+
 //Constructor
 I2C::I2C(Pin sda, Pin scl, uint32_t baudrate)
 	: sda(sda), scl(scl), baudrate(baudrate){
 	i2c_periph = find_i2c_pins(sda, scl);
 	if(i2c_periph != nullptr) {
-			i2c_periph->sda_used = sda;
-			i2c_periph->scl_used = scl;
-	        init_gpio(i2c_periph);
-	        init_i2c(baudrate);
-	        initialized = true;
-	    }
+		i2c_periph->sda_used = sda;
+		i2c_periph->scl_used = scl;
+		gpio_clock_enable(sda.block);
+		gpio_clock_enable(scl.block);
+
+		HAL_I2C_MspInit_custom(i2c_periph->handle, sda, scl);
+		uint32_t timing_reg = compute_timing(baudrate);
+	    hi2c = I2C_init(i2c_periph->handle, timing_reg);
+	    initialized = true;
+	}
+	else {
+		initialized = false;
+	}
 }
 
 
-//TODO: FINISH READ & WRITE
 void I2C::write(uint16_t address, uint8_t *buffer, uint16_t length){
-	if(initialized != 0) {
-	    HAL_I2C_Master_Transmit(&hi2c, address, buffer, length, HAL_MAX_DELAY);
+	if(initialized) {
+	    HAL_I2C_Master_Transmit(hi2c, address, buffer, length, HAL_MAX_DELAY);
 	}
 }
 
 
 void I2C::read(uint16_t address, uint8_t *buffer, uint16_t length){
-	if(initialized != 0) {
-		HAL_I2C_Master_Receive(&hi2c, address, buffer, length, HAL_MAX_DELAY);
+	if(initialized) {
+		HAL_I2C_Master_Receive(hi2c, address, buffer, length, HAL_MAX_DELAY);
 	}
-}
-
-void I2C::init_gpio(I2C_Peripheral* i2c_periph) {
-    Pin sda_pin = i2c_periph->sda_used;
-    Pin scl_pin = i2c_periph->scl_used;
-
-    //Turn on clocks for each gpio port
-    gpio_clock_enable(sda_pin.block);
-    gpio_clock_enable(scl_pin.block);
-
-
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-    // TX
-    GPIO_InitStruct.Pin       = sda_pin.block_mask;
-    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull      = GPIO_NOPULL;
-    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = i2c_periph->alternate_function;
-    HAL_GPIO_Init(sda_pin.block, &GPIO_InitStruct);
-
-    // RX
-    GPIO_InitStruct.Pin       = scl_pin.block_mask;
-    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull      = GPIO_NOPULL;
-    GPIO_InitStruct.Alternate =  i2c_periph->alternate_function;
-    HAL_GPIO_Init(scl_pin.block, &GPIO_InitStruct);
-}
-
-
-// Initialize UART peripheral
-void I2C::init_i2c(uint32_t baudrate) {
-    //Turn on clocks for all possible UART
-
-	i2c_clock_enable(i2c_periph->handle);
-
-	hi2c.Instance = i2c_periph->handle;
-	hi2c.Init.Timing = compute_timing(baudrate);
-	hi2c.Init.OwnAddress1 = 0;
-	hi2c.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-	hi2c.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-	hi2c.Init.OwnAddress2 = 0;
-	hi2c.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-	hi2c.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-	hi2c.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-    HAL_I2C_Init(&hi2c);
-
-    /** Configure Analogue filter
-      */
-    HAL_I2CEx_ConfigAnalogFilter(&hi2c, I2C_ANALOGFILTER_ENABLE);
-
-    /** Configure Digital filter
-      */
-    HAL_I2CEx_ConfigDigitalFilter(&hi2c, 0);
-
-
 }
 
 
