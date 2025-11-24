@@ -60,21 +60,6 @@ void uart_clock_enable(USART_TypeDef* handle){
     return;
 }
 
-void i2c_clock_enable(I2C_TypeDef* handle) {
-	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-	if (handle == I2C2) {
-		PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C2;
-		PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_D2PCLK1;
-		__HAL_RCC_I2C2_CLK_ENABLE();
-	}
-	else if (handle == I2C4){
-		PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C2;
-		PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C4CLKSOURCE_D3PCLK1;
-		__HAL_RCC_I2C4_CLK_ENABLE();
-	}
-	HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
-}
-
 void gpio_clock_enable(GPIO_TypeDef* port) {
 	if (port == GPIOA)
 	{
