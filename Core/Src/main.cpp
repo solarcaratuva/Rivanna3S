@@ -27,11 +27,15 @@
 #include "peripheralmap.h"
 #include "DigitalIn.h"
 #include "DigitalOut.h"
+#include "UART.h"
+#include "AnalogIn.h"
 #include "Timeout.h"
 #include "Clock.h"
+#include "thread.h"
 #include "Timeout.h"
 #include "lock.h"
-#include "I2C.h"
+#include "log.h"
+
 
 /* USER CODE END Includes */
 
@@ -96,16 +100,7 @@ void timeout_test_task(void *argument) {
 DigitalOut pin1(PB_0);
 DigitalOut pin2(PA_5);
 Clock Timer;
-static void flashPin1() {
-	Clock::sleep_for(500);
-    if (pin1.read() == true) { pin1.write(false); }
-    else { pin1.write(true); }
-}
-static void flashPin2() {
-	Timer.sleep_since(500);
-    if (pin2.read() == true) { pin2.write(false); }
-    else { pin2.write(true); }
-}
+
 void test_get_current_time() {
     while (1) {
         uint32_t t1 = Timer.get_current_time();
@@ -114,7 +109,18 @@ void test_get_current_time() {
     }
 }
 
-
+void test_logging() {
+  float x = 0.55;
+  float y = 10989.021;
+  while (1) {
+    log_debug("Debug, SHOULD NOT PRINT");
+    log_info("Info x: %f y: %f", x, y);
+    log_warn("warn level, this is a massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflow massive overflowmassive overflow!");
+    log_fault("Fault Level, should Print, y: %f and x: %f", y , x);
+    x += 1;
+    y -= 1;
+  }
+}
 /**
   * @brief  The application entry point.
   * @retval int
@@ -123,7 +129,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
 
   /* USER CODE END 1 */
 
@@ -136,12 +141,26 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
   /* USER CODE END Init */
-
   /* Configure the system clock */
   SystemClock_Config();
+  DigitalOut LED1(PB_0);
 
+  AnalogIn analogInput1(PF_5);
+  AnalogIn analogInput2(PF_10);
+
+  while (1)
+  {
+
+	float value1 = analogInput1.read_voltage();
+	float value2 = analogInput2.read_voltage();
+    if (value1 > 1.0f && value1 < 4.0f){
+        LED1.write(true);
+        HAL_Delay(1000);
+    }
+
+  }
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
@@ -156,29 +175,23 @@ int main(void)
 //  MX_USART2_UART_Init();
 //  MX_USART3_UART_Init();
 //  MX_USART6_UART_Init();
+//  MX_GPIO_Init();
+//  MX_UART4_Init();
+//  MX_UART5_Init();
+//  MX_UART7_Init();
+//  MX_UART8_Init();
+//  MX_USART1_UART_Init();
+//  MX_USART2_UART_Init();
+//  MX_USART3_UART_Init();
+//  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
-  I2C test_i2c(PF_0, PF_1, 100000);
-  uint8_t test_data[2] = {6, 7};
-  uint8_t received_data[3];
+  Thread thread;
 
+  thread.start(test_logging);
+  xTaskCreate(timeout_test_task, "Timeout Test", 128, NULL, 2, NULL);
+  vTaskStartScheduler();
   /* USER CODE END 2 */
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
-    /* USER CODE BEGIN 3 */
-	  test_i2c.read(0x2, received_data, 3);
-
-	  HAL_Delay(100);
-
-	  test_i2c.write(0x2, test_data, 2);
-
-
-    // This should never be reached if FreeRTOS is working properly
-  }
-  /* USER CODE END 3 */
 }
 
 /**

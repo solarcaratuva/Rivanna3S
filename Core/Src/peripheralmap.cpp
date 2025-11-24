@@ -4,7 +4,8 @@
 UART_Peripheral UART_Peripherals[] = {
     {USART2, PA_3.universal_mask, PA_2.universal_mask, NC, NC, GPIO_AF7_USART2, false},
     {UART4, PA_1.universal_mask, PA_0.universal_mask, NC, NC, GPIO_AF8_UART4, false},
-    {UART7, (PF_6.universal_mask | PE_7.universal_mask), (PF_7.universal_mask | PE_8.universal_mask), NC, NC, GPIO_AF7_UART7, false}
+    {UART7, (PF_6.universal_mask | PE_7.universal_mask), (PF_7.universal_mask | PE_8.universal_mask), NC, NC, GPIO_AF7_UART7, false},
+	{USART3, PD_9.universal_mask, PD_8.universal_mask, NC, NC, GPIO_AF7_USART3, false}
 };
 
 const uint8_t UART_PERIPHERAL_COUNT = sizeof(UART_Peripherals) / sizeof(UART_Peripherals[0]);
@@ -15,6 +16,21 @@ I2C_Peripheral I2C_Peripherals[] = {
 };
 
 const uint8_t I2C_PERIPHERAL_COUNT = sizeof(I2C_Peripherals) / sizeof(I2C_Peripherals[0]);
+
+
+
+ADC_Peripheral ADC_Peripherals[] = {
+    { ADC1, ADC_CHANNEL_16,  PA_0.universal_mask, NC, false, 0},
+	{ ADC3, ADC_CHANNEL_6, PF_10.universal_mask, NC, false, 2},
+	{ ADC3, ADC_CHANNEL_5, PF_4.universal_mask, NC, false, 2},
+	{ ADC3, ADC_CHANNEL_4, PF_5.universal_mask, NC, false, 2},
+	//for ranking ADC1 --> 0, ADC2 --> 1 etc.
+};
+
+const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Peripherals[0]);
+
+uint8_t adc_channels_claimed[] = {0, 0, 0};
+
 
 void uart_clock_enable(USART_TypeDef* handle){
 	RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
