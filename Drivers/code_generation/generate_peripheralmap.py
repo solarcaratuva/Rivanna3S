@@ -4,43 +4,62 @@ import re
 from generate_pinmap import parse_XML_pinmap
 
 """ 
-Only need these peripherals: I2C, SPI (and QuadSPI), UART (and USART), CAN (they call it FDCAN), ADC
-
-Currently only implementing UART and USART.
-
 TODO: 
-    - Update header file and cpp file to include other peripherals as well.
-    - Add alternate function for UART peripherals.
+    - Add I2C, SPI, FDCAN peripheral arrays in cpp file.
+    - Add ADC peripheral mapping (currently excluded from peripheral map).
+    - Add I2C, SPI, FDCAN alternate function methods in cpp file.
 """
+
+# Define valid signals for each peripheral type (excludes ADC for now)
+SIGNAL_MAP = {
+    "UART": ["RX", "TX"],
+    "USART": ["RX", "TX"],
+    "I2C": ["SDA", "SCL"],
+    "SPI": ["MOSI", "MISO", "SCK"],
+    "FDCAN": ["RX", "TX"]
+}
 
 def parse_XML_peripheralmap(dir):
     tree = ET.parse(dir)
     root = tree.getroot()
 
-    peripheral_map = {"UART": {}, "USART": {}}
+    peripheral_map = {peripheral: {} for peripheral in SIGNAL_MAP.keys()}
 
     # Get all peripherals
     for peripheral in root.findall('{http://dummy.com}IP'):
         if peripheral.attrib['Name'] in peripheral_map:
             peripheral_map[peripheral.attrib['Name']][peripheral.attrib['InstanceName']] = {}
 
-    # Find valid RX and TX pins for UART and USART peripherals
-    for peripheral, map in peripheral_map.items():
-        for instance, values in map.items():
-            values['RX'] = []
-            values['TX'] = []
-            for pin in root.findall('{http://dummy.com}Pin'):
-                pin_name = pin.attrib['Name']
-                position = int(pin.attrib['Position'])
+   
+    pattern = r"^P[A-Z](?:\d{1}|\d{2})$"
 
-                pattern = r"^P[A-Z](?:\d{1}|\d{2})$"
+    # Fill in pin mappings
+    for pin in root.findall('{http://dummy.com}Pin'):
+        pin_name = pin.attrib['Name']
+        position = int(pin.attrib['Position'])
 
-                if re.match(pattern, pin_name) and position <= 64:
-                    for signal in pin.findall('{http://dummy.com}Signal'):   
-                        if signal.attrib['Name'] == instance + '_RX':
-                            values['RX'].append(pin_name)
-                        if signal.attrib['Name'] == instance + '_TX':
-                            values['TX'].append(pin_name)
+        if not re.match(pattern, pin_name) or position > 64:
+            continue
+
+        # Check each signal in this pin
+        for signal in pin.findall('{http://dummy.com}Signal'):
+            signal_name = signal.attrib['Name']
+
+            # Split into instance + signal type
+            if "_" not in signal_name:
+                continue
+            
+            instance, sig_type = signal_name.split("_", 1)
+
+            # Find which peripheral this instance belongs to
+            for peripheral, instances in peripheral_map.items():
+                if instance not in instances:
+                    continue
+
+                valid_signals = SIGNAL_MAP[peripheral]
+
+                if sig_type in valid_signals:
+                    instances[instance].setdefault(sig_type, []).append(pin_name)
                     
     return peripheral_map
 
@@ -51,7 +70,7 @@ def parse_XML_alternate_functions(dir, peripheral_map):
 
     # Formatted as { "UART4": { "RX": { "PA0": AF#, "PA1": AF# }, "TX": { "PA2": AF#, "PA3": AF# } }, ... }
     af_map = {}
-    for peripheral, map in peripheral_map.items():
+    for map in peripheral_map.values():
         for instance, values in map.items():
             af_map[instance] = {}
             for mode, pins in values.items():
