@@ -67,58 +67,6 @@ def parse_XML_alternate_functions(dir, peripheral_map):
     return af_map
 
 
-def create_header_file(file_path):
-    with open(file_path, 'w') as f:
-        # Header guard and includes
-        f.write("""#ifndef PERIPHERALMAP_H
-#define PERIPHERALMAP_H\n
-#include \"stm32h743xx.h\"
-#include \"pinmap.h\"
-#include <stdbool.h>\n""")
-
-        # UART struct definition
-        f.write(""" 
-// UART peripheral struct
-typedef struct {
-    USART_TypeDef* handle;
-    uint64_t rxd_valid_pins;
-    uint64_t txd_valid_pins;
-    Pin rxd_used;
-    Pin txd_used;
-    uint8_t alternate_function;
-    bool isClaimed;
-    // Queue[float] return_value_queue
-} UART_Peripheral;\n""")
-        
-        # Alternate function info struct
-        f.write("""
-// Alternate function info struct
-typedef struct {
-    Pin* pin;
-    uint8_t AF;
-} AF_Info;\n""")
-        
-        # Defines
-        f.write("""
-// Define RX and TX modes
-#define RX 0
-#define TX 1\n""")
-
-        # Global arrays
-        f.write(""" 
-// Declare global arrays
-extern UART_Peripheral UART_Peripherals[];
-extern const uint8_t UART_PERIPHERAL_COUNT;\n""")
-        
-        # Clock enable functions
-        f.write("""
-void uart_clock_enable(USART_TypeDef* handle);\n
-void gpio_clock_enable(GPIO_TypeDef* handle);\n\n""")
-
-        # End header guard
-        f.write("#endif /* PERIPHERALMAP */")
-
-
 def create_cpp_file(file_path, peripheral_map, pin_map, af_map):
     with open(file_path, 'w') as f:
         # Includes
@@ -148,19 +96,6 @@ def create_cpp_file(file_path, peripheral_map, pin_map, af_map):
         f.write("};\n\n")
 
         f.write("const uint8_t UART_PERIPHERAL_COUNT = sizeof(UART_Peripherals) / sizeof(UART_Peripherals[0]);\n\n")
-
-
-        # UART clock enable function
-        f.write("void uart_clock_enable(USART_TypeDef* handle){\n")
-        peripherals = list(peripheral_map["UART"].keys())
-        peripherals.extend(list(peripheral_map["USART"].keys()))
-
-        for index, instance in enumerate(peripherals):
-            if index == 0:
-                f.write(f"    if(handle == {instance}){{\n        __HAL_RCC_{instance}_CLK_ENABLE();\n    }}\n")
-            else:
-                f.write(f"    else if(handle == {instance}){{\n        __HAL_RCC_{instance}_CLK_ENABLE();\n    }}\n")
-        f.write("    return;\n}\n\n")
 
 
         # GPIO clock enable function
@@ -211,10 +146,7 @@ def create_cpp_file(file_path, peripheral_map, pin_map, af_map):
     }\n""")
         f.write("}\n\n")
 
-if __name__ == "__main__":    
-    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'peripheralmap.h')
-    create_header_file(file_path)
-
+if __name__ == "__main__":
     dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'input/STM32H743ZITx.xml')
     peripheral_map = parse_XML_peripheralmap(dir)
     pin_map = parse_XML_pinmap(dir)
