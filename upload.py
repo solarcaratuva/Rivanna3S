@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+
+import platform
+import subprocess
+import argparse
+import sys
+import os
+
+
+BOARD_MAP = {
+    "power": "build/PowerBoard/powerboard.bin",
+    "telemetry": "cmake_build/POWER_BOARD/develop/GCC_ARM/TelemetryBoard/TelemetryBoard.bin",}
+
+HIL_BOARD_MAP = {} # board path map specific to the HIL testing system server
+CMD_ARGS_ERASE = "-c port=SWD mode=UR -e all"
+CMD_ARGS_FLASH = "-c port=SWD mode=UR -rst -d"
+OS = platform.system()
+EXE_PATH = r"C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer\bin\STM32_Programmer_CLI.exe"
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description="Upload firmware to the board through a ST-Link")
+    parser.add_argument("board", type=str, help="Name of the board to upload firmware to")
+    parser.add_argument("-s", "--silent", action="store_true", help="Suppress upload output")
+    parser.add_argument("--hil", action="store_true", help="Upload firmware to the HIL testing system")
+    return parser.parse_args()
+
+def is_wsl() -> bool:
+    try:
+        if "microsoft" in platform.uname().release.lower(): # Check uname release for "microsoft" (common in WSL1/WSL2)
+            return True
+        if "WSL_INTEROP" in os.environ:
+            return True
+        with open("/proc/version", "r") as f:  # Check /proc/version for "Microsoft"
+            if "microsoft" in f.read().lower():
+                return True
+    except Exception:
+        pass
+    return False
+
+def wsl_to_windows_path(path: str) -> str:
+    """Convert a WSL path to a Windows path using wslpath."""
+    result = subprocess.run(
+        ["wslpath", "-w", path],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.strip()
+
+def main() -> None:
+    args = get_args()
+    board = args.board.lower().replace("board", "")
+    if board not in BOARD_MAP:
+        print(f"ERROR: '{args.board}' is not a valid board. Valid boards are [{', '.join(BOARD_MAP)}]")
+        sys.exit(1)
+    if not os.path.exists(BOARD_MAP[board]):
+        print("ERROR: Firmware file does not exist. You need to compile.")
+        sys.exit(4)
+
+    match OS:
+        case "Linux":
+            if not is_wsl():  # non-WSL linux
+                path = BOARD_MAP[board]
+                cmd_erase = f"STM32_Programmer_CLI {CMD_ARGS_ERASE}"
+                cmd_flash = f"STM32_Programmer_CLI {CMD_ARGS_FLASH} {path} 0x08000000"
+            else:  # actually WSL in Windows
+                windows_path = wsl_to_windows_path(BOARD_MAP[board])
+                cmd_erase = f"powershell.exe \"& '{EXE_PATH}' {CMD_ARGS_ERASE}\""
+                cmd_flash = f"powershell.exe \"& '{EXE_PATH}' {CMD_ARGS_FLASH} '{windows_path}' 0x08000000\""
+        case "Darwin":  # Mac:
+            path = BOARD_MAP[board]
+            cmd_erase = f"STM32_Programmer_CLI {CMD_ARGS_ERASE}"
+            cmd_flash = f"STM32_Programmer_CLI {CMD_ARGS_FLASH} {path} 0x08000000"
+        case "Windows":
+            print("ERROR: run this command in WSL")
+            sys.exit(2)
+        case _:
+            print("ERROR: Unknown OS")
+            sys.exit(3)
+
+    process_erase = subprocess.run(cmd_erase, capture_output=args.silent, check=False, shell=True)
+    if process_erase.returncode != 0:
+        sys.exit(process_erase.returncode)
+    process_flash = subprocess.run(cmd_flash, capture_output=args.silent, check=False, shell=True)
+    sys.exit(process_flash.returncode)
+
+
+if __name__ == "__main__":
+    main()

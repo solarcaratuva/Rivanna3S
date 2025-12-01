@@ -23,9 +23,13 @@ int main()
     // PB_0 is brought out on the Nucleo board’s user LED (adjust as needed).
     DigitalOut led(PB_0);
 
-    for (;;)
+    // for (;;)
+    // {
+    //     flashPin(led);
+    //     busy_delay(2000000U);
+    // }
+    led.write(true);
+    while (1)
     {
-        flashPin(led);
-        busy_delay(2000000U);
-    }
+    }   
 }

@@ -33,3 +33,17 @@ target_include_directories(powerboard
 
 # Pull in the shared drivers/modules (plus MCU flags/defs for Cortex-M7).
 target_link_libraries(powerboard PRIVATE common mcu_flags)
+
+# Emit a raw binary alongside the ELF so it can be flashed directly.
+if(NOT CMAKE_OBJCOPY)
+	find_program(CMAKE_OBJCOPY arm-none-eabi-objcopy)
+endif()
+if(NOT CMAKE_OBJCOPY)
+	message(FATAL_ERROR "objcopy not found; cannot convert ELF to BIN")
+endif()
+
+add_custom_command(TARGET powerboard POST_BUILD
+	COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:powerboard> $<TARGET_FILE_DIR:powerboard>/powerboard.bin
+	COMMENT "Generating powerboard.bin"
+	VERBATIM
+)
