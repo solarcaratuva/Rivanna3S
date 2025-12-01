@@ -64,13 +64,13 @@ void MX_ADC1_Init(uint32_t channel, uint32_t rank)
   hadc1.Init.Oversampling.Ratio = 1;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
-    Error_Handler();
+    // Error_Handler();
   }
   hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
-    Error_Handler();
+    // Error_Handler();
   }
 
   /** Configure the ADC multi-mode
@@ -78,7 +78,7 @@ void MX_ADC1_Init(uint32_t channel, uint32_t rank)
   multimode.Mode = ADC_MODE_INDEPENDENT;
   if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
   {
-    Error_Handler();
+    // Error_Handler();
   }
 
   /** Configure Regular Channel
@@ -92,7 +92,7 @@ void MX_ADC1_Init(uint32_t channel, uint32_t rank)
   sConfig.OffsetSignedSaturation = DISABLE;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    // Error_Handler();
   }
   /* USER CODE BEGIN ADC1_Init 2 */
 
@@ -131,13 +131,13 @@ void MX_ADC2_Init(uint32_t channel, uint32_t rank)
   hadc2.Init.Oversampling.Ratio = 1;
   if (HAL_ADC_Init(&hadc2) != HAL_OK)
   {
-    Error_Handler();
+    // Error_Handler();
   }
   hadc2.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV4;
   hadc2.Init.Resolution = ADC_RESOLUTION_12B;
   if (HAL_ADC_Init(&hadc2) != HAL_OK)
   {
-    Error_Handler();
+    // Error_Handler();
   }
 
   /** Configure Regular Channel
@@ -151,7 +151,7 @@ void MX_ADC2_Init(uint32_t channel, uint32_t rank)
   sConfig.OffsetSignedSaturation = DISABLE;
   if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    // Error_Handler();
   }
   /* USER CODE BEGIN ADC2_Init 2 */
 
@@ -191,12 +191,12 @@ void MX_ADC3_Init(uint32_t channel, uint32_t rank)
   hadc3.Init.Oversampling.Ratio = 1;
   if (HAL_ADC_Init(&hadc3) != HAL_OK)
   {
-    Error_Handler();
+    // Error_Handler();
   }
   hadc3.Init.Resolution = ADC_RESOLUTION_12B;
   if (HAL_ADC_Init(&hadc3) != HAL_OK)
   {
-    Error_Handler();
+    // Error_Handler();
   }
 
   /** Configure Regular Channel
@@ -210,7 +210,7 @@ void MX_ADC3_Init(uint32_t channel, uint32_t rank)
   sConfig.OffsetSignedSaturation = DISABLE;
   if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    // Error_Handler();
   }
   /* USER CODE BEGIN ADC3_Init 2 */
 
@@ -250,7 +250,7 @@ void HAL_ADC_MspInit_custom(ADC_TypeDef* adcHandle, Pin pin)
   PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
     {
-      Error_Handler();
+      // Error_Handler();
     }
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};

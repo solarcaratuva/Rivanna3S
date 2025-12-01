@@ -4,24 +4,6 @@ project(stm32h743_freertos C CXX ASM)
 # -------- Toolchain & MCU flags --------
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/arm-gcc-toolchain.cmake")
 
-# H743: Cortex-M7 + hard float
-set(MCU_FLAGS "-mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard")
-# Match your CubeIDE log: -O0 -g3
-set(OPT_FLAGS "-O0 -g3 -ffunction-sections -fdata-sections -fno-common")
-set(WARN_FLAGS "-Wall -Wextra -Wundef -Wdouble-promotion -Wformat=2 -Wshadow")
-
-# Your linker script lives in repo root
-set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/STM32H743ZITX_FLASH.ld" CACHE FILEPATH "LD script")
-
-# -------- Include directories (exactly like your log) --------
-set(INC_CORE          ${CMAKE_SOURCE_DIR}/Core/Inc)
-set(INC_HAL           ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc)
-cmake_minimum_required(VERSION 3.21)
-project(stm32h743_freertos C CXX ASM)
-
-# -------- Toolchain & MCU flags --------
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/arm-gcc-toolchain.cmake")
-
 # Cortex-M7 + hard float
 set(MCU_FLAGS -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard)
 set(OPT_FLAGS -O0 -g3 -ffunction-sections -fdata-sections -fno-common)
@@ -40,9 +22,9 @@ set(INC_RTOS_KERNEL   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Sourc
 set(INC_RTOS_CMSISV2  ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2)
 
 # Optional TouchGFX (only if present)
-set(INC_TGFX_APP      ${CMAKE_SOURCE_DIR}/TouchGFX/App)
-set(INC_TGFX_TGT_GEN  ${CMAKE_SOURCE_DIR}/TouchGFX/target/generated)
-set(INC_TGFX_TGT      ${CMAKE_SOURCE_DIR}/TouchGFX/target)
+# set(INC_TGFX_APP      ${CMAKE_SOURCE_DIR}/TouchGFX/App)
+# set(INC_TGFX_TGT_GEN  ${CMAKE_SOURCE_DIR}/TouchGFX/target/generated)
+# set(INC_TGFX_TGT      ${CMAKE_SOURCE_DIR}/TouchGFX/target)
 
 # -------- Startup + Source files --------
 set(STARTUP_S ${CMAKE_SOURCE_DIR}/Core/Startup/startup_stm32h743zitx.s)
@@ -92,12 +74,25 @@ set_source_files_properties(${APP_CPP_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gn
 set_source_files_properties(${APP_C_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu11")
 
 # -------- Link options --------
+# target_link_options(${PROJECT_NAME}.elf PRIVATE
+#   ${MCU_FLAGS}
+#   -Wl,--gc-sections
+#   -Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map
+#   -Wl,--print-memory-usage
+#   -T ${LINKER_SCRIPT}
+#   -Wl,-Map=SolarCar_FreeRtos.map -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+# )
 target_link_options(${PROJECT_NAME}.elf PRIVATE
   ${MCU_FLAGS}
-  -Wl,--gc-sections
-  -Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map
-  -Wl,--print-memory-usage
   -T ${LINKER_SCRIPT}
+  -Wl,-Map=SolarCar_FreeRtos.map
+  -Wl,--gc-sections
+  -static
+  --specs=nano.specs
+  -Wl,--start-group
+  -lc -lm -lstdc++
+  -lsupc++
+  -Wl,--end-group
 )
 
 # -------- Add FreeRTOS as a subdirectory (builds freertos_kernel library) --------
@@ -113,7 +108,7 @@ target_link_libraries(${PROJECT_NAME}.elf
 add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
   COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${PROJECT_NAME}.elf> ${PROJECT_NAME}.bin
   COMMAND ${CMAKE_OBJCOPY} -O ihex   $<TARGET_FILE:${PROJECT_NAME}.elf> ${PROJECT_NAME}.hex
-  COMMAND ${CMAKE_SIZE} --format=berkeley $<TARGET_FILE:${PROJECT_NAME}.elf>
+  # COMMAND ${CMAKE_SIZE} --format=berkeley $<TARGET_FILE:${PROJECT_NAME}.elf>
   BYPRODUCTS ${PROJECT_NAME}.bin ${PROJECT_NAME}.hex
   COMMENT "Generating BIN/HEX and printing size"
 )

@@ -147,18 +147,21 @@ int main(void)
   SystemClock_Config();
   DigitalOut LED1(PB_0);
 
-  AnalogIn analogInput1(PF_5);
-  AnalogIn analogInput2(PF_10);
+  // AnalogIn analogInput1(PF_5);
+  // AnalogIn analogInput2(PF_10);
 
   while (1)
   {
 
-	float value1 = analogInput1.read_voltage();
-	float value2 = analogInput2.read_voltage();
-    if (value1 > 1.0f && value1 < 4.0f){
-        LED1.write(true);
-        HAL_Delay(1000);
-    }
+	// float value1 = analogInput1.read_voltage();
+	// float value2 = analogInput2.read_voltage();
+  //   if (value1 > 1.0f && value1 < 4.0f){
+  //       LED1.write(true);
+  //       HAL_Delay(1000);
+  //   }
+    log_debug("%s","HERE");
+    HAL_Delay(1000);
+    LED1.write(!LED1.read());
 
   }
   /* USER CODE BEGIN SysInit */
