@@ -9,14 +9,13 @@ import os
 
 
 BOARD_MAP = {
-    "power": "cmake_build/NUCLEO_F413ZH/develop/GCC_ARM/PowerBoard/PowerBoard.bin",
-    "telemetry": "cmake_build/POWER_BOARD/develop/GCC_ARM/TelemetryBoard/TelemetryBoard.bin",
-    "test": "build/stm32h743_freertos.bin",
-    "test2": "Debug/SolarCar_FreeRtos.elf"}
+    # "power": "cmake_build/NUCLEO_F413ZH/develop/GCC_ARM/PowerBoard/PowerBoard.bin",
+    # "telemetry": "cmake_build/POWER_BOARD/develop/GCC_ARM/TelemetryBoard/TelemetryBoard.bin",
+    "test": "build/stm32h743_freertos.elf",}
 
 HIL_BOARD_MAP = {} # board path map specific to the HIL testing system server
 CMD_ARGS_ERASE = "-c port=SWD mode=UR -e all"
-CMD_ARGS_FLASH = "-c port=SWD mode=UR -w"
+CMD_ARGS_FLASH = "-c port=SWD mode=UR -w {} -rst"
 OS = platform.system()
 EXE_PATH = r"C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer\bin\STM32_Programmer_CLI.exe"
 
@@ -60,15 +59,16 @@ def main() -> None:
             if not is_wsl():  # non-WSL linux
                 path = BOARD_MAP[board]
                 cmd_erase = f"STM32_Programmer_CLI {CMD_ARGS_ERASE}"
-                cmd_flash = f"STM32_Programmer_CLI {CMD_ARGS_FLASH} {path} 0x08000000 -rst"
+                cmd_flash = f"STM32_Programmer_CLI {CMD_ARGS_FLASH.format(path)}"
             else:  # actually WSL in Windows
                 copy_file_to_windows(BOARD_MAP[board])
                 cmd_erase = f"powershell.exe \"& '{EXE_PATH}' {CMD_ARGS_ERASE}\""
-                cmd_flash = f"powershell.exe \"& '{EXE_PATH}' {CMD_ARGS_FLASH} C:\\Windows\\Temp\\firmware.bin 0x08000000 -rst\""
+                firmware_path = "C:\\Windows\\Temp\\firmware.bin"
+                cmd_flash = f"powershell.exe \"& '{EXE_PATH}' {CMD_ARGS_FLASH.format(firmware_path)}\""
         case "Darwin":  # Mac:
             path = BOARD_MAP[board]
             cmd_erase = f"STM32_Programmer_CLI {CMD_ARGS_ERASE}"
-            cmd_flash = f"STM32_Programmer_CLI {CMD_ARGS_FLASH} {path} 0x08000000 -rst"
+            cmd_flash = f"STM32_Programmer_CLI {CMD_ARGS_FLASH.format(path)}"
         case "Windows":
             print("ERROR: run this command in WSL")
             sys.exit(2)

@@ -74,14 +74,6 @@ set_source_files_properties(${APP_CPP_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gn
 set_source_files_properties(${APP_C_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu11")
 
 # -------- Link options --------
-# target_link_options(${PROJECT_NAME}.elf PRIVATE
-#   ${MCU_FLAGS}
-#   -Wl,--gc-sections
-#   -Wl,-Map=${CMAKE_BINARY_DIR}/${PROJECT_NAME}.map
-#   -Wl,--print-memory-usage
-#   -T ${LINKER_SCRIPT}
-#   -Wl,-Map=SolarCar_FreeRtos.map -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
-# )
 target_link_options(${PROJECT_NAME}.elf PRIVATE
   ${MCU_FLAGS}
   -T ${LINKER_SCRIPT}
@@ -102,48 +94,4 @@ add_subdirectory(Middlewares/Third_Party/FreeRTOS/Source)
 target_link_libraries(${PROJECT_NAME}.elf
   freertos_kernel
   m c gcc
-)
-
-# -------- Post-build artifacts --------
-add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
-  COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${PROJECT_NAME}.elf> ${PROJECT_NAME}.bin
-  COMMAND ${CMAKE_OBJCOPY} -O ihex   $<TARGET_FILE:${PROJECT_NAME}.elf> ${PROJECT_NAME}.hex
-  # COMMAND ${CMAKE_SIZE} --format=berkeley $<TARGET_FILE:${PROJECT_NAME}.elf>
-  BYPRODUCTS ${PROJECT_NAME}.bin ${PROJECT_NAME}.hex
-  COMMENT "Generating BIN/HEX and printing size"
-)
-
-# -------- Optional flash targets --------
-find_program(ST_FLASH st-flash)
-if(ST_FLASH)
-  add_custom_target(flash_st
-    COMMAND ${ST_FLASH} --reset write ${PROJECT_NAME}.bin 0x08000000
-    DEPENDS ${PROJECT_NAME}.elf
-    COMMENT "Flashing with st-flash"
-  )
-endif()
-
-find_program(PYOCD pyocd)
-if(PYOCD)
-  add_custom_target(flash_pyocd
-    COMMAND ${PYOCD} flash -t stm32h743zitx ${PROJECT_NAME}.hex
-    DEPENDS ${PROJECT_NAME}.elf
-    COMMENT "Flashing with pyOCD"
-  )
-endif()
-
-find_program(STM32PROG STM32_Programmer_CLI)
-if(STM32PROG)
-  add_custom_target(flash_cubeprog
-    COMMAND ${STM32PROG} -c port=SWD mode=UR -w ${PROJECT_NAME}.bin 0x08000000 -v -rst
-    DEPENDS ${PROJECT_NAME}.elf
-    COMMENT "Flashing with STM32_Programmer_CLI"
-  )
-endif()
-
-# -------- Disassembly --------
-add_custom_target(dump
-  COMMAND ${CMAKE_OBJDUMP} -dC $<TARGET_FILE:${PROJECT_NAME}.elf> > ${PROJECT_NAME}.lst
-  DEPENDS ${PROJECT_NAME}.elf
-  COMMENT "Generating disassembly"
 )
