@@ -7,7 +7,7 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/arm-gcc-toolchain.cmake")
 # Cortex-M7 + hard float
 set(MCU_FLAGS -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard)
 set(OPT_FLAGS -O0 -g3 -ffunction-sections -fdata-sections -fno-common)
-set(WARN_FLAGS -Wall -Wextra -Wundef -Wdouble-promotion -Wformat=2 -Wshadow)
+set(WARN_FLAGS -Wall -Wextra -Wformat=2 -Wshadow -Wno-missing-field-initializers)
 
 # Linker script
 set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/STM32H743ZITX_FLASH.ld" CACHE FILEPATH "LD script")
