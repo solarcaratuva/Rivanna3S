@@ -51,15 +51,11 @@ uint8_t CAN::dlcToBytes(uint32_t dlc) const
 
 CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     : m_hfdcan(&hfdcan1),
-      m_txMutex(nullptr)
+      m_txMutex()
 {
     (void)tx;
     (void)rx;
     (void)baudrate; // timing is assumed to be configured elsewhere
-
-    // Create mutex for Tx path
-    m_txMutex = xSemaphoreCreateMutex();
-    // If this fails, you'll find out pretty quickly when write() returns error.
 
     // Default Tx header setup; fields that change per-frame will be set in write().
     m_txHeader.IdType              = FDCAN_STANDARD_ID;
@@ -71,12 +67,31 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     m_txHeader.MessageMarker       = 0;
 }
 
+// Write a raw frame
+int CAN::write(const SerializedCanMessage& msg)
+{
+    m_txMutex.lock();
+    m_txHeader.Identifier = msg.id;
+    m_txHeader.DataLength = bytesToDlc(msg.len);
+
+    // HAL expects a uint8_t* to data
+    HAL_StatusTypeDef status =
+        HAL_FDCAN_AddMessageToTxFifoQ(m_hfdcan, &m_txHeader,
+                                      const_cast<uint8_t*>(msg.data));
+
+    m_txMutex.unlock();
+
+    if (status != HAL_OK) {
+        return -4;
+    }
+
+    return 0;
+}
+
+
 // Write a logical CanMessage
 int CAN::write(CanMessage* msg)
 {
-    if (!msg) {
-        Error_Handler();
-    }
     SerializedCanMessage scm = msg->serialize();
     return write(scm);
 }
@@ -84,10 +99,6 @@ int CAN::write(CanMessage* msg)
 // Poll RX FIFO0
 int CAN::read(SerializedCanMessage* msg)
 {
-    if (!msg) {
-        Error_Handler();
-    }
-
     // Check how many frames are pending in FIFO0
     uint32_t pending = HAL_FDCAN_GetRxFifoFillLevel(m_hfdcan, FDCAN_RX_FIFO0);
     if (pending == 0) {

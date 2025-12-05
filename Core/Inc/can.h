@@ -7,11 +7,12 @@ extern "C" {
 #endif
 #include "fdcan.h"
 #include "FreeRTOS.h"
-#include "semphr.h"
 #include "main.h"
 #ifdef __cplusplus
 }
 #endif
+
+#include "lock.h"
 
 // -----------------------------------------------------------------------------
 // Serialized CAN message (raw frame)
@@ -56,6 +57,10 @@ public:
     // Returns 0 on success, negative on error.
     int write(CanMessage* msg);
 
+    // Write a raw CAN frame
+    // Returns 0 on success, negative on error.
+    int write(const SerializedCanMessage& msg);
+
     // Read a raw message (polling FIFO0).
     // Returns:
     //   1 if a message was read,
@@ -65,7 +70,7 @@ public:
 
 private:
     FDCAN_HandleTypeDef* m_hfdcan;
-    SemaphoreHandle_t    m_txMutex;
+    Lock                 m_txMutex;
     FDCAN_TxHeaderTypeDef m_txHeader;
     FDCAN_RxHeaderTypeDef m_rxHeader;
 
