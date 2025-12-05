@@ -33,7 +33,7 @@
 #include "Clock.h"
 #include "Timeout.h"
 #include "lock.h"
-
+#include "caninterface.h"
 
 /* USER CODE END Includes */
 
@@ -75,6 +75,17 @@ void onTimeout() {
   pin.write(true);
   vTaskDelay(pdMS_TO_TICKS(3000));
   pin.write(false);
+}
+
+int x = 0;
+int y = 100;
+
+void testCANcallback1(const SerializedCanMessage &msg) {
+  x += 3;
+}
+
+void testCANcallback2(const SerializedCanMessage &msg) {
+  y += 3;
 }
 
 void timeout_test_task(void *argument) {
@@ -123,7 +134,9 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  CanInterface can_itf(PF_0, PF_1, 4600);
+  can_itf.register_callback(412, &testCANcallback1);
+  can_itf.register_always_callback(&testCANcallback2);
 
   /* USER CODE END 1 */
 
