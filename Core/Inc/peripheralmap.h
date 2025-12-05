@@ -6,6 +6,15 @@
 #include "pinmap.h"
 #include "stm32h743xx.h"
 
+#define SDA 1
+#define SCL 2
+#define RX 3
+#define TX
+
+typedef struct {
+  Pin pin;
+  uint8_t af;
+} af_info;
 
 // I2C peripheral struct
 typedef struct {
@@ -14,6 +23,7 @@ typedef struct {
     uint64_t scl_valid_pins;
     Pin sda_used;
     Pin scl_used;
+    uint8_t alternate_function;
     bool isClaimed;
     // Queue[float] return_value_queue
 } I2C_Peripheral;
@@ -54,6 +64,7 @@ extern uint8_t adc_channels_claimed[];
 
 void uart_clock_enable(USART_TypeDef* handle);
 void gpio_clock_enable(GPIO_TypeDef* port);
+uint8_t get_i2c_af(I2C_TypeDef* handle, Pin pin, uint8_t mode);
 
 #endif /* PERIPHERALMAP */
 

@@ -35,6 +35,7 @@
 #include "Timeout.h"
 #include "lock.h"
 #include "log.h"
+#include "i2c.h"
 
 
 /* USER CODE END Includes */
@@ -150,15 +151,17 @@ int main(void)
   AnalogIn analogInput1(PF_5);
   AnalogIn analogInput2(PF_10);
 
+  I2C test_i2c(PF_0, PF_1, I2C::FAST);
+  uint8_t test_data[2] = {6, 7};
+  uint8_t received_data[3];
+
   while (1)
   {
 
-	float value1 = analogInput1.read_voltage();
-	float value2 = analogInput2.read_voltage();
-    if (value1 > 1.0f && value1 < 4.0f){
-        LED1.write(true);
-        HAL_Delay(1000);
-    }
+	  test_i2c.read(0x2, received_data, 3);
+	  HAL_Delay(100);
+	  test_i2c.write(0x2, test_data, 2);
+
 
   }
   /* USER CODE BEGIN SysInit */
