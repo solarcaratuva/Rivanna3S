@@ -2,13 +2,13 @@
 #include "peripheralmap.h"
 #include "I2C.h"
 
-// function declarations for init functions in a hardware-specific adc.c file
+// function declarations for init functions in a hardware-specific i2c.c file
 extern "C" I2C_HandleTypeDef* I2C_init(I2C_TypeDef* i2cHandle, uint32_t timing_reg);
-extern "C" void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl);
-
+extern "C" void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl, uint8_t af_sda, uint8_t af_scl);
+extern "C" uint32_t compute_timing(uint32_t freq_hz);
 
 //Constructor
-I2C::I2C(Pin sda, Pin scl, uint32_t baudrate)
+I2C::I2C(Pin sda, Pin scl, I2C_Speed baudrate)
 	: sda(sda), scl(scl), baudrate(baudrate){
 	i2c_periph = find_i2c_pins(sda, scl);
 	if(i2c_periph != nullptr) {
@@ -16,8 +16,10 @@ I2C::I2C(Pin sda, Pin scl, uint32_t baudrate)
 		i2c_periph->scl_used = scl;
 		gpio_clock_enable(sda.block);
 		gpio_clock_enable(scl.block);
+		uint8_t sda_af = get_i2c_af(i2c_periph->handle, sda, SDA);
+		uint8_t scl_af = get_i2c_af(i2c_periph->handle, scl, SCL);
 
-		HAL_I2C_MspInit_custom(i2c_periph->handle, sda, scl);
+		HAL_I2C_MspInit_custom(i2c_periph->handle, sda, scl, sda_af, scl_af);
 		uint32_t timing_reg = compute_timing(baudrate);
 	    hi2c = I2C_init(i2c_periph->handle, timing_reg);
 	    initialized = true;
@@ -57,29 +59,4 @@ I2C_Peripheral* I2C::find_i2c_pins(Pin sda, Pin scl) {
 	    return nullptr; // No matching peripheral found
 }
 
-uint32_t I2C::compute_timing(uint32_t freq_hz)
-{
-    // I2C kernel clock = 64 MHz for STM32H743 (D2PCLK1)
-    constexpr uint32_t I2C_CLK = 64000000;
 
-    // ======== 100 kHz ========
-    if (freq_hz <= 100000) {
-        // Standard mode, Rise ≈ 100ns, Fall ≈ 10ns
-        return 0x10805D89;
-    }
-
-    // ======== 400 kHz ========
-    else if (freq_hz <= 400000) {
-        // Fast mode, Rise ≈ 100ns, Fall ≈ 10ns
-        return 0x00C0216C;
-    }
-
-    // ======== 1 MHz ========
-    else if (freq_hz <= 1000000) {
-        // Fast mode plus, Rise ≈ 60ns, Fall ≈ 10ns
-        return 0x00707CBB;
-    }
-
-    // Unsupported speed — return safe default (100 kHz)
-    return 0x10805D89;
-}

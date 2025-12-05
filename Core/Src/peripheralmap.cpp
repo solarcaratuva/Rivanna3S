@@ -111,3 +111,69 @@ void gpio_clock_enable(GPIO_TypeDef* port) {
 	#endif //GPIOK
 }
 
+uint8_t get_i2c_af(I2C_TypeDef* handle, Pin pin, uint8_t mode) {
+	af_info i2c2_sda[] =
+	{
+		{PF_0, GPIO_AF4_I2C2}
+	};
+
+	uint8_t i2c2_sda_len = 2;
+
+	af_info i2c2_scl[] =
+	{
+		{PF_1, GPIO_AF4_I2C2}
+	};
+
+	uint8_t i2c2_scl_len = 1;
+
+	af_info i2c4_sda[] =
+	{
+		{PF_15, GPIO_AF4_I2C2}
+	};
+
+	uint8_t i2c4_sda_len = 1;
+
+	af_info i2c4_scl[] =
+	{
+		{PF_14, GPIO_AF4_I2C2}
+	};
+
+	uint8_t i2c4_scl_len = 1;
+
+	af_info *array;
+	uint8_t array_len;
+
+	if (handle == I2C2) {
+		if (mode == SDA) {
+			array = i2c2_sda;
+			array_len = i2c2_sda_len;
+		}
+		if (mode == SCL) {
+			array = i2c2_scl;
+			array_len = i2c2_scl_len;
+		}
+	}
+
+	if (handle == I2C4) {
+		if (mode == SDA) {
+		    array = i2c4_sda;
+		    array_len = i2c4_sda_len;
+		}
+		if (mode == SCL) {
+			array = i2c4_scl;
+			array_len = i2c4_scl_len;
+		}
+	}
+
+	for (uint8_t i = 0; i < array_len; i++) {
+	  if (array[i].pin.universal_mask == pin.universal_mask) {
+	    return array[i].af;
+	  }
+	}
+
+
+
+
+
+}
+

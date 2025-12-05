@@ -22,10 +22,6 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
 
@@ -132,7 +128,7 @@ I2C_HandleTypeDef* I2C_init(I2C_TypeDef* i2cHandle, uint32_t timing_reg) {
   return &hi2c1; // Default return to avoid compiler warning
 }
 
-void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl)
+void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl, uint8_t af_sda, uint8_t af_scl)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -161,14 +157,14 @@ void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl)
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
+    GPIO_InitStruct.Alternate = af_sda;
     HAL_GPIO_Init(sda.block, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = scl.block_mask;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
+    GPIO_InitStruct.Alternate = af_scl;
     HAL_GPIO_Init(scl.block, &GPIO_InitStruct);
 
     /* I2C1 clock enable */
@@ -199,14 +195,14 @@ void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl)
       GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
       GPIO_InitStruct.Pull = GPIO_NOPULL;
       GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-      GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
+      GPIO_InitStruct.Alternate = af_sda;
       HAL_GPIO_Init(sda.block, &GPIO_InitStruct);
 
       GPIO_InitStruct.Pin = scl.block_mask;
       GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
       GPIO_InitStruct.Pull = GPIO_NOPULL;
       GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-      GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
+      GPIO_InitStruct.Alternate = af_scl;
       HAL_GPIO_Init(scl.block, &GPIO_InitStruct);
 
       /* I2C1 clock enable */
@@ -217,31 +213,29 @@ void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl)
     }
 }
 
-void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
+uint32_t compute_timing(uint32_t freq_hz)
 {
+    // I2C kernel clock = 64 MHz for STM32H743 (D2PCLK1)
+    uint32_t I2C_CLK = 64000000;
 
-  if(i2cHandle->Instance==I2C1)
-  {
-  /* USER CODE BEGIN I2C1_MspDeInit 0 */
+    // ======== 100 kHz ========
+    if (freq_hz <= 100000) {
+        // Standard mode, Rise ≈ 100ns, Fall ≈ 10ns
+        return 0x10805D89;
+    }
 
-  /* USER CODE END I2C1_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_I2C1_CLK_DISABLE();
+    // ======== 400 kHz ========
+    else if (freq_hz <= 400000) {
+        // Fast mode, Rise ≈ 100ns, Fall ≈ 10ns
+        return 0x00C0216C;
+    }
 
-    /**I2C1 GPIO Configuration
-    PB6     ------> I2C1_SCL
-    PB7     ------> I2C1_SDA
-    */
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_6);
+    // ======== 1 MHz ========
+    else if (freq_hz <= 1000000) {
+        // Fast mode plus, Rise ≈ 60ns, Fall ≈ 10ns
+        return 0x00707CBB;
+    }
 
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_7);
-
-  /* USER CODE BEGIN I2C1_MspDeInit 1 */
-
-  /* USER CODE END I2C1_MspDeInit 1 */
-  }
+    // Unsupported speed — return safe default (100 kHz)
+    return 0x10805D89;
 }
-
-/* USER CODE BEGIN 1 */
-
-/* USER CODE END 1 */
