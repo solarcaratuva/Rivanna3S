@@ -8,25 +8,25 @@ extern "C" void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl,
 extern "C" uint32_t compute_timing(uint32_t freq_hz);
 
 //Constructor
-I2C::I2C(Pin sda, Pin scl, I2C_Speed baudrate)
+I2C::I2C(Pin sda, Pin scl, I2C_BaudRate baudrate)
 	: sda(sda), scl(scl), baudrate(baudrate){
 	i2c_periph = find_i2c_pins(sda, scl);
-	if(i2c_periph != nullptr) {
-		i2c_periph->sda_used = sda;
-		i2c_periph->scl_used = scl;
-		gpio_clock_enable(sda.block);
-		gpio_clock_enable(scl.block);
-		uint8_t sda_af = get_i2c_af(i2c_periph->handle, sda, SDA);
-		uint8_t scl_af = get_i2c_af(i2c_periph->handle, scl, SCL);
-
-		HAL_I2C_MspInit_custom(i2c_periph->handle, sda, scl, sda_af, scl_af);
-		uint32_t timing_reg = compute_timing(baudrate);
-	    hi2c = I2C_init(i2c_periph->handle, timing_reg);
-	    initialized = true;
-	}
-	else {
+	if(i2c_periph == nullptr) {
 		initialized = false;
+		return;
 	}
+
+	i2c_periph->sda_used = sda;
+	i2c_periph->scl_used = scl;
+	gpio_clock_enable(sda.block);
+	gpio_clock_enable(scl.block);
+	uint8_t sda_af = get_i2c_af(i2c_periph->handle, sda, SDA);
+	uint8_t scl_af = get_i2c_af(i2c_periph->handle, scl, SCL);
+
+	HAL_I2C_MspInit_custom(i2c_periph->handle, sda, scl, sda_af, scl_af);
+	uint32_t timing_reg = compute_timing(baudrate);
+    hi2c = I2C_init(i2c_periph->handle, timing_reg);
+    initialized = true;
 }
 
 

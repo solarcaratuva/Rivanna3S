@@ -56,10 +56,10 @@ public:
      *  - ONE_M (1000000 Hz): Fast Mode Plus
      */
 	typedef enum {
-	    	ONE_HUNDRED_K = 100000, //Standard Mode
-			FOUR_HUNDRED_K = 400000, // Fast Mode
-			ONE_M = 1000000 //Fast Mode Plus
-	    }I2C_Speed;
+	    	STANDARD = 100000, // 100k
+			FAST = 400000, // 400k
+			FAST_PLUS = 1000000 //1M
+	    }I2C_BaudRate;
 
     /**
      * @brief Indicates whether the I2C peripheral was successfully initialized.
@@ -72,7 +72,7 @@ public:
      * @param sda  SDA pin (must correspond to valid I2C SDA mapping).
      * @param frequency I2C bus frequency (Supports (kHz): 100000, 400000, 1000000).
      */
-    explicit I2C(Pin scl, Pin sda, I2C_Speed baudrate);
+    explicit I2C(Pin scl, Pin sda, I2C_BaudRate baudrate);
 
     /**
      * @brief Writes data to an I2C device (blocking).
