@@ -1,4 +1,3 @@
-from sys import prefix
 import xml.etree.ElementTree as ET
 import os
 import re
@@ -6,18 +5,20 @@ from generate_pinmap import parse_XML_pinmap
 
 """ 
 TODO: 
-    - Add ADC peripheral mapping (currently excluded from peripheral map)
-    - Generate ADC and SPI peripheral arrays and get_<PERIPHERAL>_AF functions
+    - Generate SPI peripheral array and get_SPI_AF function
+    - Generate get_ADC_AF function (if needed)
 """
 
-# Define valid signals for each peripheral type (excludes ADC for now)
+# Define valid signals for each peripheral type
 SIGNAL_MAP = {
     "UART": ["RX", "TX"],
     "USART": ["RX", "TX"],
     "I2C": ["SDA", "SCL"],
     "SPI": ["MOSI", "MISO", "SCK"],
-    "FDCAN": ["RX", "TX"]
+    "FDCAN": ["RX", "TX"],
+    "ADC": None
 }
+
 
 def parse_XML_peripheralmap(dir):
     tree = ET.parse(dir)
@@ -56,8 +57,15 @@ def parse_XML_peripheralmap(dir):
                 if instance not in instances:
                     continue
 
-                valid_signals = SIGNAL_MAP[peripheral]
+                # Handle ADC channels separately
+                if peripheral == "ADC":
+                    if sig_type.startswith("INP"):
+                        channel = int(sig_type[3:])
+                        instances[instance].setdefault(channel, []).append(pin_name)
+                    continue
 
+                # For other peripherals, check if signal type is valid
+                valid_signals = SIGNAL_MAP[peripheral]
                 if sig_type in valid_signals:
                     instances[instance].setdefault(sig_type, []).append(pin_name)
                     
@@ -71,6 +79,9 @@ def parse_XML_alternate_functions(dir, peripheral_map):
     # Formatted as { "UART4": { "RX": { "PA0": AF#, "PA1": AF# }, "TX": { "PA2": AF#, "PA3": AF# } }, ... }
     af_map = {}
     for peripheral, map in peripheral_map.items():
+        # Skip ADC as it doesn't use alternate functions
+        if peripheral.startswith("ADC"):
+            continue
         af_map[peripheral] = {}
         for instance, values in map.items():
             af_map[peripheral][instance] = {}
@@ -252,6 +263,42 @@ def write_fdcan_array(f, peripheral_map):
     f.write("const uint8_t FDCAN_PERIPHERAL_COUNT = sizeof(FDCAN_Peripherals) / sizeof(FDCAN_Peripherals[0]);\n\n")
 
 
+def write_adc_array(f, peripheral_map):
+    adc_map = peripheral_map.get("ADC", {})
+
+    # Assign instance numbers in consistent order
+    adc_instances = list(adc_map.keys())
+    instance_to_num = {adc: idx for idx, adc in enumerate(adc_instances)}
+
+    f.write("ADC_Peripheral ADC_Peripherals[] = {\n")
+
+    for instance, channels in adc_map.items():
+        instance_num = instance_to_num[instance]
+
+        for channel, pins in channels.items():
+            for pin in pins:
+                port = pin[:2]
+                num = pin[2:]
+
+                pin_mask = f"{port}_{num}.universal_mask"
+
+                f.write(
+                    f"    {{{instance}, ADC_CHANNEL_{channel}, {pin_mask}, NC, false, {instance_num}}},\n"
+                )
+
+    f.write("};\n\n")
+
+    f.write(
+        "const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / "
+        "sizeof(ADC_Peripherals[0]);\n\n"
+    )
+
+    # adc_channels_claimed array (all zeros)
+    f.write(
+        f"uint8_t adc_channels_claimed[] = "
+        f"{{{', '.join(['0'] * len(adc_instances))}}};\n\n"
+    )
+
 def create_cpp_file(file_path, peripheral_map, pin_map, af_map):
     with open(file_path, 'w') as f:
         # Includes
@@ -261,6 +308,7 @@ def create_cpp_file(file_path, peripheral_map, pin_map, af_map):
         write_uart_array(f, peripheral_map)
         write_i2c_array(f, peripheral_map)
         write_fdcan_array(f, peripheral_map)
+        write_adc_array(f, peripheral_map)
 
         # GPIO clock enable function
         f.write("void gpio_clock_enable(GPIO_TypeDef* handle){\n")
