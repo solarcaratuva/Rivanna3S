@@ -56,7 +56,9 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     (void)tx;
     (void)rx;
     (void)baudrate; // timing is assumed to be configured elsewhere
-
+    /* Initialize and start FDCAN1 for CAN usage */
+    MX_FDCAN1_Init(baudrate);
+    HAL_FDCAN_Start(&hfdcan1);
     // Default Tx header setup; fields that change per-frame will be set in write().
     m_txHeader.IdType              = FDCAN_STANDARD_ID;
     m_txHeader.TxFrameType         = FDCAN_DATA_FRAME;
@@ -101,6 +103,10 @@ int CAN::read(SerializedCanMessage* msg)
 {
     // Check how many frames are pending in FIFO0
     uint32_t pending = HAL_FDCAN_GetRxFifoFillLevel(m_hfdcan, FDCAN_RX_FIFO0);
+    if (pending == 0) {
+		// No message available right now
+		return 0;
+	}
     uint8_t rxData[8] = {0};
 
     HAL_StatusTypeDef status =

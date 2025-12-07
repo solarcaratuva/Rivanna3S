@@ -171,24 +171,23 @@ int main(void)
   uint8_t test_data[2] = {6, 7};
   uint8_t received_data[3];
 
-  while (1)
-  {
-
-	  test_i2c.read(0x2, received_data, 3);
-	  HAL_Delay(100);
-	  test_i2c.write(0x2, test_data, 2);
-
-
-  }
+//  while (1)
+//  {
+//
+//	  test_i2c.read(0x2, received_data, 3);
+//	  HAL_Delay(100);
+//	  test_i2c.write(0x2, test_data, 2);
+//
+//
+//  }
 
   CAN can(PB_9, PB_8, 250000);
   SerializedCanMessage msg;
-  while (1){
-    int rc = can.read(&msg);
-    if(rc > 0){
-        LED1.write(true);
-    }
+  int rc = -1;
+  while (rc <= 0){
+     rc = can.read(&msg);
   }
+  LED1.write(true);
   
   
   /* USER CODE BEGIN SysInit */
