@@ -4,9 +4,7 @@
 
 #include "pinmap.h"
 #include "stm32h743xx.h"
-<<<<<<< HEAD
 #include <stdbool.h>
-=======
 
 #define SDA 1
 #define SCL 2
@@ -17,7 +15,6 @@ typedef struct {
   Pin pin;
   uint8_t af;
 } af_info;
->>>>>>> main
 
 // I2C peripheral struct
 typedef struct {
