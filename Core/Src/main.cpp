@@ -34,14 +34,11 @@
 #include "thread.h"
 #include "Timeout.h"
 #include "lock.h"
-<<<<<<< HEAD
 #include "caninterface.h"
 #include "can.h"  
-=======
 #include "log.h"
 #include "i2c.h"
 
->>>>>>> main
 
 /* USER CODE END Includes */
 
@@ -146,12 +143,9 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-<<<<<<< HEAD
   CanInterface can_itf(PF_0, PF_1, 4600);
   can_itf.register_callback(412, &testCANcallback1);
   can_itf.register_always_callback(&testCANcallback2);
-=======
->>>>>>> main
 
   /* USER CODE END 1 */
 
