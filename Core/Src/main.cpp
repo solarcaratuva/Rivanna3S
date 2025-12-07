@@ -34,6 +34,7 @@
 #include "Timeout.h"
 #include "lock.h"
 #include "caninterface.h"
+#include "can.h"  
 
 /* USER CODE END Includes */
 
@@ -157,6 +158,9 @@ int main(void)
 
   AnalogIn analogInput1(PF_5);
   AnalogIn analogInput2(PF_10);
+
+
+  
 
   while (1)
   {
