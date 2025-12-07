@@ -43,6 +43,10 @@ typedef struct {
 #define PC_5 (Pin){GPIOC, 1 << 5, 1ULL << 44}
 #define PC_13 (Pin){GPIOC, 1 << 13, 1ULL << 6}
 
+//fake D's for FDCAN1
+#define PD_0 (Pin){GPIOD, 1 << 0, 1ULL << 60}
+#define PD_1 (Pin){GPIOD, 1 << 1, 1ULL << 61}
+
 // E's
 #define PE_2 (Pin){GPIOE, 1 << 2, 1ULL << 0}
 #define PE_3 (Pin){GPIOE, 1 << 3, 1ULL << 1}
