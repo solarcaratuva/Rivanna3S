@@ -173,6 +173,17 @@ int main(void)
     }
 
   }
+
+  CAN can(PB_9, PB_8, 250000);
+  SerializedCanMessage msg;
+  while (1){
+    int rc = can.read(&msg);
+    if(rc > 0){
+        LED1.write(true);
+    }
+  }
+  
+  
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
