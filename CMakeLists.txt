@@ -90,9 +90,11 @@ target_link_options(${PROJECT_NAME}.elf PRIVATE
 # -------- Add FreeRTOS as a subdirectory (builds freertos_kernel library) --------
 add_subdirectory(Middlewares/Third_Party/FreeRTOS/Source)
 add_subdirectory(Drivers)
+add_subdirectory(Common)
 
 # -------- Link targets --------
 target_link_libraries(${PROJECT_NAME}.elf
+  common
   freertos_kernel
   m c gcc
 )
