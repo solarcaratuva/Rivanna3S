@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #include "lock.h"
+#include "pinmap.h"
 
 // -----------------------------------------------------------------------------
 // Serialized CAN message (raw frame)
@@ -44,9 +45,6 @@ struct CanMessage {
 // -----------------------------------------------------------------------------
 // Simple CAN driver wrapper
 // -----------------------------------------------------------------------------
-
-using Pin = uint32_t;
-
 class CAN {
 public:
     // Constructor: tx/rx kept for compatibility; baudrate is assumed to be set
