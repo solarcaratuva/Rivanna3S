@@ -4,14 +4,15 @@
 UART_Peripheral UART_Peripherals[] = {
     {USART2, PA_3.universal_mask, PA_2.universal_mask, NC, NC, GPIO_AF7_USART2, false},
     {UART4, PA_1.universal_mask, PA_0.universal_mask, NC, NC, GPIO_AF8_UART4, false},
-    {UART7, (PF_6.universal_mask | PE_7.universal_mask), (PF_7.universal_mask | PE_8.universal_mask), NC, NC, GPIO_AF7_UART7, false}
+    {UART7, (PF_6.universal_mask | PE_7.universal_mask), (PF_7.universal_mask | PE_8.universal_mask), NC, NC, GPIO_AF7_UART7, false},
+	{USART3, PD_9.universal_mask, PD_8.universal_mask, NC, NC, GPIO_AF7_USART3, false}
 };
 
 const uint8_t UART_PERIPHERAL_COUNT = sizeof(UART_Peripherals) / sizeof(UART_Peripherals[0]);
 
 I2C_Peripheral I2C_Peripherals[] = {
-    {I2C2, PF_0.universal_mask, PF_1.universal_mask, NC, NC, false},
-    {I2C4, PF_15.universal_mask, PF_14.universal_mask, NC, NC, false}
+    {I2C2, PF_0.universal_mask, PF_1.universal_mask, NC, NC, GPIO_AF4_I2C2, false},
+    {I2C4, PF_15.universal_mask, PF_14.universal_mask, NC, NC, GPIO_AF4_I2C4, false}
 };
 
 const uint8_t I2C_PERIPHERAL_COUNT = sizeof(I2C_Peripherals) / sizeof(I2C_Peripherals[0]);
@@ -34,28 +35,6 @@ ADC_Peripheral ADC_Peripherals[] = {
 const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Peripherals[0]);
 
 uint8_t adc_channels_claimed[] = {0, 0, 0};
-
-uint32_t adc_get_rank(ADC_Peripheral* peripheral) {
-	uint8_t index = peripheral->instance_num;
-
-	uint32_t rank;
-	switch (adc_channels_claimed[index]) {
-		case 0: rank = ADC_REGULAR_RANK_1; break;
-		case 1: rank = ADC_REGULAR_RANK_2; break;
-		case 2: rank = ADC_REGULAR_RANK_3; break;
-		case 3: rank = ADC_REGULAR_RANK_4; break;
-		case 4: rank = ADC_REGULAR_RANK_5; break;
-		case 5: rank = ADC_REGULAR_RANK_6; break;
-		case 6: rank = ADC_REGULAR_RANK_7; break;
-		case 7: rank = ADC_REGULAR_RANK_8; break;
-		case 8: rank = ADC_REGULAR_RANK_9; break;
-		case 9: rank = ADC_REGULAR_RANK_10; break;
-		default: rank = ADC_REGULAR_RANK_1; break;
-	}
-
-	adc_channels_claimed[index] += 1;
-	return rank;
-}
 
 
 void uart_clock_enable(USART_TypeDef* handle){
@@ -135,5 +114,71 @@ void gpio_clock_enable(GPIO_TypeDef* port) {
 	        __HAL_RCC_GPIOK_CLK_ENABLE();
 	    }
 	#endif //GPIOK
+}
+
+uint8_t get_i2c_af(I2C_TypeDef* handle, Pin pin, uint8_t mode) {
+	af_info i2c2_sda[] =
+	{
+		{PF_0, GPIO_AF4_I2C2}
+	};
+
+	uint8_t i2c2_sda_len = 2;
+
+	af_info i2c2_scl[] =
+	{
+		{PF_1, GPIO_AF4_I2C2}
+	};
+
+	uint8_t i2c2_scl_len = 1;
+
+	af_info i2c4_sda[] =
+	{
+		{PF_15, GPIO_AF4_I2C2}
+	};
+
+	uint8_t i2c4_sda_len = 1;
+
+	af_info i2c4_scl[] =
+	{
+		{PF_14, GPIO_AF4_I2C2}
+	};
+
+	uint8_t i2c4_scl_len = 1;
+
+	af_info *array;
+	uint8_t array_len;
+
+	if (handle == I2C2) {
+		if (mode == SDA) {
+			array = i2c2_sda;
+			array_len = i2c2_sda_len;
+		}
+		if (mode == SCL) {
+			array = i2c2_scl;
+			array_len = i2c2_scl_len;
+		}
+	}
+
+	if (handle == I2C4) {
+		if (mode == SDA) {
+		    array = i2c4_sda;
+		    array_len = i2c4_sda_len;
+		}
+		if (mode == SCL) {
+			array = i2c4_scl;
+			array_len = i2c4_scl_len;
+		}
+	}
+
+	for (uint8_t i = 0; i < array_len; i++) {
+	  if (array[i].pin.universal_mask == pin.universal_mask) {
+	    return array[i].af;
+	  }
+	}
+
+
+
+
+
 }
 

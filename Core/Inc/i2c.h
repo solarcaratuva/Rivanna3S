@@ -1,52 +1,127 @@
-/* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file    i2c.h
-  * @brief   This file contains all the function prototypes for
-  *          the i2c.c file
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __I2C_H__
-#define __I2C_H__
+ * @file I2C.h
+ * @brief C++ wrapper class for I2C communication using STM32 HAL drivers.
+ *
+ * This class provides an object-oriented interface for configuring and
+ * communicating over I2C peripherals on STM32 microcontrollers.
+ *
+ * It automatically configures GPIO pins, initializes the appropriate
+ * I2C peripheral, and provides simplified read/write helper functions.
+ *
+ * Example usage:
+ * @code
+ * #include "I2C.h"
+ *
+ * I2C bus(PB_8, PB_9, 400000);   // I2C1 (SCL=PB8, SDA=PB9), 400 kHz
+ *
+ * uint8_t data = 0x55;
+ * bus.write(0x50, &data, 1);     // Write 1 byte to slave address 0x50
+ *
+ * uint8_t buffer[4];
+ * bus.read(0x50, buffer, 4);     // Read 4 bytes from slave address 0x50
+ * @endcode
+ *
+ * @see stm32h7xx_hal_i2c.h
+ * @see pinmap.h
+ * @see peripheralmap.h
+ */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef I2C_H
+#define I2C_H
 
-/* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32h7xx_hal.h"
+#include "pinmap.h"
+#include "peripheralmap.h"
 
-/* USER CODE BEGIN Includes */
+/**
+ * @class I2C
+ * @brief Provides I2C communication interface using STM32 HAL.
+ */
+class I2C {
+public:
 
-/* USER CODE END Includes */
+    /**
+     * @enum I2C_Speed
+     * @brief Enumerates supported I2C bus speeds.
+     *
+     * This enumeration defines the standard I2C bus frequency modes
+     * supported by the STM32 I2C peripheral and used during peripheral
+     * initialization. These values correspond directly to the desired
+     * clock rate in Hertz and are passed to the constructor to
+     * configure timing parameters.
+     *
+     * Available speeds:
+     *  - ONE_HUNDRED_K (100000 Hz): Standard Mode
+     *  - FOUR_HUNDRED_K (400000 Hz): Fast Mode
+     *  - ONE_M (1000000 Hz): Fast Mode Plus
+     */
+	typedef enum {
+	    	STANDARD = 100000, // 100k
+			FAST = 400000, // 400k
+			FAST_PLUS = 1000000 //1M
+	    }I2C_BaudRate;
 
-extern I2C_HandleTypeDef hi2c1;
+    /**
+     * @brief Indicates whether the I2C peripheral was successfully initialized.
+     */
+    bool initialized = false;
 
-/* USER CODE BEGIN Private defines */
+    /**
+     * @brief Constructs an I2C object and initializes the I2C peripheral.
+     * @param scl  SCL pin (must correspond to valid I2C SCL mapping).
+     * @param sda  SDA pin (must correspond to valid I2C SDA mapping).
+     * @param frequency I2C bus frequency (Supports (kHz): 100000, 400000, 1000000).
+     */
+    explicit I2C(Pin scl, Pin sda, I2C_BaudRate baudrate);
 
-/* USER CODE END Private defines */
+    /**
+     * @brief Writes data to an I2C device (blocking).
+     * @param address 7-bit peripheral address (0x00 – 0x7F).
+     * @param buffer Pointer to data to transmit.
+     * @param length Number of bytes to send.
+     */
+    void write(uint16_t address, uint8_t *buffer, uint16_t length);
 
-void MX_I2C1_Init(void);
+    /**
+     * @brief Reads data from an I2C device (blocking).
+     * @param address 7-bit peripheral address.
+     * @param buffer Buffer where received data is stored.
+     * @param length Number of bytes to read.
+     */
+    void read(uint16_t address, uint8_t *buffer, uint16_t length);
 
-/* USER CODE BEGIN Prototypes */
 
-/* USER CODE END Prototypes */
 
-#ifdef __cplusplus
-}
-#endif
+private:
+    I2C_HandleTypeDef* hi2c;          /**< HAL I2C handle. */
 
-#endif /* __I2C_H__ */
+    /**
+     * @brief Matching peripheral entry from your peripheral map.
+     */
+    I2C_Peripheral *i2c_periph;
 
+    /**
+     * @brief Initializes GPIO pins for I2C alternate function mode.
+     */
+    void init_gpio(I2C_Peripheral *i2c_periph);
+
+    /**
+     * @brief Initializes the I2C peripheral.
+     */
+    void init_i2c(uint32_t baudrate);
+
+    /**
+     * @brief Finds the I2C peripheral that matches SCL/SDA pin pair.
+     * @param scl SCL pin.
+     * @param sda SDA pin.
+     * @return Pointer to I2C_Peripheral entry, or nullptr if invalid.
+     */
+    I2C_Peripheral* find_i2c_pins(Pin scl, Pin sda);
+
+
+    Pin scl;                     /**< SCL pin object. */
+    Pin sda;                     /**< SDA pin object. */
+    uint32_t baudrate;          /**< I2C bus frequency. */
+};
+
+#endif // I2C_H

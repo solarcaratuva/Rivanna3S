@@ -2,7 +2,6 @@
     "files.associations": {
         "main.h": "c",
         "memorymap.h": "c",
-        "ios": "c",
         "atomic": "cpp",
         "cmath": "cpp",
         "compare": "cpp",
@@ -21,7 +20,6 @@
         "iosfwd": "cpp",
         "limits": "cpp",
         "list": "cpp",
-        "map": "cpp",
         "memory": "cpp",
         "new": "cpp",
         "tuple": "cpp",
@@ -34,7 +32,6 @@
         "xmemory": "cpp",
         "xstring": "cpp",
         "xtr1common": "cpp",
-        "xtree": "cpp",
         "xutility": "cpp"
     }
 }
