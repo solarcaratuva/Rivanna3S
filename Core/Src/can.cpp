@@ -101,11 +101,6 @@ int CAN::read(SerializedCanMessage* msg)
 {
     // Check how many frames are pending in FIFO0
     uint32_t pending = HAL_FDCAN_GetRxFifoFillLevel(m_hfdcan, FDCAN_RX_FIFO0);
-    if (pending == 0) {
-        // No message available
-        return 0;
-    }
-
     uint8_t rxData[8] = {0};
 
     HAL_StatusTypeDef status =
