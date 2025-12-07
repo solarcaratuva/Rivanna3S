@@ -51,6 +51,16 @@ typedef struct {
     bool isClaimed;
 } FDCAN_Peripheral;
 
+// ADC peripheral struct
+typedef struct {
+    ADC_TypeDef *instance;    // ADC1, ADC2, ...
+    uint32_t channel;         // ADC_CHANNEL_0, ...
+    uint64_t pin_mask;        // PA_0.universal_mask
+    Pin used_pin;
+    bool isClaimed;
+    uint8_t instance_num;
+} ADC_Peripheral;
+
 // Declare global arrays
 extern UART_Peripheral UART_Peripherals[];
 extern const uint8_t UART_PERIPHERAL_COUNT;
@@ -69,4 +79,3 @@ void gpio_clock_enable(GPIO_TypeDef* port);
 uint8_t get_i2c_af(I2C_TypeDef* handle, Pin pin, uint8_t mode);
 
 #endif /* PERIPHERALMAP */
-
