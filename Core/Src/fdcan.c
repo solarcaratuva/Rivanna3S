@@ -46,7 +46,7 @@ void MX_FDCAN1_Init(uint32_t baudrate)
 
 
 
-  hfdcan1.Init.NominalPrescaler = (int) setPrescaler(baudrate);
+  hfdcan1.Init.NominalPrescaler = (int) calculate_Prescaler(baudrate);
   hfdcan1.Init.NominalSyncJumpWidth = 1;
   hfdcan1.Init.NominalTimeSeg1 = 2;
   hfdcan1.Init.NominalTimeSeg2 = 2;
@@ -81,7 +81,7 @@ void MX_FDCAN1_Init(uint32_t baudrate)
 
 }
 
-uint32_t setPrescaler(uint32_t baudrate) {
+uint32_t calculate_Prescaler(uint32_t baudrate) {
     // This function can be used to set the prescaler based on desired baudrate
     // Implementation depends on specific requirements and hardware capabilities
     const uint32_t fdcan_ker_clk = 160000000UL; 

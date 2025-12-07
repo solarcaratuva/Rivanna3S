@@ -5,6 +5,7 @@
 
 #include "can.h"        // Your CAN wrapper (CAN, CanMessage, SerializedCanMessage)
 #include "thread.h"
+#include "Clock.h"
 
 // Callback type: user gets a const reference to the received serialized CAN frame
 using CanCallback = void (*)(const SerializedCanMessage &msg);
@@ -35,13 +36,12 @@ private:
     Thread  interface_thread;
 
     int num_callbacks = 0;
-    int num_alwayscallbacks = 0;
 
     static constexpr int max_callbacks = 16;
 
     uint16_t      CANid_arr[max_callbacks];
     CanCallback callback_arr[max_callbacks];
-    CanCallback alwayscallback_arr[max_callbacks];
+    CanCallback alwayscallback;
     // Receive one frame and dispatch callbacks
     void receiver_thread();
     void receive();
