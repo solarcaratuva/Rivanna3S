@@ -35,6 +35,10 @@ typedef struct {
 #define PB_0 (Pin){GPIOB, 1 << 0, 1ULL << 45}
 #define PB_1 (Pin){GPIOB, 1 << 1, 1ULL << 46}
 #define PB_2 (Pin){GPIOB, 1 << 2, 1ULL << 47}
+//fake D's for FDCAN1
+#define PB_8 (Pin){GPIOB, 1 << 0, 1ULL << 60}
+#define PB_9 (Pin){GPIOB, 1 << 1, 1ULL << 61}
+
 
 // C's
 #define PC_0 (Pin){GPIOC, 1 << 0, 1ULL << 25}

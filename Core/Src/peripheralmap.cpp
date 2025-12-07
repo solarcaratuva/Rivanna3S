@@ -18,6 +18,11 @@ I2C_Peripheral I2C_Peripherals[] = {
 const uint8_t I2C_PERIPHERAL_COUNT = sizeof(I2C_Peripherals) / sizeof(I2C_Peripherals[0]);
 
 
+FDCAN_Peripheral FDCAN_Peripherals[] = {
+	{FDCAN1, PB_8.universal_mask, PB_9.universal_mask, NC, NC, false} //need to add more FDCAN peripherals if used and verify the pins
+};
+const uint8_t FDCAN_PERIPHERAL_COUNT = sizeof(FDCAN_Peripherals) / sizeof(FDCAN_Peripherals[0]);
+
 
 ADC_Peripheral ADC_Peripherals[] = {
     { ADC1, ADC_CHANNEL_16,  PA_0.universal_mask, NC, false, 0},

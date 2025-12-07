@@ -38,7 +38,8 @@ extern FDCAN_HandleTypeDef hfdcan1;
 
 /* USER CODE END Private defines */
 
-void MX_FDCAN1_Init(void);
+void MX_FDCAN1_Init(uint32_t baudrate);
+uint32_t calculate_Prescaler(uint32_t baudrate);
 
 /* USER CODE BEGIN Prototypes */
 

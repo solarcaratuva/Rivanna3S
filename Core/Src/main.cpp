@@ -34,6 +34,8 @@
 #include "thread.h"
 #include "Timeout.h"
 #include "lock.h"
+#include "caninterface.h"
+#include "can.h"  
 #include "log.h"
 #include "i2c.h"
 
@@ -78,6 +80,17 @@ void onTimeout() {
   pin.write(true);
   vTaskDelay(pdMS_TO_TICKS(3000));
   pin.write(false);
+}
+
+int x = 0;
+int y = 100;
+
+void testCANcallback1(const SerializedCanMessage &msg) {
+  x += 3;
+}
+
+void testCANcallback2(const SerializedCanMessage &msg) {
+  y += 3;
 }
 
 void timeout_test_task(void *argument) {
@@ -130,6 +143,9 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
+  CanInterface can_itf(PF_0, PF_1, 4600);
+  can_itf.register_callback(412, &testCANcallback1);
+  can_itf.register_always_callback(&testCANcallback2);
 
   /* USER CODE END 1 */
 
@@ -155,15 +171,25 @@ int main(void)
   uint8_t test_data[2] = {6, 7};
   uint8_t received_data[3];
 
-  while (1)
-  {
+//  while (1)
+//  {
+//
+//	  test_i2c.read(0x2, received_data, 3);
+//	  HAL_Delay(100);
+//	  test_i2c.write(0x2, test_data, 2);
+//
+//
+//  }
 
-	  test_i2c.read(0x2, received_data, 3);
-	  HAL_Delay(100);
-	  test_i2c.write(0x2, test_data, 2);
-
-
+  CAN can(PB_9, PB_8, 250000);
+  SerializedCanMessage msg;
+  int rc = -1;
+  while (rc <= 0){
+     rc = can.read(&msg);
   }
+  LED1.write(true);
+  
+  
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
