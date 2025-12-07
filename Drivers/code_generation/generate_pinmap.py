@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import os
 import re
 
-def parse_XML_pinmap(dir):
+def parse_XML_pinmap(dir: str) -> dict:
     tree = ET.parse(dir)
     root = tree.getroot()
 
@@ -19,19 +19,19 @@ def parse_XML_pinmap(dir):
 
     return pin_map
 
-def create_header_file(file_path, pin_map):
+def create_header_file(file_path: str, pin_map: dict):
     with open(file_path, 'w') as f:
         # Header guard and includes
-        f.write(f"#ifndef PINMAP_H\n")
-        f.write(f"#define PINMAP_H\n\n")
-        f.write("#include \"stm32h743xx.h\"\n\n")
+        f.write("""#ifndef PINMAP_H
+#define PINMAP_H\n
+#include "stm32h743xx.h"\n\n""")
 
         # Pin struct definition
-        f.write("typedef struct {\n")
-        f.write("    GPIO_TypeDef* block;       // Pointer to GPIO peripheral block\n")
-        f.write("    uint16_t block_mask;       // Mask for pins within the block\n")
-        f.write("    uint64_t universal_mask;   // Unique global pin mask\n")
-        f.write("} Pin;\n\n")
+        f.write("""typedef struct {
+    GPIO_TypeDef* block;        // Pointer to GPIO peripheral block
+    uint16_t block_mask;        // Mask for pins within the block
+    uint64_t universal_mask;    // Unique global pin mask
+} Pin;\n\n""")
 
         # Pins
         f.write("#define NC (Pin){NULL, 0, 0} // Not connected pin\n\n")
