@@ -1,4 +1,4 @@
-#include "PeripheralMap.h"
+#include "peripheralmap.h"
 #include "stm32h7xx_hal.h"
 
 UART_Peripheral UART_Peripherals[] = {
