@@ -31,10 +31,10 @@ struct CanMessage {
     virtual ~CanMessage() = default;
 
     // Convert logical struct -> raw CAN frame
-    virtual SerializedCanMessage serialize() const = 0;
+    virtual void serialize(SerializedCanMessage *message) const = 0;
 
     // Convert raw CAN frame -> logical struct
-    virtual void deserialize(const SerializedCanMessage& scm) = 0;
+    virtual void deserialize(SerializedCanMessage *message) = 0;
 
     // For debugging/logging
     virtual void log(int level) const = 0;
