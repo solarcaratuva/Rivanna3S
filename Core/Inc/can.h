@@ -14,6 +14,7 @@ extern "C" {
 
 #include "lock.h"
 #include "pinmap.h"
+#include "log.h"
 
 // -----------------------------------------------------------------------------
 // Serialized CAN message (raw frame)
@@ -31,13 +32,13 @@ struct CanMessage {
     virtual ~CanMessage() = default;
 
     // Convert logical struct -> raw CAN frame
-    virtual void serialize(SerializedCanMessage *message) const = 0;
+    virtual void serialize(SerializedCanMessage *message) = 0;
 
     // Convert raw CAN frame -> logical struct
     virtual void deserialize(SerializedCanMessage *message) = 0;
 
     // For debugging/logging
-    virtual void log(int level) const = 0;
+    virtual void log_msg(LogLevel level) const = 0;
 
     // make sure to always initialize it with static uint16_t get_ID()
 };
