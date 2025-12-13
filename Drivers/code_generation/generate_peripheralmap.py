@@ -6,10 +6,9 @@ from generate_pinmap import parse_XML_pinmap
 """ 
 TODO: 
     - Generate SPI peripheral array and get_SPI_AF function
-    - Generate get_ADC_AF function (if needed)
 """
 
-# Define valid signals for each peripheral type
+# Define specific pins required for each peripheral type
 SIGNAL_MAP = {
     "UART": ["RX", "TX"],
     "USART": ["RX", "TX"],
@@ -62,12 +61,12 @@ def parse_XML_peripheralmap(dir: str) -> dict:
                     if sig_type.startswith("INP"):
                         channel = int(sig_type[3:])
                         instances[instance].setdefault(channel, []).append(pin_name)
-                    continue
 
                 # For other peripherals, check if signal type is valid
-                valid_signals = SIGNAL_MAP[peripheral]
-                if sig_type in valid_signals:
-                    instances[instance].setdefault(sig_type, []).append(pin_name)
+                else:
+                    valid_signals = SIGNAL_MAP[peripheral]
+                    if sig_type in valid_signals:
+                        instances[instance].setdefault(sig_type, []).append(pin_name)
                     
     return peripheral_map
 
@@ -98,7 +97,7 @@ def parse_XML_alternate_functions(dir: str, peripheral_map: dict) -> dict:
     return af_map
 
 
-def write_af_arrays(f, af_map: dict, peripheral_type: str):
+def write_af_arrays(f, af_map: dict, peripheral_type: str) -> None:
     for peripheral, modes in af_map[peripheral_type].items():
         for mode, pins in modes.items():
             if not pins:
@@ -112,7 +111,7 @@ def write_af_arrays(f, af_map: dict, peripheral_type: str):
             f.write(f"    uint8_t {peripheral}_{mode}_len = {len(pins)};\n\n")
 
 
-def write_get_uart_af(f, af_map: dict):
+def write_get_uart_af(f, af_map: dict) -> None:
     f.write("uint8_t get_UART_AF(USART_TypeDef* handle, Pin* pin, uint8_t mode) {\n")
 
     write_af_arrays(f, af_map, "UART")
@@ -146,7 +145,7 @@ def write_get_uart_af(f, af_map: dict):
 }\n\n""")
 
 
-def write_get_i2c_af(f, af_map: dict):
+def write_get_i2c_af(f, af_map: dict) -> None:
     f.write("uint8_t get_I2C_AF(I2C_TypeDef* handle, Pin* pin, uint8_t mode) {\n")
 
     write_af_arrays(f, af_map, "I2C")
@@ -177,7 +176,7 @@ def write_get_i2c_af(f, af_map: dict):
 }\n\n""")
 
 
-def write_get_fdcan_af(f, af_map: dict):
+def write_get_fdcan_af(f, af_map: dict) -> None:
     f.write("uint8_t get_FDCAN_AF(FDCAN_GlobalTypeDef* handle, Pin* pin, uint8_t mode) {\n")
 
     write_af_arrays(f, af_map, "FDCAN")
@@ -208,7 +207,7 @@ def write_get_fdcan_af(f, af_map: dict):
 }\n\n""")
 
 
-def write_uart_array(f, peripheral_map: dict):
+def write_uart_array(f, peripheral_map: dict) -> None:
     f.write("UART_Peripheral UART_Peripherals[] = {\n")
 
     for bus in ("UART", "USART"):
@@ -229,7 +228,7 @@ def write_uart_array(f, peripheral_map: dict):
     f.write("const uint8_t UART_PERIPHERAL_COUNT = sizeof(UART_Peripherals) / sizeof(UART_Peripherals[0]);\n\n")
 
 
-def write_i2c_array(f, peripheral_map: dict):
+def write_i2c_array(f, peripheral_map: dict) -> None:
     f.write("I2C_Peripheral I2C_Peripherals[] = {\n")
 
     for instance, values in peripheral_map.get("I2C", {}).items():
@@ -249,7 +248,7 @@ def write_i2c_array(f, peripheral_map: dict):
     f.write("const uint8_t I2C_PERIPHERAL_COUNT = sizeof(I2C_Peripherals) / sizeof(I2C_Peripherals[0]);\n\n")
 
 
-def write_fdcan_array(f, peripheral_map: dict):
+def write_fdcan_array(f, peripheral_map: dict) -> None:
     f.write("FDCAN_Peripheral FDCAN_Peripherals[] = {\n")
 
     for instance, values in peripheral_map.get("FDCAN", {}).items():
@@ -269,7 +268,7 @@ def write_fdcan_array(f, peripheral_map: dict):
     f.write("const uint8_t FDCAN_PERIPHERAL_COUNT = sizeof(FDCAN_Peripherals) / sizeof(FDCAN_Peripherals[0]);\n\n")
 
 
-def write_adc_array(f, peripheral_map: dict):
+def write_adc_array(f, peripheral_map: dict) -> None:
     adc_map = peripheral_map.get("ADC", {})
 
     # Assign instance numbers in consistent order
@@ -305,7 +304,7 @@ def write_adc_array(f, peripheral_map: dict):
         f"{{{', '.join(['0'] * len(adc_instances))}}};\n\n"
     )
 
-def create_cpp_file(file_path: str, peripheral_map: dict, pin_map: dict, af_map: dict):
+def create_cpp_file(file_path: str, peripheral_map: dict, pin_map: dict, af_map: dict) -> None:
     with open(file_path, 'w') as f:
         # Includes
         f.write('#include "peripheralmap.h"\n#include "stm32h7xx_hal.h"\n\n')

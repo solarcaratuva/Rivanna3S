@@ -19,7 +19,7 @@ def parse_XML_pinmap(dir: str) -> dict:
 
     return pin_map
 
-def create_header_file(file_path: str, pin_map: dict):
+def create_header_file(file_path: str, pin_map: dict) -> None:
     with open(file_path, 'w') as f:
         # Header guard and includes
         f.write("""#ifndef PINMAP_H
