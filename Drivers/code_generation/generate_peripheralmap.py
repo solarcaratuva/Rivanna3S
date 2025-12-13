@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import os
 import re
+import argparse
 from generate_pinmap import parse_XML_pinmap
 
 """ 
@@ -304,10 +305,10 @@ def write_adc_array(f, peripheral_map: dict) -> None:
         f"{{{', '.join(['0'] * len(adc_instances))}}};\n\n"
     )
 
-def create_cpp_file(file_path: str, peripheral_map: dict, pin_map: dict, af_map: dict) -> None:
+def create_cpp_file(file_path: str, peripheral_map: dict, pin_map: dict, af_map: dict, family: str) -> None:
     with open(file_path, 'w') as f:
         # Includes
-        f.write('#include "peripheralmap.h"\n#include "stm32h7xx_hal.h"\n\n')
+        f.write(f'#include "peripheralmap.h"\n#include "{family.lower()}xx_hal.h"\n\n')
 
         # Peripheral arrays
         write_uart_array(f, peripheral_map)
@@ -336,14 +337,21 @@ def create_cpp_file(file_path: str, peripheral_map: dict, pin_map: dict, af_map:
         write_get_fdcan_af(f, af_map)
 
 
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Generate peripheralmap source file from XML",)
+    parser.add_argument("--device_pinmapping", help="Path to the device pinmapping input XML file", required=True)
+    parser.add_argument("--family_peripheral_list", help="Path to the family peripheral list input XML file", required=True)
+    parser.add_argument("--family", help="Name of the device family (e.g. STM32H743)", required=True)
+
+    args = parser.parse_args()
+
+    peripheral_map = parse_XML_peripheralmap(args.device_pinmapping)
+    pin_map = parse_XML_pinmap(args.device_pinmapping)
+    af_map = parse_XML_alternate_functions(args.family_peripheral_list, peripheral_map)
+
+    output_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'peripheralmap.cpp')
+    create_cpp_file(output_file_path, peripheral_map, pin_map, af_map, args.family)
+
+
 if __name__ == "__main__":
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'input/STM32H743ZITx.xml')
-    peripheral_map = parse_XML_peripheralmap(dir)
-    pin_map = parse_XML_pinmap(dir)
-
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'input/GPIO-STM32H747_gpio_v1_0_Modes.xml')
-    af_map = parse_XML_alternate_functions(dir, peripheral_map)
-
-    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'peripheralmap.cpp')
-    create_cpp_file(file_path, peripheral_map, pin_map, af_map)
-
+    main()

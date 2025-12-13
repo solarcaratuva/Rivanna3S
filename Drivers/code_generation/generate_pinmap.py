@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import os
 import re
+import argparse
 
 def parse_XML_pinmap(dir: str) -> dict:
     tree = ET.parse(dir)
@@ -19,12 +20,12 @@ def parse_XML_pinmap(dir: str) -> dict:
 
     return pin_map
 
-def create_header_file(file_path: str, pin_map: dict) -> None:
+def create_header_file(file_path: str, pin_map: dict, family: str) -> None:
     with open(file_path, 'w') as f:
         # Header guard and includes
-        f.write("""#ifndef PINMAP_H
+        f.write(f"""#ifndef PINMAP_H
 #define PINMAP_H\n
-#include "stm32h743xx.h"\n\n""")
+#include "{family.lower()}xx.h"\n\n""")
 
         # Pin struct definition
         f.write("""typedef struct {
@@ -49,14 +50,17 @@ def create_header_file(file_path: str, pin_map: dict) -> None:
         f.write(f"\n#endif /* PINMAP */")
 
 
-if __name__ == "__main__":
-    dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'input/STM32H743ZITx.xml')
-    pin_map = parse_XML_pinmap(dir)
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Generate pinmap header file from XML",)
+    parser.add_argument("--device_pinmapping", help="Path to the device pinmapping input XML file", required=True)
+    parser.add_argument("--family", help="Name of the device family (e.g. STM32H743)", required=True)
 
-    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pinmap.h')
-    create_header_file(file_path, pin_map)
+    args = parser.parse_args()
 
-
-
+    output_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pinmap.h')
+    pin_map = parse_XML_pinmap(args.device_pinmapping)
+    create_header_file(output_file_path, pin_map, args.family)
 
     
+if __name__ == "__main__":
+    main()
