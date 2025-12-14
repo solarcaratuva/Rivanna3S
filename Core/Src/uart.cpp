@@ -51,7 +51,7 @@ void UART::init_gpio(UART_Peripheral* uart_periph) {
 void UART::init_uart(uint32_t baud) {
     //Turn on clocks for all possible UART
 
-	uart_clock_enable(uart_periph->handle);
+	// uart_clock_enable(uart_periph->handle);
 
     huart.Instance          = uart_periph-> handle;
     huart.Init.BaudRate     = baud;
