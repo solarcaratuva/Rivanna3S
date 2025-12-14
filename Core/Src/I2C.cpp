@@ -20,8 +20,8 @@ I2C::I2C(Pin sda, Pin scl, I2C_BaudRate baudrate)
 	i2c_periph->scl_used = scl;
 	gpio_clock_enable(sda.block);
 	gpio_clock_enable(scl.block);
-	uint8_t sda_af = get_i2c_af(i2c_periph->handle, sda, SDA);
-	uint8_t scl_af = get_i2c_af(i2c_periph->handle, scl, SCL);
+	uint8_t sda_af = get_I2C_AF(i2c_periph->handle, &sda, SDA);
+	uint8_t scl_af = get_I2C_AF(i2c_periph->handle, &scl, SCL);
 
 	HAL_I2C_MspInit_custom(i2c_periph->handle, sda, scl, sda_af, scl_af);
 	uint32_t timing_reg = compute_timing(baudrate);
