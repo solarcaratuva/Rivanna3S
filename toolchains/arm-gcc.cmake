@@ -7,8 +7,8 @@ set(ARM_TOOLCHAIN_PATH "/home/vboxuser/armtoolchain/arm-gnu-toolchain-14.3.rel1-
 set(CMAKE_C_COMPILER   "${ARM_TOOLCHAIN_PATH}/arm-none-eabi-gcc")
 set(CMAKE_CXX_COMPILER "${ARM_TOOLCHAIN_PATH}/arm-none-eabi-g++")
 set(CMAKE_ASM_COMPILER "${ARM_TOOLCHAIN_PATH}/arm-none-eabi-gcc")
-set(CMAKE_C_COMPILER arm-none-eabi-gcc)
-set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
+#set(CMAKE_C_COMPILER arm-none-eabi-gcc)
+#set(CMAKE_ASM_COMPILER arm-none-eabi-gcc)
 
 # Default flags for Cortex-M7 + hard float
 set(CORTEX_FLAGS "-mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard")
