@@ -157,10 +157,12 @@ int main(void)
 
   while (1)
   {
-
-	  test_i2c.read(0x2, received_data, 3);
-	  HAL_Delay(100);
-	  test_i2c.write(0x2, test_data, 2);
+	  // test_i2c.read(0x2, received_data, 3);
+	  // HAL_Delay(100);
+	  // test_i2c.write(0x2, test_data, 2);
+    Thread t;
+    t.start(test_get_current_time);
+    vTaskStartScheduler();
 
 
   }

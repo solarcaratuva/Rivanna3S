@@ -79,7 +79,7 @@ public:
     void write(uint8_t *buffer, uint16_t length);
 
 private:
-    UART_HandleTypeDef huart;   /**< HAL UART handle used for configuration and I/O. */
+    UART_HandleTypeDef* huart;   /**< HAL UART handle used for configuration and I/O. */
 
     void init_gpio(UART_Peripheral* uart_periph);
 
