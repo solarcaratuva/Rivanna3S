@@ -5,9 +5,9 @@
 #define STACK_SIZE 1000
 #define PRIORITY 1
 
-Thread::Thread() {
-    handle_ = NULL;
-}
+Thread::Thread() 
+    : handle_(NULL)
+    {}
 
 BaseType_t Thread::start(void (*fn)()) {
         return xTaskCreate(
