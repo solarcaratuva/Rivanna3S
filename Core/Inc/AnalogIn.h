@@ -15,9 +15,7 @@ public:
     float read_voltage();
 private:
     ADC_Peripheral* adc_periph;
-    void initGPIO(ADC_Peripheral* adc_peripheral);
-    uint32_t adc_get_rank(ADC_Peripheral* peripheral);
-    void initADC();
+    uint32_t adc_get_rank(const ADC_Peripheral* peripheral);
     ADC_Peripheral* findADCPin(Pin pin);
     ADC_HandleTypeDef* hadc;
 };
