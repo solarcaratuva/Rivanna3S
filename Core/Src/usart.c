@@ -384,7 +384,7 @@ void MX_USART6_UART_Init(uint32_t baudrate)
 
 }
 
-void HAL_UART_MspInit_custom(USART_TypeDef* uartHandle, Pin pin, uint8_t af)
+void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t af)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -664,7 +664,7 @@ void HAL_UART_MspInit_custom(USART_TypeDef* uartHandle, Pin pin, uint8_t af)
   }
 }
 
-UART_HandleTypeDef* UART_init(USART_TypeDef* uart, uint32_t baudrate) {
+UART_HandleTypeDef* UART_init(const USART_TypeDef* uart, uint32_t baudrate) {
     UART_HandleTypeDef* handle;
 
     if (uart == UART4) {

@@ -113,7 +113,7 @@ void MX_I2C2_Init(uint32_t timing_reg)
 
 }
 
-I2C_HandleTypeDef* I2C_init(I2C_TypeDef* i2cHandle, uint32_t timing_reg) {
+I2C_HandleTypeDef* I2C_init(const I2C_TypeDef* i2cHandle, uint32_t timing_reg) {
   if (i2cHandle == I2C1) {
 	MX_I2C1_Init(timing_reg);
     return &hi2c1;
@@ -128,7 +128,7 @@ I2C_HandleTypeDef* I2C_init(I2C_TypeDef* i2cHandle, uint32_t timing_reg) {
   return &hi2c1; // Default return to avoid compiler warning
 }
 
-void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl, uint8_t af_sda, uint8_t af_scl)
+void HAL_I2C_MspInit_custom(const I2C_TypeDef* i2cHandle, Pin pin, uint8_t af)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -153,19 +153,13 @@ void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl, uint8_t af
     PB6     ------> I2C1_SCL
     PB7     ------> I2C1_SDA
     */
-    GPIO_InitStruct.Pin = sda.block_mask;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = af_sda;
-    HAL_GPIO_Init(sda.block, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = scl.block_mask;
+    GPIO_InitStruct.Pin = pin.block_mask;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = af_scl;
-    HAL_GPIO_Init(scl.block, &GPIO_InitStruct);
+    GPIO_InitStruct.Alternate = af;
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct);
 
     /* I2C1 clock enable */
     __HAL_RCC_I2C1_CLK_ENABLE();
@@ -191,19 +185,12 @@ void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl, uint8_t af
 
       __HAL_RCC_GPIOB_CLK_ENABLE();
 
-      GPIO_InitStruct.Pin = sda.block_mask;
+      GPIO_InitStruct.Pin = pin.block_mask;
       GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
       GPIO_InitStruct.Pull = GPIO_NOPULL;
       GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-      GPIO_InitStruct.Alternate = af_sda;
-      HAL_GPIO_Init(sda.block, &GPIO_InitStruct);
-
-      GPIO_InitStruct.Pin = scl.block_mask;
-      GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-      GPIO_InitStruct.Pull = GPIO_NOPULL;
-      GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-      GPIO_InitStruct.Alternate = af_scl;
-      HAL_GPIO_Init(scl.block, &GPIO_InitStruct);
+      GPIO_InitStruct.Alternate = af;
+      HAL_GPIO_Init(pin.block, &GPIO_InitStruct);
 
       /* I2C1 clock enable */
       __HAL_RCC_I2C2_CLK_ENABLE();
@@ -215,9 +202,6 @@ void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin sda, Pin scl, uint8_t af
 
 uint32_t compute_timing(uint32_t freq_hz)
 {
-    // I2C kernel clock = 64 MHz for STM32H743 (D2PCLK1)
-    uint32_t I2C_CLK = 64000000;
-
     // ======== 100 kHz ========
     if (freq_hz <= 100000) {
         // Standard mode, Rise ≈ 100ns, Fall ≈ 10ns

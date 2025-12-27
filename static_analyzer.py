@@ -10,6 +10,7 @@ ARGS = [
     "--quiet",
     "--max-ctu-depth=4",
     "--error-exitcode=1",
+    "--check-level=exhaustive",
 ]
 
 SOURCES = [
@@ -27,6 +28,7 @@ SUPPRESSES = ["--suppress=" + s for s in [
     "staticFunction",
     "functionStatic",
     "variableScope",
+    "passedByValue",
 ]]
 
 

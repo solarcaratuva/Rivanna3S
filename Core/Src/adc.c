@@ -218,7 +218,7 @@ void MX_ADC3_Init(uint32_t channel, uint32_t rank)
 
 }
 
-ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, uint32_t rank) {
+ADC_HandleTypeDef* ADC_init(const ADC_TypeDef* hadc, uint32_t channel, uint32_t rank) {
   if (hadc == ADC1) {
     MX_ADC1_Init(channel, rank);
     return &hadc1;
@@ -235,7 +235,7 @@ ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, uint32_t rank) 
 
 static uint32_t HAL_RCC_ADC12_CLK_ENABLED=0;
 
-void HAL_ADC_MspInit_custom(ADC_TypeDef* adcHandle, Pin pin)
+void HAL_ADC_MspInit_custom(const ADC_TypeDef* adcHandle, Pin pin)
 {
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC;

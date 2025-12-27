@@ -4,8 +4,8 @@
  *  Created on: Sep 21, 2025
  *      Author: rrx7xw
  */
-#include "../Inc/DigitalOut.h"
-
+#include "DigitalOut.h"
+#include "peripheralmap.h"
 #include "stm32h7xx_hal.h"
 
 // -------- Constructors --------
@@ -14,6 +14,7 @@
 DigitalOut::DigitalOut(Pin pin)
     : pin_(pin), active_high_(true)
 {
+    gpio_clock_enable(pin_.block);
     configure_pin();
 }
 
@@ -21,6 +22,7 @@ DigitalOut::DigitalOut(Pin pin)
 DigitalOut::DigitalOut(Pin pin, bool active_high)
     : pin_(pin), active_high_(active_high)
 {
+    gpio_clock_enable(pin_.block);
     configure_pin();
 }
 
@@ -56,20 +58,6 @@ bool DigitalOut::read() {
 
 void DigitalOut::configure_pin() {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-    // Enable GPIO clock (basic version; expand for all ports)
-    if (pin_.block == GPIOA) __HAL_RCC_GPIOA_CLK_ENABLE();
-    else if (pin_.block == GPIOB) __HAL_RCC_GPIOB_CLK_ENABLE();
-    else if (pin_.block == GPIOC) __HAL_RCC_GPIOC_CLK_ENABLE();
-    else if (pin_.block == GPIOD) __HAL_RCC_GPIOD_CLK_ENABLE();
-    else if (pin_.block == GPIOE) __HAL_RCC_GPIOE_CLK_ENABLE();
-    else if (pin_.block == GPIOF) __HAL_RCC_GPIOF_CLK_ENABLE();
-    else if (pin_.block == GPIOG) __HAL_RCC_GPIOG_CLK_ENABLE();
-    else if (pin_.block == GPIOH) __HAL_RCC_GPIOH_CLK_ENABLE();
-    else if (pin_.block == GPIOI) __HAL_RCC_GPIOI_CLK_ENABLE();
-    // Add GPIOJ/K if your STM32 variant has them
-
-    // Configure pin as output
     GPIO_InitStruct.Pin = pin_.block_mask;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP; // push-pull
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW; // adjust if needed

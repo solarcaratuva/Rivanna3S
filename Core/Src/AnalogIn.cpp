@@ -15,30 +15,37 @@ AnalogIn::AnalogIn(Pin pin) {
         return;
     }
     adc_periph->used_pin = pin;
+
     gpio_clock_enable(pin.block);
+
     HAL_ADC_MspInit_custom(adc_periph->instance, pin);
+
     uint32_t rank = adc_get_rank(adc_periph);
     hadc = ADC_init(adc_periph->instance, adc_periph->channel, rank);
+    
     initialized = true;
 }
 
 
 float AnalogIn::read() {
+    if (!initialized) {
+        return 10.0f;
+    }
 
     // Start ADC conversion
     HAL_StatusTypeDef check = HAL_ADC_Start(hadc);
-    if (check != HAL_OK) return 1.5;
+    if (check != HAL_OK) return 11.0f;
 
     // Poll for conversion completion
     check = HAL_ADC_PollForConversion(hadc, HAL_MAX_DELAY);
-    if (check != HAL_OK) return 1.5;
+    if (check != HAL_OK) return 12.0f;
 
     // Get the converted value
     float value = (HAL_ADC_GetValue(hadc)/4095.0f);
 
     // Stop ADC
     check = HAL_ADC_Stop(hadc);
-    if (check != HAL_OK) return 1.5;
+    if (check != HAL_OK) return 13.0f;
 
     return value;
 }
@@ -61,7 +68,7 @@ ADC_Peripheral* AnalogIn::findADCPin(Pin pin) {
     return nullptr; // No matching ADC peripheral found
 }
 
-uint32_t AnalogIn::adc_get_rank(ADC_Peripheral* peripheral) {
+uint32_t AnalogIn::adc_get_rank(const ADC_Peripheral* peripheral) {
 	uint8_t index = peripheral->instance_num;
 
 	uint32_t rank;
@@ -82,9 +89,4 @@ uint32_t AnalogIn::adc_get_rank(ADC_Peripheral* peripheral) {
 	adc_channels_claimed[index] += 1;
 	return rank;
 }
-
-
-
-
-
 

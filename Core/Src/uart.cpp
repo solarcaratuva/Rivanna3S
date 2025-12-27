@@ -34,19 +34,19 @@ UART::UART(Pin tx, Pin rx, uint32_t baud)
 
 
 void UART::read(uint8_t *buffer, uint16_t length){
-	if(initialized != 0) {
+	if(initialized) {
 		HAL_UART_Receive(huart, buffer, length, HAL_MAX_DELAY);
 	}
 }
 
 void UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
-	if(initialized != 0) {
+	if(initialized) {
 		HAL_UART_Receive(huart, buffer, length, timeout_ms);
 	}
 }
 
 void UART::write(uint8_t* buffer, uint16_t length) {
-	if(initialized != 0) {
+	if(initialized) {
 		HAL_UART_Transmit(huart, buffer, length, HAL_MAX_DELAY);
 	}
 }
@@ -54,10 +54,10 @@ void UART::write(uint8_t* buffer, uint16_t length) {
 UART_Peripheral* UART::find_uart_pins(Pin tx, Pin rx) {
     for (size_t i = 0; i < UART_PERIPHERAL_COUNT; ++i) {
         UART_Peripheral* peripheral = &UART_Peripherals[i];
-        if (((*peripheral).txd_valid_pins & tx.universal_mask) &&
-            ((*peripheral).rxd_valid_pins & rx.universal_mask)) {
+        if ((peripheral->txd_valid_pins & tx.universal_mask) &&
+            (peripheral->rxd_valid_pins & rx.universal_mask)) {
             if (!peripheral->isClaimed) {
-                (*peripheral).isClaimed = true;
+                peripheral->isClaimed = true;
                 return peripheral;
             }
         }
