@@ -26,22 +26,25 @@ AnalogIn::AnalogIn(Pin pin) {
 float AnalogIn::read() {
 
     // Start ADC conversion
-    HAL_ADC_Start(hadc);
+    HAL_StatusTypeDef check = HAL_ADC_Start(hadc);
+    if (check != HAL_OK) return 1.5;
 
-    float value;
     // Poll for conversion completion
-    HAL_StatusTypeDef check = HAL_ADC_PollForConversion(hadc, HAL_MAX_DELAY);
-    if (check == HAL_OK) {
-        // Get the converted value
-        value = (HAL_ADC_GetValue(hadc)/(float)4095 );
-    }
+    check = HAL_ADC_PollForConversion(hadc, HAL_MAX_DELAY);
+    if (check != HAL_OK) return 1.5;
+
+    // Get the converted value
+    float value = (HAL_ADC_GetValue(hadc)/4095.0f);
+
     // Stop ADC
-    HAL_ADC_Stop(hadc);
+    check = HAL_ADC_Stop(hadc);
+    if (check != HAL_OK) return 1.5;
+
     return value;
 }
 
 float AnalogIn::read_voltage(){
-	return read()*(float)3.3;
+	return read() * 3.3f;
 }
 
 
