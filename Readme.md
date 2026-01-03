@@ -6,7 +6,7 @@ This code was made by and for the Solar Car Team at UVA. Use elsewhere is not re
 
 Team Wiki: [https://solarcaratuva.github.io/](https://solarcaratuva.github.io/) <br>
 
-**Compiling, Upload, Logging**: [Embedded >> Compile, Upload, Monitor](https://solarcaratuva.github.io/Embedded/riv3_compile_upload.html) <br>
+**Compiling, Uploading, Logging**: [Embedded >> Compile, Upload, Monitor](https://solarcaratuva.github.io/Embedded/riv3_compile_upload.html) <br>
 **Development Guide**: [Embedded >> Rivanna3S Development Guide](https://solarcaratuva.github.io/Embedded/riv3_dev_guide.html) <br>
 **New Member Onboarding**: [Embedded >> Onboarding](https://solarcaratuva.github.io/Embedded/onboarding.html) <br>
 ... and more
