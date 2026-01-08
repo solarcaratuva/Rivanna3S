@@ -18,7 +18,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "i2c.h"
+#include "stm32h7xx_hal.h"
 
 /* USER CODE BEGIN 0 */
 

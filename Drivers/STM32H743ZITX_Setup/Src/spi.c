@@ -18,7 +18,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "spi.h"
+#include "stm32h7xx_hal.h"
 
 /* USER CODE BEGIN 0 */
 

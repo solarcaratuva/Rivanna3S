@@ -14,6 +14,8 @@ set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/STM32H743ZITX_FLASH.ld" CACHE FILEPATH "L
 
 # -------- Include directories --------
 set(INC_CORE          ${CMAKE_SOURCE_DIR}/Core/Inc)
+set(INC_BOARD         ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Inc)
+set(INC_COMMON_LIBS   ${CMAKE_SOURCE_DIR}/Common/Libs/Inc)
 set(INC_HAL           ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc)
 set(INC_HAL_LEGACY    ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy)
 set(INC_CMSIS_DEV     ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Include)
@@ -27,10 +29,16 @@ set(INC_RTOS_CMSISV2  ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Sourc
 # set(INC_TGFX_TGT      ${CMAKE_SOURCE_DIR}/TouchGFX/target)
 
 # -------- Startup + Source files --------
-set(STARTUP_S ${CMAKE_SOURCE_DIR}/Core/Startup/startup_stm32h743zitx.s)
+set(STARTUP_S ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/startup_stm32h743zitx.s)
 
-file(GLOB APP_C_SOURCES   ${CMAKE_SOURCE_DIR}/Core/Src/*.c)
-file(GLOB APP_CPP_SOURCES ${CMAKE_SOURCE_DIR}/Core/Src/*.cpp)
+file(GLOB APP_C_SOURCES
+  ${CMAKE_SOURCE_DIR}/Core/Src/*.c
+  ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/*.c
+)
+file(GLOB APP_CPP_SOURCES
+  ${CMAKE_SOURCE_DIR}/Core/Src/*.cpp
+  ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/*.cpp
+)
 
 file(GLOB HAL_SRCS
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal*.c
@@ -48,6 +56,8 @@ add_executable(${PROJECT_NAME}.elf
 # -------- Includes --------
 target_include_directories(${PROJECT_NAME}.elf PRIVATE
   ${INC_CORE}
+  ${INC_BOARD}
+  ${INC_COMMON_LIBS}
   ${INC_HAL}
   ${INC_HAL_LEGACY}
   ${INC_CMSIS_DEV}

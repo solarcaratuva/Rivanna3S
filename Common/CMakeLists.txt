@@ -10,9 +10,15 @@ file(GLOB COMMON_LIBS_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/Libs/Src/*.cpp
 )
 
+file(GLOB COMMON_STM_LIBS_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/STM_Libs/*.c
+)
+
 set(COMMON_SOURCES
   ${COMMON_DRIVERS_SOURCES}
   ${COMMON_LIBS_SOURCES}
+  ${COMMON_STM_LIBS_SOURCES}
+  ${CMAKE_CURRENT_SOURCE_DIR}/startup.cpp
 )
 
 add_library(common STATIC ${COMMON_SOURCES})
@@ -20,6 +26,7 @@ add_library(common STATIC ${COMMON_SOURCES})
 target_include_directories(common PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/Inc
   ${CMAKE_CURRENT_SOURCE_DIR}/Libs/Inc
+  ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Inc
   ${CMAKE_SOURCE_DIR}/Core/Inc
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy
