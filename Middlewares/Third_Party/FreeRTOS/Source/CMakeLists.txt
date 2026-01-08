@@ -28,6 +28,8 @@ target_include_directories(freertos_kernel PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include                    # FreeRTOS kernel headers
     ${FREERTOS_PORT_DIR}                                   # Port headers
     ${CMAKE_SOURCE_DIR}/Common/Libs/Inc                    # FreeRTOSConfig.h
+    ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Inc    # stm32h7xx_hal_conf.h
+    ${CMAKE_SOURCE_DIR}/Core/Inc                           # main.h for Error_Handler
     ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Include              # CMSIS compiler/ARM headers
     ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Core/Include         # CMSIS core headers
     ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc   # HAL driver headers

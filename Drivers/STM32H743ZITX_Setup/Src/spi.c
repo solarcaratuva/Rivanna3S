@@ -18,7 +18,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "stm32h7xx_hal.h"
+#include "main.h"
 
 /* USER CODE BEGIN 0 */
 
