@@ -11,6 +11,7 @@ class AnalogIn {
 public:
     bool initialized = false;
     explicit AnalogIn(Pin pin);
+    uint16_t read_u12();
     float read();
     float read_voltage();
 private:

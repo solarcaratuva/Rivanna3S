@@ -26,8 +26,7 @@ AnalogIn::AnalogIn(Pin pin) {
     initialized = true;
 }
 
-
-float AnalogIn::read() {
+uint16_t AnalogIn::read_u12() {
     if (!initialized) {
         return 10.0f;
     }
@@ -41,13 +40,19 @@ float AnalogIn::read() {
     if (check != HAL_OK) return 12.0f;
 
     // Get the converted value
-    float value = (HAL_ADC_GetValue(hadc)/4095.0f);
+    uint16_t value = (HAL_ADC_GetValue(hadc));
 
     // Stop ADC
     check = HAL_ADC_Stop(hadc);
     if (check != HAL_OK) return 13.0f;
 
     return value;
+}
+
+
+float AnalogIn::read() {
+    uint16_t value = read_u12();
+    return static_cast<float>(value) / 4095.0f;
 }
 
 float AnalogIn::read_voltage(){
