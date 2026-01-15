@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PATH="/opt/gcc-arm-none-eabi/bin:${PATH}"
+ENV PATH="/opt/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin:${PATH}"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
@@ -13,9 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /opt && \
-    wget -O /tmp/gcc-arm-none-eabi.tar.xz https://developer.arm.com/-/media/Files/downloads/gnu-rm/12.3-2023.05/gcc-arm-none-eabi-12.3-2023.05-x86_64-linux.tar.bz2 && \
-    tar -xjf /tmp/gcc-arm-none-eabi.tar.xz -C /opt && \
-    rm /tmp/gcc-arm-none-eabi.tar.xz
+    wget -O /tmp/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz \
+      https://developer.arm.com/-/media/Files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz && \
+    tar -xJf /tmp/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz -C /opt && \
+    rm /tmp/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz
 
 RUN mkdir -p /root/Rivanna2
 
