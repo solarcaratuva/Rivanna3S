@@ -13,7 +13,6 @@ set(WARN_FLAGS -Wall -Wextra -Wformat=2 -Wshadow -Wno-missing-field-initializers
 set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/STM32H743ZITX_FLASH.ld" CACHE FILEPATH "LD script")
 
 # -------- Include directories --------
-set(INC_CORE          ${CMAKE_SOURCE_DIR}/Core/Inc)
 set(INC_BOARD         ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Inc)
 set(INC_COMMON_LIBS   ${CMAKE_SOURCE_DIR}/Common/Libs/Inc)
 set(INC_HAL           ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc)
@@ -32,11 +31,9 @@ set(INC_RTOS_CMSISV2  ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Sourc
 set(STARTUP_S ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/startup_stm32h743zitx.s)
 
 file(GLOB APP_C_SOURCES
-  ${CMAKE_SOURCE_DIR}/Core/Src/*.c
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/*.c
 )
 file(GLOB APP_CPP_SOURCES
-  ${CMAKE_SOURCE_DIR}/Core/Src/*.cpp
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/*.cpp
 )
 
@@ -45,66 +42,98 @@ file(GLOB HAL_SRCS
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_*.c
 )
 
-# -------- Executable target --------
-add_executable(${PROJECT_NAME}.elf
-  ${STARTUP_S}
-  ${APP_C_SOURCES}
-  ${APP_CPP_SOURCES}
-  ${HAL_SRCS}
-)
-
-# -------- Includes --------
-target_include_directories(${PROJECT_NAME}.elf PRIVATE
-  ${INC_CORE}
-  ${INC_BOARD}
-  ${INC_COMMON_LIBS}
-  ${INC_HAL}
-  ${INC_HAL_LEGACY}
-  ${INC_CMSIS_DEV}
-  ${INC_CMSIS_CORE}
-  ${INC_RTOS_KERNEL}
-  ${INC_RTOS_CMSISV2}
-  ${FREERTOS_PORT_DIR}
-)
-
-# -------- Defines --------
-target_compile_definitions(${PROJECT_NAME}.elf PRIVATE
-  DEBUG
-  USE_HAL_DRIVER
-  STM32H743xx
-)
-
-# -------- Compile options --------
-target_compile_options(${PROJECT_NAME}.elf PRIVATE
-  ${MCU_FLAGS} ${OPT_FLAGS} ${WARN_FLAGS}
-  -fstack-usage
-)
-
-set_source_files_properties(${APP_CPP_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu++14 -fno-exceptions -fno-rtti -fno-use-cxa-atexit")
-set_source_files_properties(${APP_C_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu11")
-
-# -------- Link options --------
-target_link_options(${PROJECT_NAME}.elf PRIVATE
-  ${MCU_FLAGS}
-  -T ${LINKER_SCRIPT}
-  -Wl,-Map=SolarCar_FreeRtos.map
-  -Wl,--gc-sections
-  -static
-  --specs=nano.specs
-  -Wl,--start-group
-  -lc -lm -lstdc++
-  -lsupc++
-  -Wl,--end-group
-)
-
 # -------- Add FreeRTOS as a subdirectory (builds freertos_kernel library) --------
 add_subdirectory(Middlewares/Third_Party/FreeRTOS/Source)
 add_subdirectory(Drivers)
 add_subdirectory(Common)
 
-# -------- Link targets --------
-target_link_libraries(${PROJECT_NAME}.elf
-  common
-  freertos_kernel
-  m c gcc
-)
+# -------- Board targets --------
+file(GLOB BOARD_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/*Board")
+foreach(BOARD_DIR ${BOARD_DIRS})
+  if(IS_DIRECTORY ${BOARD_DIR})
+    get_filename_component(BOARD_NAME ${BOARD_DIR} NAME)
+    file(GLOB BOARD_SOURCES
+      ${BOARD_DIR}/Src/*.c
+      ${BOARD_DIR}/Src/*.cpp
+    )
+    if(BOARD_SOURCES)
+      set(BOARD_LIB_TARGET ${BOARD_NAME}_app)
+      add_library(${BOARD_LIB_TARGET} OBJECT ${BOARD_SOURCES})
+      target_include_directories(${BOARD_LIB_TARGET} PUBLIC
+        ${BOARD_DIR}
+        ${BOARD_DIR}/Inc
+        ${INC_COMMON_LIBS}
+        ${INC_BOARD}
+        ${INC_HAL}
+        ${INC_HAL_LEGACY}
+        ${INC_CMSIS_DEV}
+        ${INC_CMSIS_CORE}
+        ${INC_RTOS_KERNEL}
+        ${INC_RTOS_CMSISV2}
+      )
+      if(DEFINED MCU_FLAGS)
+        target_compile_options(${BOARD_LIB_TARGET} PRIVATE ${MCU_FLAGS} ${OPT_FLAGS} ${WARN_FLAGS})
+      endif()
+      target_compile_definitions(${BOARD_LIB_TARGET} PUBLIC
+        USE_HAL_DRIVER
+        STM32H743xx
+      )
+      target_link_libraries(${BOARD_LIB_TARGET} PUBLIC
+        common
+        freertos_kernel
+      )
+
+      set(BOARD_EXE_TARGET ${BOARD_NAME}.elf)
+      add_executable(${BOARD_EXE_TARGET}
+        ${STARTUP_S}
+        ${APP_C_SOURCES}
+        ${APP_CPP_SOURCES}
+        ${HAL_SRCS}
+        $<TARGET_OBJECTS:${BOARD_LIB_TARGET}>
+      )
+      set_target_properties(${BOARD_EXE_TARGET} PROPERTIES
+        OUTPUT_NAME ${BOARD_NAME}.elf
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+      )
+      target_include_directories(${BOARD_EXE_TARGET} PRIVATE
+        ${INC_BOARD}
+        ${INC_COMMON_LIBS}
+        ${INC_HAL}
+        ${INC_HAL_LEGACY}
+        ${INC_CMSIS_DEV}
+        ${INC_CMSIS_CORE}
+        ${INC_RTOS_KERNEL}
+        ${INC_RTOS_CMSISV2}
+        ${FREERTOS_PORT_DIR}
+      )
+      target_compile_definitions(${BOARD_EXE_TARGET} PRIVATE
+        DEBUG
+        USE_HAL_DRIVER
+        STM32H743xx
+      )
+      target_compile_options(${BOARD_EXE_TARGET} PRIVATE
+        ${MCU_FLAGS} ${OPT_FLAGS} ${WARN_FLAGS}
+        -fstack-usage
+      )
+      set_source_files_properties(${APP_CPP_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu++14 -fno-exceptions -fno-rtti -fno-use-cxa-atexit")
+      set_source_files_properties(${APP_C_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu11")
+      target_link_options(${BOARD_EXE_TARGET} PRIVATE
+        ${MCU_FLAGS}
+        -T ${LINKER_SCRIPT}
+        -Wl,-Map=${BOARD_NAME}.map
+        -Wl,--gc-sections
+        -static
+        --specs=nano.specs
+        -Wl,--start-group
+        -lc -lm -lstdc++
+        -lsupc++
+        -Wl,--end-group
+      )
+      target_link_libraries(${BOARD_EXE_TARGET}
+        common
+        freertos_kernel
+        m c gcc
+      )
+    endif()
+  endif()
+endforeach()
