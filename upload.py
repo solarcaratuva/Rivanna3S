@@ -11,9 +11,12 @@ import os
 BOARD_MAP = {
     # "power": "cmake_build/NUCLEO_F413ZH/develop/GCC_ARM/PowerBoard/PowerBoard.bin",
     # "telemetry": "cmake_build/POWER_BOARD/develop/GCC_ARM/TelemetryBoard/TelemetryBoard.bin",
-    #"test": "build/stm32h743_freertos.elf",
+    "bottomdist": "build/bin/BottomDistBoard.elf",
+    "motor": "build/bin/MotorBoard.elf",
+    "relay": "build/bin/RelayBoard.elf",
     "telemetry": "build/bin/TelemetryBoard.elf",
-    }
+    "topdist": "build/bin/TopDistBoard.elf",
+}
 
 HIL_BOARD_MAP = {} # board path map specific to the HIL testing system server
 CMD_ARGS_ERASE = "-c port=SWD mode=UR -e all"
