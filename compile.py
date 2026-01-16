@@ -23,18 +23,18 @@ if process.returncode != 0:
     exit(1)
 
 if args.clean:
-    command = "rm -rf Rivanna2/build/"
+    command = "rm -rf /root/Rivanna2/build/"
     process = subprocess.run(f"docker exec -t {CONTAINER} /bin/bash -c \"{command}\"", shell=True, capture_output=True, text=True)
     if process.returncode != 0:
         print("Failed to clean the build.")
         exit(1)
 
-command = "cd Rivanna2/ && cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=toolchains/arm-gcc.cmake -DCMAKE_BUILD_TYPE=Debug"
+command = "cd /root/Rivanna2/ && cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=toolchains/arm-gcc.cmake -DCMAKE_BUILD_TYPE=Debug"
 process = subprocess.run(f"docker exec -t {CONTAINER} /bin/bash -c \"{command}\"", shell=True, capture_output=args.silent, text=True)
 if args.silent and process.returncode != 0:
     print("Compilation failed.")
 
-command = f"cd Rivanna2/ && cmake --build build {' '.join(args.args)}"
+command = f"cd /root/Rivanna2/ && cmake --build build {' '.join(args.args)}"
 compile_process = subprocess.run(f"docker exec -t {CONTAINER} /bin/bash -c \"{command}\"", shell=True, capture_output=args.silent, text=True)
 if args.silent and compile_process.returncode != 0:
     print("Compilation failed.")
