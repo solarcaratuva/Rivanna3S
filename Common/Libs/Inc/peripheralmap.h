@@ -10,10 +10,6 @@
 #define RX      3
 #define TX      4
 
-typedef struct {
-  Pin pin;
-  uint8_t af;
-} af_info;
 
 // I2C peripheral struct
 typedef struct {
@@ -79,9 +75,9 @@ typedef struct {
 } AF_Info;
 
 
-void gpio_clock_enable(GPIO_TypeDef* port);
-uint8_t get_UART_AF(USART_TypeDef* handle, Pin* pin, uint8_t mode);
-uint8_t get_I2C_AF(I2C_TypeDef* handle, Pin* pin, uint8_t mode);
-uint8_t get_FDCAN_AF(FDCAN_GlobalTypeDef* handle, Pin* pin, uint8_t mode);
+void gpio_clock_enable(const GPIO_TypeDef* port);
+uint8_t get_UART_AF(const USART_TypeDef* handle, const Pin* pin, uint8_t mode);
+uint8_t get_I2C_AF(const I2C_TypeDef* handle, const Pin* pin, uint8_t mode);
+uint8_t get_FDCAN_AF(const FDCAN_GlobalTypeDef* handle, const Pin* pin, uint8_t mode);
 
 #endif /* PERIPHERALMAP */

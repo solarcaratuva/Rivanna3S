@@ -104,16 +104,16 @@ def write_af_arrays(f, af_map: dict, peripheral_type: str) -> None:
             if not pins:
                 continue
 
-            f.write(f"    AF_Info {peripheral}_{mode}[] = {{\n")
+            f.write(f"    static AF_Info {peripheral}_{mode}[] = {{\n")
             for pin_name, af in pins.items():
                 c_pin = pin_name[:2] + "_" + pin_name[2:]
                 f.write(f"        {{{c_pin}, {af}}},\n")
             f.write("    };\n")
-            f.write(f"    uint8_t {peripheral}_{mode}_len = {len(pins)};\n\n")
+            f.write(f"    static uint8_t {peripheral}_{mode}_len = {len(pins)};\n\n")
 
 
 def write_get_uart_af(f, af_map: dict) -> None:
-    f.write("uint8_t get_UART_AF(USART_TypeDef* handle, Pin* pin, uint8_t mode) {\n")
+    f.write("uint8_t get_UART_AF(const USART_TypeDef* handle, const Pin* pin, uint8_t mode) {\n")
 
     write_af_arrays(f, af_map, "UART")
     write_af_arrays(f, af_map, "USART")
@@ -147,7 +147,7 @@ def write_get_uart_af(f, af_map: dict) -> None:
 
 
 def write_get_i2c_af(f, af_map: dict) -> None:
-    f.write("uint8_t get_I2C_AF(I2C_TypeDef* handle, Pin* pin, uint8_t mode) {\n")
+    f.write("uint8_t get_I2C_AF(const I2C_TypeDef* handle, const Pin* pin, uint8_t mode) {\n")
 
     write_af_arrays(f, af_map, "I2C")
 
@@ -178,7 +178,7 @@ def write_get_i2c_af(f, af_map: dict) -> None:
 
 
 def write_get_fdcan_af(f, af_map: dict) -> None:
-    f.write("uint8_t get_FDCAN_AF(FDCAN_GlobalTypeDef* handle, Pin* pin, uint8_t mode) {\n")
+    f.write("uint8_t get_FDCAN_AF(const FDCAN_GlobalTypeDef* handle, const Pin* pin, uint8_t mode) {\n")
 
     write_af_arrays(f, af_map, "FDCAN")
 
@@ -317,7 +317,7 @@ def create_cpp_file(file_path: str, peripheral_map: dict, pin_map: dict, af_map:
         write_adc_array(f, peripheral_map)
 
         # GPIO clock enable function
-        f.write("void gpio_clock_enable(GPIO_TypeDef* handle){\n")
+        f.write("void gpio_clock_enable(const GPIO_TypeDef* handle){\n")
         gpio_blocks = set()
         for pin_name in pin_map.keys():
             block = pin_name[1]

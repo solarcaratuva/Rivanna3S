@@ -5,9 +5,9 @@
  *      Author: rrx7xw
  */
 
-#include "../Inc/DigitalIn.h"
-
+#include "DigitalIn.h"
 #include "stm32h7xx_hal.h"
+#include "peripheralmap.h"
 
 // -------- Constructors --------
 
@@ -15,6 +15,7 @@
 DigitalIn::DigitalIn(Pin pin)
     : pin_(pin), active_high_(true), pull_(Pull::None)
 {
+    gpio_clock_enable(pin_.block);
     configure_pin();
 }
 
@@ -22,6 +23,7 @@ DigitalIn::DigitalIn(Pin pin)
 DigitalIn::DigitalIn(Pin pin, bool active_high, Pull pull)
     : pin_(pin), active_high_(active_high), pull_(pull)
 {
+    gpio_clock_enable(pin_.block);
     configure_pin();
 }
 
@@ -40,22 +42,8 @@ bool DigitalIn::read() {
 
 void DigitalIn::configure_pin() {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-    // Enable GPIO clock (basic version, can be expanded to support all ports)
-    if (pin_.block == GPIOA) __HAL_RCC_GPIOA_CLK_ENABLE();
-    else if (pin_.block == GPIOB) __HAL_RCC_GPIOB_CLK_ENABLE();
-    else if (pin_.block == GPIOC) __HAL_RCC_GPIOC_CLK_ENABLE();
-    else if (pin_.block == GPIOD) __HAL_RCC_GPIOD_CLK_ENABLE();
-    else if (pin_.block == GPIOE) __HAL_RCC_GPIOE_CLK_ENABLE();
-    else if (pin_.block == GPIOF) __HAL_RCC_GPIOF_CLK_ENABLE();
-    else if (pin_.block == GPIOG) __HAL_RCC_GPIOG_CLK_ENABLE();
-    else if (pin_.block == GPIOH) __HAL_RCC_GPIOH_CLK_ENABLE();
-    else if (pin_.block == GPIOI) __HAL_RCC_GPIOI_CLK_ENABLE();
-    // (extend for J, K if your MCU has them)
-
-    // Configure pin as input
     GPIO_InitStruct.Pin = pin_.block_mask;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT; // Configure pin as input
 
     // Set pull configuration
     switch (pull_) {

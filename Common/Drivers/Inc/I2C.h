@@ -59,7 +59,7 @@ public:
 	    	STANDARD = 100000, // 100k
 			FAST = 400000, // 400k
 			FAST_PLUS = 1000000 //1M
-	    }I2C_BaudRate;
+	    } I2C_BaudRate;
 
     /**
      * @brief Indicates whether the I2C peripheral was successfully initialized.
@@ -68,11 +68,11 @@ public:
 
     /**
      * @brief Constructs an I2C object and initializes the I2C peripheral.
-     * @param scl  SCL pin (must correspond to valid I2C SCL mapping).
      * @param sda  SDA pin (must correspond to valid I2C SDA mapping).
+     * @param scl  SCL pin (must correspond to valid I2C SCL mapping).
      * @param frequency I2C bus frequency (Supports (kHz): 100000, 400000, 1000000).
      */
-    explicit I2C(Pin scl, Pin sda, I2C_BaudRate baudrate);
+    explicit I2C(Pin sda, Pin scl, I2C_BaudRate baudrate);
 
     /**
      * @brief Writes data to an I2C device (blocking).
@@ -101,26 +101,16 @@ private:
     I2C_Peripheral *i2c_periph;
 
     /**
-     * @brief Initializes GPIO pins for I2C alternate function mode.
-     */
-    void init_gpio(I2C_Peripheral *i2c_periph);
-
-    /**
-     * @brief Initializes the I2C peripheral.
-     */
-    void init_i2c(uint32_t baudrate);
-
-    /**
      * @brief Finds the I2C peripheral that matches SCL/SDA pin pair.
-     * @param scl SCL pin.
      * @param sda SDA pin.
+     * @param scl SCL pin.
      * @return Pointer to I2C_Peripheral entry, or nullptr if invalid.
      */
-    I2C_Peripheral* find_i2c_pins(Pin scl, Pin sda);
+    I2C_Peripheral* find_i2c_pins(Pin sda, Pin scl);
 
 
-    Pin scl;                     /**< SCL pin object. */
     Pin sda;                     /**< SDA pin object. */
+    Pin scl;                     /**< SCL pin object. */
     uint32_t baudrate;          /**< I2C bus frequency. */
 };
 

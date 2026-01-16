@@ -18,7 +18,7 @@ I2C_Peripheral I2C_Peripherals[] = {
 const uint8_t I2C_PERIPHERAL_COUNT = sizeof(I2C_Peripherals) / sizeof(I2C_Peripherals[0]);
 
 FDCAN_Peripheral FDCAN_Peripherals[] = {
-	{FDCAN1, PB_8.universal_mask, PB_9.universal_mask, NC, NC, false} //need to add more FDCAN peripherals if used and verify the pins
+    {FDCAN1, PB_8.universal_mask, PB_9.universal_mask, NC, NC, false} //need to add more FDCAN peripherals if used and verify the pins
 };
 
 const uint8_t FDCAN_PERIPHERAL_COUNT = sizeof(FDCAN_Peripherals) / sizeof(FDCAN_Peripherals[0]);
@@ -70,70 +70,73 @@ const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Periph
 
 uint8_t adc_channels_claimed[] = {0, 0, 0};
 
-void gpio_clock_enable(GPIO_TypeDef* handle){
-    if(handle == GPIOE){
-        __HAL_RCC_GPIOE_CLK_ENABLE();
-    }
-    else if(handle == GPIOG){
-        __HAL_RCC_GPIOG_CLK_ENABLE();
-    }
-    else if(handle == GPIOC){
+void gpio_clock_enable(const GPIO_TypeDef* handle){
+    if(handle == GPIOC){
         __HAL_RCC_GPIOC_CLK_ENABLE();
-    }
-    else if(handle == GPIOB){
-        __HAL_RCC_GPIOB_CLK_ENABLE();
     }
     else if(handle == GPIOF){
         __HAL_RCC_GPIOF_CLK_ENABLE();
     }
+    else if(handle == GPIOE){
+        __HAL_RCC_GPIOE_CLK_ENABLE();
+    }
+    else if(handle == GPIOB){
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+    }
     else if(handle == GPIOA){
         __HAL_RCC_GPIOA_CLK_ENABLE();
+    }
+    else if(handle == GPIOG){
+        __HAL_RCC_GPIOG_CLK_ENABLE();
+    }
+    else if (handle == GPIOD){
+        __HAL_RCC_GPIOD_CLK_ENABLE();
     }
     return;
 }
 
-uint8_t get_UART_AF(USART_TypeDef* handle, Pin* pin, uint8_t mode) {
-    AF_Info UART4_TX[] = {
+uint8_t get_UART_AF(const USART_TypeDef* handle, const Pin* pin, uint8_t mode) {
+    static AF_Info UART4_TX[] = {
         {PA_0, GPIO_AF8_UART4},
     };
-    uint8_t UART4_TX_len = 1;
+    static uint8_t UART4_TX_len = 1;
 
-    AF_Info UART4_RX[] = {
+    static AF_Info UART4_RX[] = {
         {PA_1, GPIO_AF8_UART4},
     };
-    uint8_t UART4_RX_len = 1;
+    static uint8_t UART4_RX_len = 1;
 
-    AF_Info UART7_RX[] = {
+    static AF_Info UART7_RX[] = {
         {PF_6, GPIO_AF7_UART7},
         {PE_7, GPIO_AF7_UART7},
     };
-    uint8_t UART7_RX_len = 2;
+    static uint8_t UART7_RX_len = 2;
 
-    AF_Info UART7_TX[] = {
+    static AF_Info UART7_TX[] = {
         {PF_7, GPIO_AF7_UART7},
         {PE_8, GPIO_AF7_UART7},
     };
-    uint8_t UART7_TX_len = 2;
+    static uint8_t UART7_TX_len = 2;
 
-    AF_Info USART2_TX[] = {
+    static AF_Info USART2_TX[] = {
         {PA_2, GPIO_AF7_USART2},
     };
-    uint8_t USART2_TX_len = 1;
+    static uint8_t USART2_TX_len = 1;
 
-    AF_Info USART2_RX[] = {
+    static AF_Info USART2_RX[] = {
         {PA_3, GPIO_AF7_USART2},
     };
-    uint8_t USART2_RX_len = 1;
+    static uint8_t USART2_RX_len = 1;
 
-    AF_Info USART3_TX[] = {
+    static AF_Info USART3_TX[] = {
         {PD_8, GPIO_AF7_USART3},
     };
-    uint8_t USART3_TX_len = 1;
+    static uint8_t USART3_TX_len = 1;
 
-    AF_Info USART3_RX[] = {
+    static AF_Info USART3_RX[] = {
         {PD_9, GPIO_AF7_USART3},
     };
-    uint8_t USART3_RX_len = 1;
+    static uint8_t USART3_RX_len = 1;
 
     AF_Info* array = NULL;
     uint8_t array_len = 0;
@@ -187,26 +190,26 @@ uint8_t get_UART_AF(USART_TypeDef* handle, Pin* pin, uint8_t mode) {
     return 0; // should never happen
 }
 
-uint8_t get_I2C_AF(I2C_TypeDef* handle, Pin* pin, uint8_t mode) {
-    AF_Info I2C2_SDA[] = {
+uint8_t get_I2C_AF(const I2C_TypeDef* handle, const Pin* pin, uint8_t mode) {
+    static AF_Info I2C2_SDA[] = {
         {PF_0, GPIO_AF4_I2C2},
     };
-    uint8_t I2C2_SDA_len = 1;
+    static uint8_t I2C2_SDA_len = 1;
 
-    AF_Info I2C2_SCL[] = {
+    static AF_Info I2C2_SCL[] = {
         {PF_1, GPIO_AF4_I2C2},
     };
-    uint8_t I2C2_SCL_len = 1;
+    static uint8_t I2C2_SCL_len = 1;
 
-    AF_Info I2C4_SCL[] = {
+    static AF_Info I2C4_SCL[] = {
         {PF_14, GPIO_AF4_I2C4},
     };
-    uint8_t I2C4_SCL_len = 1;
+    static uint8_t I2C4_SCL_len = 1;
 
-    AF_Info I2C4_SDA[] = {
+    static AF_Info I2C4_SDA[] = {
         {PF_15, GPIO_AF4_I2C4},
     };
-    uint8_t I2C4_SDA_len = 1;
+    static uint8_t I2C4_SDA_len = 1;
 
     AF_Info* array = NULL;
     uint8_t array_len = 0;
@@ -240,19 +243,19 @@ uint8_t get_I2C_AF(I2C_TypeDef* handle, Pin* pin, uint8_t mode) {
     return 0; // should never happen
 }
 
-uint8_t get_FDCAN_AF(FDCAN_GlobalTypeDef* handle, Pin* pin, uint8_t mode) {
+uint8_t get_FDCAN_AF(const FDCAN_GlobalTypeDef* handle, const Pin* pin, uint8_t mode) {
     AF_Info* array = NULL;
     uint8_t array_len = 0;
 
-    AF_Info FDCAN1_RX[] = {
+    static AF_Info FDCAN1_RX[] = {
         {PB_8, GPIO_AF9_FDCAN1},
     };
-    uint8_t FDCAN1_RX_len = 1;
+    static uint8_t FDCAN1_RX_len = 1;
 
-    AF_Info FDCAN1_TX[] = {
+    static AF_Info FDCAN1_TX[] = {
         {PB_9, GPIO_AF9_FDCAN1},
     };
-    uint8_t FDCAN1_TX_len = 1;
+    static uint8_t FDCAN1_TX_len = 1;
 
     if(handle == FDCAN1) {
         if(mode == RX) {
@@ -271,4 +274,3 @@ uint8_t get_FDCAN_AF(FDCAN_GlobalTypeDef* handle, Pin* pin, uint8_t mode) {
     }
     return 0; // should never happen
 }
-

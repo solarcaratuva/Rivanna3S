@@ -12,21 +12,44 @@
 #include "pinmap.h"
 #include "stm32h7xx_hal.h"
 
+/**
+ * @brief Pull resistor configuration for digital input pins
+ */
 enum class Pull {
-    None = GPIO_NOPULL,
-    Up   = GPIO_PULLUP,
-    Down = GPIO_PULLDOWN
+    None = GPIO_NOPULL,   ///< No pull resistor
+    Up   = GPIO_PULLUP,   ///< Pull-up resistor enabled
+    Down = GPIO_PULLDOWN  ///< Pull-down resistor enabled
 };
 
+/**
+ * @brief Digital input pin interface with configurable polarity and pull resistors
+ * 
+ * Provides a high-level interface for reading digital input pins.
+ * Supports active-high/active-low logic and internal pull resistors.
+ */
 class DigitalIn {
 public:
-    // Construct with just a Pin (default: active-high, no pull)
+    /**
+     * @brief Construct a DigitalIn with default settings
+     * @param pin The pin to configure as digital input
+     * 
+     * Defaults: active-high logic, no pull resistor
+     */
     explicit DigitalIn(Pin pin);
 
-    // Construct with Pin, active_high flag, and pull config
+    /**
+     * @brief Construct a DigitalIn with full configuration
+     * @param pin The pin to configure as digital input
+     * @param active_high If true, high voltage = logical true; if false, low voltage = logical true
+     * @param pull Pull resistor configuration (None, Up, or Down)
+     */
     DigitalIn(Pin pin, bool active_high, Pull pull);
 
-    // Read the logical value of the pin
+    /**
+     * @brief Read the logical state of the input pin
+     * @return true if pin is logically high (accounting for active_high setting)
+     * @return false if pin is logically low (accounting for active_high setting)
+     */
     bool read();
 
 private:
