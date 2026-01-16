@@ -7,6 +7,7 @@ CONTAINER = "Rivanna3S_compile"
 HOST_DIR = "$(pwd)"
 CONTAINER_DIR = "/root/code"
 
+
 def container_exists(name):
     result = subprocess.run(f"docker ps -a --format '{{{{.Names}}}}'", shell=True, capture_output=True, text=True)
     return name in result.stdout.splitlines()
@@ -17,11 +18,12 @@ def create_container():
         subprocess.run(f"docker rm -f {CONTAINER}", shell=True, check=True)
     print(f"Creating container {CONTAINER}...")
     subprocess.run(
-        f'docker create --name {CONTAINER} --init -it -v "{HOST_DIR}/:{CONTAINER_DIR}:Z" rivanna3s-compile',
+        f'docker create --name {CONTAINER} --init -it -v "{HOST_DIR}/:{CONTAINER_DIR}:Z" --platform linux/amd64 ghcr.io/solarcaratuva/rivanna3s_compile_env',
         shell=True,
         check=True
     )
     print("Container created successfully.")
+
 
 arg_parser = argparse.ArgumentParser(description="Compile Rivanna3S code in the Docker container.")
 arg_parser.add_argument("args", nargs="*", help="Arguments to pass to `cmake --build`.")
@@ -32,7 +34,6 @@ args = arg_parser.parse_args()
 
 if args.install:
     create_container()
-    exit(0)
 
 process = subprocess.run("docker --help", shell=True, capture_output=True, text=True)
 if process.returncode != 0:
