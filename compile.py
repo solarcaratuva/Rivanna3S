@@ -52,7 +52,7 @@ if args.clean:
         print("Failed to clean the build.")
         exit(1)
 
-command = f"cd {CONTAINER_DIR} && cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=toolchains/arm-gcc.cmake -DCMAKE_BUILD_TYPE=Debug"
+command = f"cd {CONTAINER_DIR} && cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-gcc.cmake -DCMAKE_BUILD_TYPE=Debug"
 process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=args.silent, text=True)
 if args.silent and process.returncode != 0:
     print("CMake configuration failed.")
