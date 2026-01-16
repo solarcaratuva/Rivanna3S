@@ -9,7 +9,7 @@ extern "C" uint32_t compute_timing(uint32_t freq_hz);
 
 //Constructor
 I2C::I2C(Pin sda, Pin scl, I2C_BaudRate baudrate)
-	: sda(sda), scl(scl), baudrate(baudrate){
+	: sda_(sda), scl_(scl), baudrate_(baudrate){
 	i2c_periph = find_i2c_pins(sda, scl);
 	if(i2c_periph == nullptr) {
 		initialized = false;

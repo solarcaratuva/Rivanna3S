@@ -9,19 +9,19 @@ extern "C" void HAL_ADC_MspInit_custom(ADC_TypeDef* adcHandle, Pin pin);
 
 
 AnalogIn::AnalogIn(Pin pin) {
-    adc_periph = findADCPin(pin);
-    if(adc_periph == nullptr) {
+    adc_periph_ = findADCPin(pin);
+    if(adc_periph_ == nullptr) {
         initialized = false;
         return;
     }
-    adc_periph->used_pin = pin;
+    adc_periph_->used_pin = pin;
 
     gpio_clock_enable(pin.block);
 
-    HAL_ADC_MspInit_custom(adc_periph->instance, pin);
+    HAL_ADC_MspInit_custom(adc_periph_->instance, pin);
 
-    uint32_t rank = adc_get_rank(adc_periph);
-    hadc = ADC_init(adc_periph->instance, adc_periph->channel, rank);
+    uint32_t rank = adc_get_rank(adc_periph_);
+    hadc_ = ADC_init(adc_periph_->instance, adc_periph_->channel, rank);
     
     initialized = true;
 }
@@ -32,18 +32,18 @@ uint16_t AnalogIn::read_u12() {
     }
 
     // Start ADC conversion
-    HAL_StatusTypeDef check = HAL_ADC_Start(hadc);
+    HAL_StatusTypeDef check = HAL_ADC_Start(hadc_);
     if (check != HAL_OK) return 11.0f;
 
     // Poll for conversion completion
-    check = HAL_ADC_PollForConversion(hadc, HAL_MAX_DELAY);
+    check = HAL_ADC_PollForConversion(hadc_, HAL_MAX_DELAY);
     if (check != HAL_OK) return 12.0f;
 
     // Get the converted value
-    uint16_t value = (HAL_ADC_GetValue(hadc));
+    uint16_t value = (HAL_ADC_GetValue(hadc_));
 
     // Stop ADC
-    check = HAL_ADC_Stop(hadc);
+    check = HAL_ADC_Stop(hadc_);
     if (check != HAL_OK) return 13.0f;
 
     return value;

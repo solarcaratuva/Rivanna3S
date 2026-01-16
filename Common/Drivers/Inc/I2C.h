@@ -109,9 +109,9 @@ private:
     I2C_Peripheral* find_i2c_pins(Pin sda, Pin scl);
 
 
-    Pin sda;                     /**< SDA pin object. */
-    Pin scl;                     /**< SCL pin object. */
-    uint32_t baudrate;          /**< I2C bus frequency. */
+    Pin sda_;                     /**< SDA pin object. */
+    Pin scl_;                     /**< SCL pin object. */
+    uint32_t baudrate_;          /**< I2C bus frequency. */
 };
 
 #endif // I2C_H

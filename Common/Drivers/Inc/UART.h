@@ -97,9 +97,9 @@ private:
      */
     UART_Peripheral* find_uart_pins(Pin tx, Pin rx);
 
-    Pin tx;                     /**< TX pin object. */
-    Pin rx;                     /**< RX pin object. */
-    uint32_t baud;              /**< UART baud rate. */
+    Pin tx_;                     /**< TX pin object. */
+    Pin rx_;                     /**< RX pin object. */
+    uint32_t baud_;              /**< UART baud rate. */
     UART_Peripheral* uart_periph; /**< Pointer to matched UART peripheral. */
 };
 

@@ -9,7 +9,7 @@ extern "C" UART_HandleTypeDef* UART_init(USART_TypeDef* uart, uint32_t baudrate)
 
 // Constructor
 UART::UART(Pin tx, Pin rx, uint32_t baud)
-    : tx(tx), rx(rx), baud(baud) {
+    : tx_(tx), rx_(rx), baud_(baud) {
 	uart_periph = find_uart_pins(tx, rx);
     if(uart_periph == nullptr) {
         initialized = false;

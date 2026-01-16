@@ -35,10 +35,10 @@ public:
      */
     float read_voltage();
 private:
-    ADC_Peripheral* adc_periph;
+    ADC_Peripheral* adc_periph_;
     uint32_t adc_get_rank(const ADC_Peripheral* peripheral);
     ADC_Peripheral* findADCPin(Pin pin);
-    ADC_HandleTypeDef* hadc;
+    ADC_HandleTypeDef* hadc_;
 };
 
 #endif
