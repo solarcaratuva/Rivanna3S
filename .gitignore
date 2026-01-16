@@ -9,5 +9,6 @@
 .project
 Drivers/code_generation/peripheralmap.cpp
 Drivers/code_generation/pinmap.h
-Drivers/code_generation/__pycache__
+Drivers/code_generation/pycache
 Drivers/code_generation/input
+build

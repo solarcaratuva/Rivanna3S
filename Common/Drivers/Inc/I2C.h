@@ -1,0 +1,117 @@
+/**
+ * @file I2C.h
+ * @brief C++ wrapper class for I2C communication using STM32 HAL drivers.
+ *
+ * This class provides an object-oriented interface for configuring and
+ * communicating over I2C peripherals on STM32 microcontrollers.
+ *
+ * It automatically configures GPIO pins, initializes the appropriate
+ * I2C peripheral, and provides simplified read/write helper functions.
+ *
+ * Example usage:
+ * @code
+ * #include "I2C.h"
+ *
+ * I2C bus(PB_8, PB_9, 400000);   // I2C1 (SCL=PB8, SDA=PB9), 400 kHz
+ *
+ * uint8_t data = 0x55;
+ * bus.write(0x50, &data, 1);     // Write 1 byte to slave address 0x50
+ *
+ * uint8_t buffer[4];
+ * bus.read(0x50, buffer, 4);     // Read 4 bytes from slave address 0x50
+ * @endcode
+ *
+ * @see stm32h7xx_hal_i2c.h
+ * @see pinmap.h
+ * @see peripheralmap.h
+ */
+
+#ifndef I2C_H
+#define I2C_H
+
+#include "stm32h7xx_hal.h"
+#include "pinmap.h"
+#include "peripheralmap.h"
+
+/**
+ * @class I2C
+ * @brief Provides I2C communication interface using STM32 HAL.
+ */
+class I2C {
+public:
+
+    /**
+     * @enum I2C_Speed
+     * @brief Enumerates supported I2C bus speeds.
+     *
+     * This enumeration defines the standard I2C bus frequency modes
+     * supported by the STM32 I2C peripheral and used during peripheral
+     * initialization. These values correspond directly to the desired
+     * clock rate in Hertz and are passed to the constructor to
+     * configure timing parameters.
+     *
+     * Available speeds:
+     *  - ONE_HUNDRED_K (100000 Hz): Standard Mode
+     *  - FOUR_HUNDRED_K (400000 Hz): Fast Mode
+     *  - ONE_M (1000000 Hz): Fast Mode Plus
+     */
+	typedef enum {
+	    	STANDARD = 100000, // 100k
+			FAST = 400000, // 400k
+			FAST_PLUS = 1000000 //1M
+	    } I2C_BaudRate;
+
+    /**
+     * @brief Indicates whether the I2C peripheral was successfully initialized.
+     */
+    bool initialized = false;
+
+    /**
+     * @brief Constructs an I2C object and initializes the I2C peripheral.
+     * @param sda  SDA pin (must correspond to valid I2C SDA mapping).
+     * @param scl  SCL pin (must correspond to valid I2C SCL mapping).
+     * @param frequency I2C bus frequency (Supports (kHz): 100000, 400000, 1000000).
+     */
+    explicit I2C(Pin sda, Pin scl, I2C_BaudRate baudrate);
+
+    /**
+     * @brief Writes data to an I2C device (blocking).
+     * @param address 7-bit peripheral address (0x00 – 0x7F).
+     * @param buffer Pointer to data to transmit.
+     * @param length Number of bytes to send.
+     */
+    void write(uint16_t address, uint8_t *buffer, uint16_t length);
+
+    /**
+     * @brief Reads data from an I2C device (blocking).
+     * @param address 7-bit peripheral address.
+     * @param buffer Buffer where received data is stored.
+     * @param length Number of bytes to read.
+     */
+    void read(uint16_t address, uint8_t *buffer, uint16_t length);
+
+
+
+private:
+    I2C_HandleTypeDef* hi2c;          /**< HAL I2C handle. */
+
+    /**
+     * @brief Matching peripheral entry from your peripheral map.
+     */
+    I2C_Peripheral *i2c_periph;
+
+    /**
+     * @brief Finds the I2C peripheral that matches SCL/SDA pin pair.
+     * @param sda SDA pin.
+     * @param scl SCL pin.
+     * @return Pointer to I2C_Peripheral entry, or nullptr if invalid.
+     */
+    I2C_Peripheral* find_i2c_pins(Pin sda, Pin scl);
+
+
+    Pin sda;                     /**< SDA pin object. */
+    Pin scl;                     /**< SCL pin object. */
+    uint32_t baudrate;          /**< I2C bus frequency. */
+};
+
+#endif // I2C_H
