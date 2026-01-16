@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /root/Rivanna2
+RUN mkdir -p /root/code
 
 WORKDIR /root
 
