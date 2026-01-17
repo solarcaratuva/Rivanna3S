@@ -39,9 +39,8 @@
 #include "lock.h"
 #include "log.h"
 
-extern "C" void app_main(void *argument)
+void app_main()
 {
-  (void)argument;
 
   /* USER CODE BEGIN Init */
   log_configure(DEBUG_LVL, PD_8, PD_9, 921600);

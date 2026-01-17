@@ -9,18 +9,26 @@ Thread::Thread()
     : handle_(NULL)
     {}
 
-BaseType_t Thread::start(void (*fn)()) {
-        return xTaskCreate(
-            +[](void* pv) {
-                auto fn = reinterpret_cast<void(*)()>(pv);
-                // Run the function in a loop for continuous execution
-                while(1) {
-                    fn();
-                }
-                // This should never be reached, but just in case
-                vTaskDelete(NULL);
-            },
-            "HELPER", STACK_SIZE,
-            reinterpret_cast<void*>(fn), // Pass the function pointer as parameter
-            PRIORITY, &handle_);
+BaseType_t Thread::start(std::function<void()> fn) {
+    callback_ = fn;
+    
+    return xTaskCreate(
+        Thread::task_wrapper,
+        "HELPER", 
+        STACK_SIZE,
+        this,  // Pass this instance as parameter
+        PRIORITY, 
+        &handle_);
+}
+
+void Thread::task_wrapper(void* pvParameters) {
+    Thread* instance = static_cast<Thread*>(pvParameters);
+    if(instance && instance->callback_) {
+        // Run the function in a loop for continuous execution
+        while(1) {
+            instance->callback_();
+        }
     }
+    // This should never be reached, but just in case
+    vTaskDelete(NULL);
+}
