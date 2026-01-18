@@ -59,6 +59,8 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     /* Initialize and start FDCAN1 for CAN usage */
     MX_FDCAN1_Init(baudrate);
     HAL_FDCAN_Start(&hfdcan1);
+    HAL_FDCAN_MspInit(m_hfdcan, rx);
+    HAL_FDCAN_MspInit(m_hfdcan, tx);
     // Default Tx header setup; fields that change per-frame will be set in write().
     m_txHeader.IdType              = FDCAN_STANDARD_ID;
     m_txHeader.TxFrameType         = FDCAN_DATA_FRAME;
@@ -68,6 +70,10 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     m_txHeader.TxEventFifoControl  = FDCAN_NO_TX_EVENTS;
     m_txHeader.MessageMarker       = 0;
 }
+
+
+
+
 
 // Write a raw frame
 int CAN::write(const SerializedCanMessage& msg)
