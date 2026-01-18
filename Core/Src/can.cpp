@@ -49,6 +49,20 @@ uint8_t CAN::dlcToBytes(uint32_t dlc) const
 // CAN implementation
 // -----------------------------------------------------------------------------
 
+FDCAN_Peripheral* CAN::findCANPin(Pin tx, Pin rx) {
+    for (uint8_t i = 0; i < FDCAN_PERIPHERAL_COUNT; i++) {
+        FDCAN_Peripheral* peripheral = &FDCAN_Peripherals[i];
+        if (((*peripheral).txd_valid_pins & tx.universal_mask) &&
+            ((*peripheral).rxd_valid_pins & rx.universal_mask)) {
+            if (!peripheral->isClaimed) {
+                peripheral->isClaimed = true;
+                return peripheral;
+            }
+        }
+    }
+    return nullptr; // No matching ADC peripheral found
+}
+
 CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     : m_hfdcan(&hfdcan1),
       m_txMutex()
