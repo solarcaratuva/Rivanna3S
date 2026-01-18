@@ -30,6 +30,16 @@
 
 FDCAN_HandleTypeDef hfdcan1;
 
+
+FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* hadc, uint32_t baudrate) {
+  if (hadc == FDCAN1) {
+    MX_FDCAN1_Init(baudrate);
+    return &hfdcan1;
+  } 
+
+  return &hfdcan1; // Default return to avoid compiler warning
+}
+
 /* FDCAN1 init function */
 void MX_FDCAN1_Init(uint32_t baudrate)
 {
@@ -127,7 +137,7 @@ uint32_t calculate_Prescaler(uint32_t baudrate) {
 }
 
 
-void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle, Pin pin)
+void HAL_FDCAN_MspInit_custom(FDCAN_HandleTypeDef* fdcanHandle, Pin pin)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};

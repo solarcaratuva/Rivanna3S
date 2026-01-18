@@ -66,6 +66,7 @@ public:
     //   0 if no message pending,
     //  <0 on error.
     int read(SerializedCanMessage* msg);
+    FDCAN_Peripheral* findCANPin(Pin tx, Pin rx);
 
 private:
     FDCAN_HandleTypeDef* m_hfdcan;
@@ -73,6 +74,7 @@ private:
     FDCAN_TxHeaderTypeDef m_txHeader;
     FDCAN_RxHeaderTypeDef m_rxHeader;
 
+    FDCAN_Peripheral* fdcan_periph;
     uint32_t bytesToDlc(uint8_t len) const;
     uint8_t  dlcToBytes(uint32_t dlc) const;
 };

@@ -27,6 +27,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "pinmap.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -40,6 +41,12 @@ extern FDCAN_HandleTypeDef hfdcan1;
 
 void MX_FDCAN1_Init(uint32_t baudrate);
 uint32_t calculate_Prescaler(uint32_t baudrate);
+
+FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* hadc, uint32_t baudrate);
+
+void HAL_FDCAN_MspInit_custom(FDCAN_HandleTypeDef* fdcanHandle, Pin pin);
+
+
 
 /* USER CODE BEGIN Prototypes */
 
