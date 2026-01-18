@@ -39,25 +39,7 @@
 #include "lock.h"
 #include "log.h"
 
-extern "C" void app_main(void *argument)
-{
-  (void)argument;
-
-  /* USER CODE BEGIN Init */
-  log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
-  /* USER CODE END Init */
-
-  DigitalOut LED1(PB_0);
-
-  while (1)
-  {
-    log_debug("%s","HERE");
-    HAL_Delay(1000);
-    LED1.write(!LED1.read());
-  }
-}
-
-  // Address of Flash Banks
+ // Address of Flash Banks
   // #define FLASH_BANK1_BASE          (0x08000000UL) /*!< Base address of : (up to 1 MB) Flash Bank1 accessible over AXI                          */
   // #define FLASH_BANK2_BASE          (0x08100000UL) /*!< Base address of : (up to 1 MB) Flash Bank2 accessible over AXI 
 
@@ -86,12 +68,12 @@ extern "C" void app_main(void *argument)
 
     if (HAL_FLASHEx_Erase(&erase, &sector_error) != HAL_OK)
     {
-        uint32_t err = HAL_FLASH_GetError();
+        // uint32_t err = HAL_FLASH_GetError();
         // handle error
     }
 
-    uint32_t err;
-    HAL_FLASHEx_Erase(&erase, &err);
+    //Mass Erase function call from example HAL flash code
+    // FLASH_MassErase(FLASH_VOLTAGE_RANGE_3, FLASH_BANK_2);
 
     HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, FLASH_BANK2_BASE, (uint32_t)data);
 
@@ -101,6 +83,26 @@ extern "C" void app_main(void *argument)
     SCB_InvalidateICache();
     SCB_EnableICache();
     SCB_EnableDCache();
-
-
   }
+
+extern "C" void app_main(void *argument)
+{
+  (void)argument;
+
+  /* USER CODE BEGIN Init */
+  log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
+  /* USER CODE END Init */
+
+  DigitalOut LED1(PB_0);
+
+  flash_bank2_ex();
+
+  while (1)
+  {
+    log_debug("%s","HERE");
+    HAL_Delay(1000);
+    LED1.write(!LED1.read());
+  }
+}
+
+ 
