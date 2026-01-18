@@ -56,3 +56,51 @@ extern "C" void app_main(void *argument)
     LED1.write(!LED1.read());
   }
 }
+
+  // Address of Flash Banks
+  // #define FLASH_BANK1_BASE          (0x08000000UL) /*!< Base address of : (up to 1 MB) Flash Bank1 accessible over AXI                          */
+  // #define FLASH_BANK2_BASE          (0x08100000UL) /*!< Base address of : (up to 1 MB) Flash Bank2 accessible over AXI 
+
+  void flash_bank2_ex (void) {
+
+    //Example Data 256-bit
+    uint32_t data[8] = {
+        0xDEADBEEF, 0xCAFEBABE, 0x12345678, 0x87654321,
+        0xAAAAAAAA, 0xBBBBBBBB, 0xCCCCCCCC, 0xDDDDDDDD
+    };
+
+    //Disable Cache
+    SCB_DisableICache();
+    SCB_DisableDCache();
+
+    HAL_FLASH_Unlock();
+
+    FLASH_EraseInitTypeDef erase;
+    uint32_t sector_error;
+
+    erase.TypeErase   = FLASH_TYPEERASE_SECTORS;
+    erase.Banks       = FLASH_BANK_2;        // <<<<<<<<<< IMPORTANT
+    erase.Sector      = 0;        // Bank-2-relative sector
+    erase.NbSectors   = 8;        // 8 Sectors for STM32H743
+    erase.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+
+    if (HAL_FLASHEx_Erase(&erase, &sector_error) != HAL_OK)
+    {
+        uint32_t err = HAL_FLASH_GetError();
+        // handle error
+    }
+
+    uint32_t err;
+    HAL_FLASHEx_Erase(&erase, &err);
+
+    HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, FLASH_BANK2_BASE, (uint32_t)data);
+
+    HAL_FLASH_Lock();
+
+    SCB_CleanDCache();
+    SCB_InvalidateICache();
+    SCB_EnableICache();
+    SCB_EnableDCache();
+
+
+  }
