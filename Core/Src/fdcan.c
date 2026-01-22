@@ -19,6 +19,9 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "fdcan.h"
+#include "pinmap.h"
+#include "peripheralmap.h"
+#include "stm32h7xx_hal.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -26,8 +29,18 @@
 
 FDCAN_HandleTypeDef hfdcan1;
 
+FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* hadc, uint32_t baudrate) {
+  if (hadc == FDCAN1) {
+    MX_FDCAN1_Init(baudrate);
+    return &hfdcan1;
+  } 
+
+  return &hfdcan1; // Default return to avoid compiler warning
+}
+
+
 /* FDCAN1 init function */
-void MX_FDCAN1_Init(void)
+void MX_FDCAN1_Init(uint32_t baudrate)
 {
 
   /* USER CODE BEGIN FDCAN1_Init 0 */
@@ -43,6 +56,8 @@ void MX_FDCAN1_Init(void)
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
+
+  // Set prescaler based on desired baudrate using calculate_Prescaler function
   hfdcan1.Init.NominalPrescaler = 32;
   hfdcan1.Init.NominalSyncJumpWidth = 1;
   hfdcan1.Init.NominalTimeSeg1 = 2;
@@ -75,7 +90,16 @@ void MX_FDCAN1_Init(void)
 
 }
 
-void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
+uint32_t calculate_Prescaler(uint32_t baudrate) {
+    // This function can be used to set the prescaler based on desired baudrate
+    // Implementation depends on specific requirements and hardware capabilities
+    const uint32_t fdcan_ker_clk = 160000000UL; 
+    const uint32_t nbtq = 20UL; // Nominal Bit Time Quantum
+
+    return (fdcan_ker_clk / (baudrate * nbtq)); 
+}
+
+void HAL_FDCAN_MspInit_custom(FDCAN_HandleTypeDef* fdcanHandle, Pin pin)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -92,12 +116,12 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
     PA11     ------> FDCAN1_RX
     PA12     ------> FDCAN1_TX
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
+    GPIO_InitStruct.Pin = pin.block_mask|pin.block_mask;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN1;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct);
 
   /* USER CODE BEGIN FDCAN1_MspInit 1 */
 
@@ -105,28 +129,6 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
   }
 }
 
-void HAL_FDCAN_MspDeInit(FDCAN_HandleTypeDef* fdcanHandle)
-{
-
-  if(fdcanHandle->Instance==FDCAN1)
-  {
-  /* USER CODE BEGIN FDCAN1_MspDeInit 0 */
-
-  /* USER CODE END FDCAN1_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_FDCAN_CLK_DISABLE();
-
-    /**FDCAN1 GPIO Configuration
-    PA11     ------> FDCAN1_RX
-    PA12     ------> FDCAN1_TX
-    */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_11|GPIO_PIN_12);
-
-  /* USER CODE BEGIN FDCAN1_MspDeInit 1 */
-
-  /* USER CODE END FDCAN1_MspDeInit 1 */
-  }
-}
 
 /* USER CODE BEGIN 1 */
 
