@@ -45,17 +45,22 @@
 
   void flash_bank2_ex (void) {
 
+    log_debug("%s", "ENTERING FLASH BANK 2 EXAMPLE");
+
     //Example Data 256-bit
     uint32_t data[8] = {
         0xDEADBEEF, 0xCAFEBABE, 0x12345678, 0x87654321,
         0xAAAAAAAA, 0xBBBBBBBB, 0xCCCCCCCC, 0xDDDDDDDD
     };
 
-    //Disable Cache
-    SCB_DisableICache();
-    SCB_DisableDCache();
+    //Disable Cache; Crashes???
+    // SCB_DisableICache();
+    // SCB_DisableDCache();
+
+    // log_debug("%s", "DISABLE CACHE");
 
     HAL_FLASH_Unlock();
+    log_debug("%s", "UNLOCK FLASH BLOCKS");
 
     FLASH_EraseInitTypeDef erase;
     uint32_t sector_error;
@@ -68,9 +73,13 @@
 
     if (HAL_FLASHEx_Erase(&erase, &sector_error) != HAL_OK)
     {
-        // uint32_t err = HAL_FLASH_GetError();
-        // handle error
+        log_debug("%s", "FLASH ERASE FAILED");
+        log_debug("%lx", (long unsigned int) sector_error);
     }
+
+    HAL_Delay(200); // Delay after erase (just in case)
+
+    log_debug("%s", "FLASH ERASE END");
 
     //Mass Erase function call from example HAL flash code
     // FLASH_MassErase(FLASH_VOLTAGE_RANGE_3, FLASH_BANK_2);
@@ -79,10 +88,10 @@
 
     HAL_FLASH_Lock();
 
-    SCB_CleanDCache();
-    SCB_InvalidateICache();
-    SCB_EnableICache();
-    SCB_EnableDCache();
+    // SCB_CleanDCache();
+    // SCB_InvalidateICache();
+    // SCB_EnableICache();
+    // SCB_EnableDCache();
   }
 
 extern "C" void app_main(void *argument)
