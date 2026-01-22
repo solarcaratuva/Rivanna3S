@@ -38,6 +38,7 @@
 #include "Timeout.h"
 #include "lock.h"
 #include "log.h"
+#include "can.h"
 
 extern "C" void app_main(void *argument)
 {
@@ -47,12 +48,21 @@ extern "C" void app_main(void *argument)
   log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
   /* USER CODE END Init */
 
+
   DigitalOut LED1(PB_0);
 
-  while (1)
-  {
-    log_debug("%s","HERE");
-    HAL_Delay(1000);
-    LED1.write(!LED1.read());
+  CAN can(PB_9, PB_8, 250000);
+  SerializedCanMessage msg;
+  int rc = -1;
+  while (rc <= 0){
+     rc = can.read(&msg);
   }
+  LED1.write(true);
+
+  // while (1)
+  // {
+  //   log_debug("%s","HERE");
+  //   HAL_Delay(1000);
+  //   LED1.write(!LED1.read());
+  // }
 }

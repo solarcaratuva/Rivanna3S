@@ -134,19 +134,27 @@ extern "C" void app_main(void *argument)
 
   DigitalOut LED1(PB_0);
 
+  CAN can(PB_9, PB_8, 250000);
+  SerializedCanMessage msg;
+  int rc = -1;
+  while (rc <= 0){
+     rc = can.read(&msg);
+  }
+  LED1.write(true);
+
   // AnalogIn analogInput1(PF_5);
   // AnalogIn analogInput2(PF_10);
 
-  I2C test_i2c(PF_0, PF_1, I2C::FAST);
-  uint8_t test_data[2] = {6, 7};
-  uint8_t received_data[3];
+  // I2C test_i2c(PF_0, PF_1, I2C::FAST);
+  // uint8_t test_data[2] = {6, 7};
+  // uint8_t received_data[3];
 
-  while (1)
-  {
-    log_debug("%s","HERE");
-    HAL_Delay(1000);
-    LED1.write(!LED1.read());
-  }
+  // while (1)
+  // {
+  //   log_debug("%s","HERE");
+  //   HAL_Delay(1000);
+  //   LED1.write(!LED1.read());
+  // }
 
   /* USER CODE BEGIN 2 */
   Thread thread;
