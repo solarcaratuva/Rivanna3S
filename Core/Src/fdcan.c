@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2025 STMicroelectronics.
+  * Copyright (c) 2026 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -19,10 +19,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "fdcan.h"
-#include "pinmap.h"
-#include "peripheralmap.h"
-#include "stm32h7xx_hal.h"
-
 
 /* USER CODE BEGIN 0 */
 
@@ -30,18 +26,8 @@
 
 FDCAN_HandleTypeDef hfdcan1;
 
-
-FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* hadc, uint32_t baudrate) {
-  if (hadc == FDCAN1) {
-    MX_FDCAN1_Init(baudrate);
-    return &hfdcan1;
-  } 
-
-  return &hfdcan1; // Default return to avoid compiler warning
-}
-
 /* FDCAN1 init function */
-void MX_FDCAN1_Init(uint32_t baudrate)
+void MX_FDCAN1_Init(void)
 {
 
   /* USER CODE BEGIN FDCAN1_Init 0 */
@@ -57,41 +43,18 @@ void MX_FDCAN1_Init(uint32_t baudrate)
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
-
-
-
-  hfdcan1.Init.NominalPrescaler = (int) calculate_Prescaler(baudrate);
+  hfdcan1.Init.NominalPrescaler = 32;
   hfdcan1.Init.NominalSyncJumpWidth = 1;
   hfdcan1.Init.NominalTimeSeg1 = 2;
   hfdcan1.Init.NominalTimeSeg2 = 2;
   hfdcan1.Init.DataPrescaler = 1;
   hfdcan1.Init.DataSyncJumpWidth = 1;
- hfdcan1.Init.DataTimeSeg1 = 1;
+  hfdcan1.Init.DataTimeSeg1 = 1;
   hfdcan1.Init.DataTimeSeg2 = 1;
-
-  // hfdcan1.Init.MessageRAMOffset = 0;
-  // hfdcan1.Init.StdFiltersNbr = 0;
-  // hfdcan1.Init.ExtFiltersNbr = 0;
-  // hfdcan1.Init.RxFifo0ElmtsNbr = 0;
-  // hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
-  // hfdcan1.Init.RxFifo1ElmtsNbr = 0;
-  // hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
-  // hfdcan1.Init.RxBuffersNbr = 0;
-  // hfdcan1.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
-  // hfdcan1.Init.TxEventsNbr = 0;
-  // hfdcan1.Init.TxBuffersNbr = 0;
-  // hfdcan1.Init.TxFifoQueueElmtsNbr = 0;
-  // hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-  // hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
-  // if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
-  // {
-  //   Error_Handler();
-  // }
   hfdcan1.Init.MessageRAMOffset = 0;
-  /* Configure basic message RAM: one standard filter, RX FIFO0 and TX FIFO */
-  hfdcan1.Init.StdFiltersNbr = 1;
+  hfdcan1.Init.StdFiltersNbr = 0;
   hfdcan1.Init.ExtFiltersNbr = 0;
-  hfdcan1.Init.RxFifo0ElmtsNbr = 8;
+  hfdcan1.Init.RxFifo0ElmtsNbr = 0;
   hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
   hfdcan1.Init.RxFifo1ElmtsNbr = 0;
   hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
@@ -99,7 +62,7 @@ void MX_FDCAN1_Init(uint32_t baudrate)
   hfdcan1.Init.RxBufferSize = FDCAN_DATA_BYTES_8;
   hfdcan1.Init.TxEventsNbr = 0;
   hfdcan1.Init.TxBuffersNbr = 0;
-  hfdcan1.Init.TxFifoQueueElmtsNbr = 8;
+  hfdcan1.Init.TxFifoQueueElmtsNbr = 0;
   hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
   hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
   if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
@@ -107,67 +70,34 @@ void MX_FDCAN1_Init(uint32_t baudrate)
     Error_Handler();
   }
   /* USER CODE BEGIN FDCAN1_Init 2 */
-  /* Accept all standard IDs into RX FIFO0 */
-  FDCAN_FilterTypeDef sFilterConfig = {0};
-  sFilterConfig.IdType       = FDCAN_STANDARD_ID;
-  sFilterConfig.FilterIndex  = 0;
-  sFilterConfig.FilterType   = FDCAN_FILTER_MASK;
-  sFilterConfig.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
-  sFilterConfig.FilterID1    = 0x000;
-  sFilterConfig.FilterID2    = 0x000;
-  if (HAL_FDCAN_ConfigFilter(&hfdcan1, &sFilterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN FDCAN1_Init 2 */
 
   /* USER CODE END FDCAN1_Init 2 */
 
-
-
 }
 
-uint32_t calculate_Prescaler(uint32_t baudrate) {
-    // This function can be used to set the prescaler based on desired baudrate
-    // Implementation depends on specific requirements and hardware capabilities
-    const uint32_t fdcan_ker_clk = 160000000UL; 
-    const uint32_t nbtq = 20UL; // Nominal Bit Time Quantum
-
-    return (fdcan_ker_clk / (baudrate * nbtq)); 
-}
-
-
-void HAL_FDCAN_MspInit_custom(FDCAN_HandleTypeDef* fdcanHandle, Pin pin)
+void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
   if(fdcanHandle->Instance==FDCAN1)
   {
   /* USER CODE BEGIN FDCAN1_MspInit 0 */
 
   /* USER CODE END FDCAN1_MspInit 0 */
-
-  /** Initializes the peripherals clock
-  */
-    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_FDCAN;
-    PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL;
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
     /* FDCAN1 clock enable */
     __HAL_RCC_FDCAN_CLK_ENABLE();
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    
-    GPIO_InitStruct.Pin = pin.block_mask|pin.block_mask;
+    /**FDCAN1 GPIO Configuration
+    PA11     ------> FDCAN1_RX
+    PA12     ------> FDCAN1_TX
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN1;
-    HAL_GPIO_Init(pin.block, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USER CODE BEGIN FDCAN1_MspInit 1 */
 
@@ -175,7 +105,28 @@ void HAL_FDCAN_MspInit_custom(FDCAN_HandleTypeDef* fdcanHandle, Pin pin)
   }
 }
 
+void HAL_FDCAN_MspDeInit(FDCAN_HandleTypeDef* fdcanHandle)
+{
 
+  if(fdcanHandle->Instance==FDCAN1)
+  {
+  /* USER CODE BEGIN FDCAN1_MspDeInit 0 */
+
+  /* USER CODE END FDCAN1_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_FDCAN_CLK_DISABLE();
+
+    /**FDCAN1 GPIO Configuration
+    PA11     ------> FDCAN1_RX
+    PA12     ------> FDCAN1_TX
+    */
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_11|GPIO_PIN_12);
+
+  /* USER CODE BEGIN FDCAN1_MspDeInit 1 */
+
+  /* USER CODE END FDCAN1_MspDeInit 1 */
+  }
+}
 
 /* USER CODE BEGIN 1 */
 

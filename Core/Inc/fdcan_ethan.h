@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2026 STMicroelectronics.
+  * Copyright (c) 2025 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -27,6 +27,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "pinmap.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -38,7 +39,14 @@ extern FDCAN_HandleTypeDef hfdcan1;
 
 /* USER CODE END Private defines */
 
-void MX_FDCAN1_Init(void);
+void MX_FDCAN1_Init(uint32_t baudrate);
+uint32_t calculate_Prescaler(uint32_t baudrate);
+
+FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* hadc, uint32_t baudrate);
+
+void HAL_FDCAN_MspInit_custom(FDCAN_HandleTypeDef* fdcanHandle, Pin pin);
+
+
 
 /* USER CODE BEGIN Prototypes */
 
