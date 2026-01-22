@@ -1,6 +1,7 @@
 #include "can.h"
 #include <string.h> // memcpy
 #include "pinmap.h"
+#include "log.h"
 
 // -----------------------------------------------------------------------------
 // Helper: convert length <-> DLC
@@ -20,11 +21,14 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     FDCAN_GlobalTypeDef *fdcan_handle = fdcan_periph->handle;
    
     uint8_t tx_af = get_FDCAN_AF(fdcan_periph->handle, &tx, TX);
+    log_debug("CAN TX AF: %d", tx_af);
     uint8_t rx_af = get_FDCAN_AF(fdcan_periph->handle, &rx, RX);
+    log_debug("CAN RX AF: %d", rx_af);
     HAL_FDCAN_MspInit_custom(fdcan_periph->handle, tx, tx_af);
     HAL_FDCAN_MspInit_custom(fdcan_periph->handle, rx, rx_af);
     m_hfdcan = FDCAN_init(fdcan_periph->handle, baudrate);
-    HAL_FDCAN_Start(m_hfdcan);
+    uint16_t res = HAL_FDCAN_Start(m_hfdcan);
+    log_debug("FDCAN Start result: %d", res);
 
     // Default Tx header setup; fields that change per-frame will be set in write().
     m_txHeader.IdType = FDCAN_STANDARD_ID;
