@@ -12,9 +12,9 @@ target_include_directories(STM32H7xx_HAL_DRIVER PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc/Legacy
     ${CMAKE_SOURCE_DIR}/Core/Inc
-    ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Inc
-    ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Include
-    ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Include
+    ${BOARD_SETUP_INC}
+    ${BOARD_CMSIS_DEVICE_INC}
+    ${BOARD_CMSIS_INC}
 )
 
 # If the parent defines a convenience 'mcu_flags' interface target, link it so
@@ -27,5 +27,5 @@ endif()
 # Ensure HAL driver compilation sees the project device and HAL macros
 target_compile_definitions(STM32H7xx_HAL_DRIVER PUBLIC
     USE_HAL_DRIVER
-    STM32H743xx
+    ${BOARD_DEVICE_DEFINE}
 )

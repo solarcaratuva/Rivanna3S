@@ -1,0 +1,5 @@
+/home/dominic/projects/Rivanna3S/Drivers/STM32H743ZITX/STM32H743ZITX_Setup/Src/adc.c:35:6:MX_ADC1_Init	56	static
+/home/dominic/projects/Rivanna3S/Drivers/STM32H743ZITX/STM32H743ZITX_Setup/Src/adc.c:103:6:MX_ADC2_Init	48	static
+/home/dominic/projects/Rivanna3S/Drivers/STM32H743ZITX/STM32H743ZITX_Setup/Src/adc.c:162:6:MX_ADC3_Init	48	static
+/home/dominic/projects/Rivanna3S/Drivers/STM32H743ZITX/STM32H743ZITX_Setup/Src/adc.c:221:20:ADC_init	24	static
+/home/dominic/projects/Rivanna3S/Drivers/STM32H743ZITX/STM32H743ZITX_Setup/Src/adc.c:238:6:HAL_ADC_MspInit_custom	256	static

@@ -18,7 +18,16 @@ add_library(freertos_kernel STATIC
 )
 
 # --- MCU port selection ---
-set(FREERTOS_PORT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/portable/GCC/ARM_CM4F)
+set(FREERTOS_PORT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/portable/GCC/${FREERTOS_PORT})
+if(NOT EXISTS "${FREERTOS_PORT_DIR}")
+    set(FREERTOS_FALLBACK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/portable/GCC/ARM_CM4F)
+    if(EXISTS "${FREERTOS_FALLBACK_DIR}")
+        message(WARNING "FreeRTOS port '${FREERTOS_PORT}' not found; falling back to ARM_CM4F.")
+        set(FREERTOS_PORT_DIR "${FREERTOS_FALLBACK_DIR}")
+    else()
+        message(FATAL_ERROR "FreeRTOS port '${FREERTOS_PORT}' not found and no ARM_CM4F fallback present.")
+    endif()
+endif()
 target_sources(freertos_kernel PRIVATE
     ${FREERTOS_PORT_DIR}/port.c
 )
@@ -28,22 +37,21 @@ target_include_directories(freertos_kernel PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include                    # FreeRTOS kernel headers
     ${FREERTOS_PORT_DIR}                                   # Port headers
     ${CMAKE_SOURCE_DIR}/Common/Libs/Inc                    # FreeRTOSConfig.h
-    ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Inc    # stm32h7xx_hal_conf.h
+    ${BOARD_SETUP_INC}                                     # stm32*_hal_conf.h
     ${CMAKE_SOURCE_DIR}/Core/Inc                           # main.h for Error_Handler
-    ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Include              # CMSIS compiler/ARM headers
-    ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Core/Include         # CMSIS core headers
-    ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc   # HAL driver headers
-    ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Include  # Device-specific headers
+    ${BOARD_CMSIS_INC}                                     # CMSIS compiler/ARM headers
+    ${BOARD_CMSIS_CORE_INC}                                # CMSIS core headers (if present)
+    ${BOARD_HAL_INC}                                       # HAL driver headers
+    ${BOARD_CMSIS_DEVICE_INC}                              # Device-specific headers
 )
 
 # --- Common compile settings ---
 target_compile_definitions(freertos_kernel PUBLIC
     USE_HAL_DRIVER
-    STM32H743xx
+    ${BOARD_DEVICE_DEFINE}
 )
 
 # --- Compiler options ---
-set(MCU_FLAGS -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard)
 set(OPT_FLAGS -O0 -g3 -ffunction-sections -fdata-sections -fno-common)
 set(WARN_FLAGS -Wall -Wextra -Wundef -Wdouble-promotion -Wformat=2 -Wshadow)
 

@@ -1,0 +1,20 @@
+Common/CMakeFiles/common.dir/Libs/Src/thread.cpp.obj: \
+ /home/dominic/projects/Rivanna3S/Common/Libs/Src/thread.cpp \
+ /home/dominic/projects/Rivanna3S/Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h \
+ /usr/lib/gcc/arm-none-eabi/15.2.0/include/stddef.h \
+ /usr/lib/gcc/arm-none-eabi/15.2.0/include/stdint.h \
+ /usr/arm-none-eabi/include/stdint.h \
+ /usr/arm-none-eabi/include/machine/_default_types.h \
+ /usr/arm-none-eabi/include/sys/features.h \
+ /usr/arm-none-eabi/include/_newlib_version.h \
+ /usr/arm-none-eabi/include/sys/_intsup.h \
+ /usr/arm-none-eabi/include/sys/_stdint.h \
+ /home/dominic/projects/Rivanna3S/Common/Libs/Inc/FreeRTOSConfig.h \
+ /home/dominic/projects/Rivanna3S/Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h \
+ /home/dominic/projects/Rivanna3S/Middlewares/Third_Party/FreeRTOS/Source/include/portable.h \
+ /home/dominic/projects/Rivanna3S/Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h \
+ /home/dominic/projects/Rivanna3S/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h \
+ /home/dominic/projects/Rivanna3S/Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h \
+ /home/dominic/projects/Rivanna3S/Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
+ /home/dominic/projects/Rivanna3S/Middlewares/Third_Party/FreeRTOS/Source/include/list.h \
+ /home/dominic/projects/Rivanna3S/Common/Libs/Inc/thread.h

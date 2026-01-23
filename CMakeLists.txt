@@ -1,23 +1,25 @@
 cmake_minimum_required(VERSION 3.21)
-project(stm32h743_freertos C CXX ASM)
 
 # -------- Toolchain & MCU flags --------
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/arm-gcc.cmake")
+if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+  set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/arm-gcc.cmake" CACHE FILEPATH "Toolchain file")
+endif()
 
-# Cortex-M7 + hard float
-set(MCU_FLAGS -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard)
+project(stm32h743_freertos C CXX ASM)
+
+set(BOARD "STM32H743ZITX" CACHE STRING "Target board name (Drivers/<board>)")
+
 set(OPT_FLAGS -O0 -g3 -ffunction-sections -fdata-sections -fno-common)
 set(WARN_FLAGS -Wall -Wextra -Wformat=2 -Wshadow -Wno-missing-field-initializers)
-
-# Linker script
-set(LINKER_SCRIPT "${CMAKE_SOURCE_DIR}/STM32H743ZITX_FLASH.ld" CACHE FILEPATH "LD script")
 
 # -------- Board helper --------
 include(${CMAKE_SOURCE_DIR}/cmake/board.cmake)
 
 # -------- Add FreeRTOS as a subdirectory (builds freertos_kernel library) --------
 add_subdirectory(Middlewares/Third_Party/FreeRTOS/Source)
-add_subdirectory(Drivers)
+if(EXISTS "${BOARD_ROOT}/CMakeLists.txt")
+  add_subdirectory(${BOARD_ROOT})
+endif()
 add_subdirectory(Common)
 
 # -------- Boards --------

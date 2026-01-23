@@ -1,6 +1,86 @@
 # Shared board target helper.
 
-set(BOARD_DEFINES USE_HAL_DRIVER STM32H743xx)
+if(NOT DEFINED BOARD)
+  message(FATAL_ERROR "BOARD is not set. Pass -DBOARD=<board> (e.g. STM32H743ZITX).")
+endif()
+
+set(BOARD_ROOT "${CMAKE_SOURCE_DIR}/Drivers/${BOARD}")
+if(NOT EXISTS "${BOARD_ROOT}")
+  message(FATAL_ERROR "Board folder not found: ${BOARD_ROOT}")
+endif()
+
+set(BOARD_SETUP_DIR "${BOARD_ROOT}/${BOARD}_Setup")
+set(BOARD_SETUP_INC "${BOARD_SETUP_DIR}/Inc")
+set(BOARD_SETUP_SRC "${BOARD_SETUP_DIR}/Src")
+
+file(GLOB BOARD_STARTUP_CANDIDATES "${BOARD_SETUP_SRC}/startup_*.s")
+list(LENGTH BOARD_STARTUP_CANDIDATES BOARD_STARTUP_COUNT)
+if(NOT BOARD_STARTUP_COUNT EQUAL 1)
+  message(FATAL_ERROR "Expected 1 startup file in ${BOARD_SETUP_SRC}, found ${BOARD_STARTUP_COUNT}")
+endif()
+list(GET BOARD_STARTUP_CANDIDATES 0 STARTUP_S)
+
+file(GLOB APP_C_SOURCES "${BOARD_SETUP_SRC}/*.c")
+file(GLOB APP_CPP_SOURCES "${BOARD_SETUP_SRC}/*.cpp")
+set_source_files_properties(${APP_CPP_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu++14 -fno-exceptions -fno-rtti -fno-use-cxa-atexit")
+set_source_files_properties(${APP_C_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu11")
+
+file(GLOB BOARD_HAL_DIRS LIST_DIRECTORIES true "${BOARD_ROOT}/STM32*xx_HAL_Driver")
+list(LENGTH BOARD_HAL_DIRS BOARD_HAL_DIRS_COUNT)
+if(BOARD_HAL_DIRS_COUNT LESS 1)
+  message(FATAL_ERROR "No HAL driver folder found in ${BOARD_ROOT}")
+endif()
+list(GET BOARD_HAL_DIRS 0 BOARD_HAL_DIR)
+set(BOARD_HAL_INC "${BOARD_HAL_DIR}/Inc")
+set(BOARD_HAL_LEGACY_INC "${BOARD_HAL_DIR}/Inc/Legacy")
+
+file(GLOB HAL_SRCS
+  "${BOARD_HAL_DIR}/Src/stm32*_hal*.c"
+  "${BOARD_HAL_DIR}/Src/stm32*_ll_*.c"
+)
+
+set(BOARD_CMSIS_DIR "${BOARD_ROOT}/CMSIS")
+set(BOARD_CMSIS_INC "${BOARD_CMSIS_DIR}/Include")
+set(BOARD_CMSIS_CORE_INC "")
+if(EXISTS "${BOARD_CMSIS_DIR}/Core/Include")
+  set(BOARD_CMSIS_CORE_INC "${BOARD_CMSIS_DIR}/Core/Include")
+endif()
+file(GLOB BOARD_CMSIS_DEVICE_DIRS LIST_DIRECTORIES true "${BOARD_CMSIS_DIR}/Device/ST/*/Include")
+list(LENGTH BOARD_CMSIS_DEVICE_DIRS BOARD_CMSIS_DEVICE_DIRS_COUNT)
+if(BOARD_CMSIS_DEVICE_DIRS_COUNT LESS 1)
+  message(FATAL_ERROR "No CMSIS device include folder found in ${BOARD_CMSIS_DIR}/Device/ST")
+endif()
+list(GET BOARD_CMSIS_DEVICE_DIRS 0 BOARD_CMSIS_DEVICE_INC)
+
+if(BOARD STREQUAL "STM32H743ZITX")
+  set(BOARD_DEVICE_DEFINE STM32H743xx)
+  set(MCU_FLAGS -mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard)
+  set(BOARD_FREERTOS_PORT ARM_CM7)
+  set(BOARD_LINKER_SCRIPT_FLASH "${BOARD_ROOT}/STM32H743ZITX_FLASH.ld")
+  set(BOARD_LINKER_SCRIPT_RAM "${BOARD_ROOT}/STM32H743ZITX_RAM.ld")
+elseif(BOARD STREQUAL "STM32G474RET6")
+  set(BOARD_DEVICE_DEFINE STM32G474xx)
+  set(MCU_FLAGS -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard)
+  set(BOARD_FREERTOS_PORT ARM_CM4F)
+  set(BOARD_LINKER_SCRIPT_FLASH "${BOARD_ROOT}/STM32G474RETX_FLASH.ld")
+  set(BOARD_LINKER_SCRIPT_RAM "${BOARD_ROOT}/STM32G474RETX_RAM.ld")
+elseif(BOARD STREQUAL "STM32U5A9NJH6Q")
+  set(BOARD_DEVICE_DEFINE STM32U5A9xx)
+  set(MCU_FLAGS -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard)
+  set(BOARD_FREERTOS_PORT ARM_CM33)
+  set(BOARD_LINKER_SCRIPT_FLASH "${BOARD_ROOT}/STM32U5A9NJHXQ_FLASH.ld")
+  set(BOARD_LINKER_SCRIPT_RAM "${BOARD_ROOT}/STM32U5A9NJHXQ_RAM.ld")
+else()
+  message(FATAL_ERROR "Unknown BOARD '${BOARD}'. Add its configuration to cmake/board.cmake.")
+endif()
+
+set(FREERTOS_PORT "${BOARD_FREERTOS_PORT}" CACHE STRING "FreeRTOS GCC port directory name")
+
+if(NOT DEFINED LINKER_SCRIPT)
+  set(LINKER_SCRIPT "${BOARD_LINKER_SCRIPT_FLASH}" CACHE FILEPATH "LD script")
+endif()
+
+set(BOARD_DEFINES USE_HAL_DRIVER ${BOARD_DEVICE_DEFINE})
 set(BOARD_COMPILE_OPTIONS)
 if(DEFINED MCU_FLAGS)
   list(APPEND BOARD_COMPILE_OPTIONS ${MCU_FLAGS} ${OPT_FLAGS} ${WARN_FLAGS})
@@ -18,29 +98,15 @@ set(BOARD_LINK_OPTIONS
 )
 
 set(BOARD_INCLUDE_DIRS
-  ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Inc
+  ${BOARD_SETUP_INC}
   ${CMAKE_SOURCE_DIR}/Common/Libs/Inc
-  ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc
-  ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy
-  ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Include
-  ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Include
+  ${BOARD_HAL_INC}
+  ${BOARD_HAL_LEGACY_INC}
+  ${BOARD_CMSIS_DEVICE_INC}
+  ${BOARD_CMSIS_INC}
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
 )
-
-set(STARTUP_S ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/startup_stm32h743zitx.s)
-file(GLOB APP_C_SOURCES
-  ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/*.c
-)
-file(GLOB APP_CPP_SOURCES
-  ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/*.cpp
-)
-file(GLOB HAL_SRCS
-  ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal*.c
-  ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_*.c
-)
-set_source_files_properties(${APP_CPP_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu++14 -fno-exceptions -fno-rtti -fno-use-cxa-atexit")
-set_source_files_properties(${APP_C_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu11")
 
 function(add_board BOARD_NAME)
   file(GLOB BOARD_SOURCES

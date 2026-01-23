@@ -1,0 +1,3 @@
+/home/dominic/projects/Rivanna3S/Drivers/STM32H743ZITX/STM32H743ZITX_Setup/Src/fdcan.c:30:6:MX_FDCAN1_Init	8	static
+/home/dominic/projects/Rivanna3S/Drivers/STM32H743ZITX/STM32H743ZITX_Setup/Src/fdcan.c:78:6:HAL_FDCAN_MspInit	240	static
+/home/dominic/projects/Rivanna3S/Drivers/STM32H743ZITX/STM32H743ZITX_Setup/Src/fdcan.c:119:6:HAL_FDCAN_MspDeInit	16	static
