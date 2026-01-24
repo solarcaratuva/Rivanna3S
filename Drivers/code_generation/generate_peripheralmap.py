@@ -4,10 +4,6 @@ import re
 import argparse
 from generate_pinmap import parse_XML_pinmap
 
-""" 
-TODO: 
-    - Generate SPI peripheral array and get_SPI_AF function
-"""
 
 # Define specific pins required for each peripheral type
 SIGNAL_MAP = {
@@ -206,6 +202,33 @@ def write_get_fdcan_af(f, af_map: dict) -> None:
     }
     return 0; // should never happen
 }\n\n""")
+    
+
+def write_get_spi_af(f, af_map: dict) -> None:
+    f.write("uint8_t get_SPI_AF(const SPI_TypeDef* handle, const Pin* pin, uint8_t mode) {\n")
+
+    write_af_arrays(f, af_map, "SPI")
+
+    f.write("    AF_Info* array = NULL;\n    uint8_t array_len = 0;\n\n")
+
+    for peripheral in af_map['SPI'].keys():
+        if af_map['SPI'][peripheral]:
+            f.write(f"    if(handle == {peripheral}) {{\n")
+            for mode in af_map['SPI'][peripheral]:
+                f.write(f"""\t\tif(mode == {mode}) {{
+            array = {peripheral}_{mode};
+            array_len = {peripheral}_{mode}_len;
+        }}\n""")
+            f.write("    }\n\n")
+            
+    f.write("""
+    for (uint8_t i = 0; i < array_len; i++) {
+        if(array[i].pin == *pin) {
+            return array[i].AF;
+        }
+    }
+    return 0; // should never happen
+}\n\n""")
 
 
 def write_uart_array(f, peripheral_map: dict) -> None:
@@ -305,6 +328,28 @@ def write_adc_array(f, peripheral_map: dict) -> None:
         f"{{{', '.join(['0'] * len(adc_instances))}}};\n\n"
     )
 
+
+def write_spi_array(f, peripheral_map: dict) -> None:
+    f.write("SPI_Peripheral SPI_Peripherals[] = {\n")
+
+    for instance, values in peripheral_map.get("SPI", {}).items():
+        if not values:
+            continue
+        if not values.get("SCK", []) or not values.get("MISO", []) or not values.get("MOSI", []):
+            continue
+            
+        mosi_mask = " | ".join(pin[:2] + "_" + pin[2:] + ".universal_mask" for pin in values["MOSI"])
+        miso_mask = " | ".join(pin[:2] + "_" + pin[2:] + ".universal_mask" for pin in values["MISO"])
+        sck_mask = " | ".join(pin[:2] + "_" + pin[2:] + ".universal_mask" for pin in values["SCK"])
+
+        f.write(
+            f"    {{{instance}, ({mosi_mask}), ({miso_mask}), ({sck_mask}), NC, NC, NC, false}},\n"
+        )
+    
+    f.write("};\n\n")
+    f.write("const uint8_t SPI_PERIPHERAL_COUNT = sizeof(SPI_Peripherals) / sizeof(SPI_Peripherals[0]);\n\n")
+
+
 def create_cpp_file(file_path: str, peripheral_map: dict, pin_map: dict, af_map: dict, family: str) -> None:
     with open(file_path, 'w') as f:
         # Includes
@@ -315,6 +360,7 @@ def create_cpp_file(file_path: str, peripheral_map: dict, pin_map: dict, af_map:
         write_i2c_array(f, peripheral_map)
         write_fdcan_array(f, peripheral_map)
         write_adc_array(f, peripheral_map)
+        write_spi_array(f, peripheral_map)
 
         # GPIO clock enable function
         f.write("void gpio_clock_enable(const GPIO_TypeDef* handle){\n")
@@ -335,6 +381,7 @@ def create_cpp_file(file_path: str, peripheral_map: dict, pin_map: dict, af_map:
         write_get_uart_af(f, af_map)
         write_get_i2c_af(f, af_map)
         write_get_fdcan_af(f, af_map)
+        write_get_spi_af(f, af_map)
 
 
 def main() -> None:

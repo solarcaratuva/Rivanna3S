@@ -9,6 +9,9 @@
 #define SCL     2
 #define RX      3
 #define TX      4
+#define MOSI    5
+#define MISO    6
+#define SCK     7
 
 
 // I2C peripheral struct
@@ -56,6 +59,19 @@ typedef struct {
     uint8_t instance_num;
 } ADC_Peripheral;
 
+// SPI peripheral struct
+typedef struct {
+    SPI_TypeDef* instance;
+    uint64_t mosi_valid_pins;
+    uint64_t miso_valid_pins;
+    uint64_t sck_valid_pins;
+    Pin mosi_used;
+    Pin miso_used;
+    Pin sck_used;
+
+    bool isClaimed;
+} SPI_Peripheral;
+
 // Declare global arrays
 extern UART_Peripheral UART_Peripherals[];
 extern const uint8_t UART_PERIPHERAL_COUNT;
@@ -65,9 +81,13 @@ extern const uint8_t I2C_PERIPHERAL_COUNT;
 
 extern FDCAN_Peripheral FDCAN_Peripherals[];
 extern const uint8_t FDCAN_PERIPHERAL_COUNT;
+
 extern ADC_Peripheral ADC_Peripherals[];
 extern const uint8_t ADC_PERIPHERAL_COUNT;
 extern uint8_t adc_channels_claimed[];
+
+extern SPI_Peripheral SPI_Peripherals[];
+extern const uint8_t SPI_PERIPHERAL_COUNT;
 
 typedef struct {
     Pin pin;
@@ -79,5 +99,6 @@ void gpio_clock_enable(const GPIO_TypeDef* port);
 uint8_t get_UART_AF(const USART_TypeDef* handle, const Pin* pin, uint8_t mode);
 uint8_t get_I2C_AF(const I2C_TypeDef* handle, const Pin* pin, uint8_t mode);
 uint8_t get_FDCAN_AF(const FDCAN_GlobalTypeDef* handle, const Pin* pin, uint8_t mode);
+uint8_t get_SPI_AF(const SPI_TypeDef* handle, const Pin* pin, uint8_t mode);
 
 #endif /* PERIPHERALMAP */
