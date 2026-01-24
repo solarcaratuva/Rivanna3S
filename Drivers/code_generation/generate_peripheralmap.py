@@ -114,23 +114,19 @@ def write_get_uart_af(f, af_map: dict) -> None:
     write_af_arrays(f, af_map, "UART")
     write_af_arrays(f, af_map, "USART")
 
-    f.write("    AF_Info* array = NULL;\n    uint8_t array_len = 0;\n\n")
+    f.write("    AF_Info* array = NULL;\n    uint8_t array_len = 0;\n\n\n")
 
     for peripheral in af_map.keys():
         if peripheral == "UART" or peripheral == "USART":
             for instance in af_map[peripheral].keys():
                 if af_map[peripheral][instance]:
-                    f.write(f"""
-    if(handle == {instance}) {{
-        if(mode == RX) {{
-            array = {instance}_RX;
-            array_len = {instance}_RX_len;
-        }} else if(mode == TX) {{
-            array = {instance}_TX;
-            array_len = {instance}_TX_len;
-        }}
-    }}
-""")
+                    f.write(f"    if(handle == {instance}) {{\n")
+                    for mode in af_map[peripheral][instance]:
+                        f.write(f"""\t\tif(mode == {mode}) {{
+            array = {instance}_{mode};
+            array_len = {instance}_{mode}_len;
+        }}\n""")
+                    f.write("    }\n\n")
 
     f.write("""
     for (uint8_t i = 0; i < array_len; i++) {
@@ -147,21 +143,17 @@ def write_get_i2c_af(f, af_map: dict) -> None:
 
     write_af_arrays(f, af_map, "I2C")
 
-    f.write("    AF_Info* array = NULL;\n    uint8_t array_len = 0;\n\n")
+    f.write("    AF_Info* array = NULL;\n    uint8_t array_len = 0;\n\n\n")
 
     for peripheral in af_map['I2C'].keys():
         if af_map['I2C'][peripheral]:
-            f.write(f"""
-    if(handle == {peripheral}) {{
-        if(mode == SDA) {{
-            array = {peripheral}_SDA;
-            array_len = {peripheral}_SDA_len;
-        }} else if(mode == SCL) {{
-            array = {peripheral}_SCL;
-            array_len = {peripheral}_SCL_len;
-        }}
-    }}
-""")
+            f.write(f"    if(handle == {peripheral}) {{\n")
+            for mode in af_map['I2C'][peripheral]:
+                f.write(f"""\t\tif(mode == {mode}) {{
+            array = {peripheral}_{mode};
+            array_len = {peripheral}_{mode}_len;
+        }}\n""")
+            f.write("    }\n\n")
 
     f.write("""
     for (uint8_t i = 0; i < array_len; i++) {
@@ -178,21 +170,17 @@ def write_get_fdcan_af(f, af_map: dict) -> None:
 
     write_af_arrays(f, af_map, "FDCAN")
 
-    f.write("    AF_Info* array = NULL;\n    uint8_t array_len = 0;\n\n")
+    f.write("    AF_Info* array = NULL;\n    uint8_t array_len = 0;\n\n\n")
 
     for peripheral in af_map['FDCAN'].keys():
         if af_map['FDCAN'][peripheral]:
-            f.write(f"""
-    if(handle == {peripheral}) {{
-        if(mode == RX) {{
-            array = {peripheral}_RX;
-            array_len = {peripheral}_RX_len;
-        }} else if(mode == TX) {{
-            array = {peripheral}_TX;
-            array_len = {peripheral}_TX_len;
-        }}
-    }}
-""")
+            f.write(f"    if(handle == {peripheral}) {{\n")
+            for mode in af_map['FDCAN'][peripheral]:
+                f.write(f"""\t\tif(mode == {mode}) {{
+            array = {peripheral}_{mode};
+            array_len = {peripheral}_{mode}_len;
+        }}\n""")
+            f.write("    }\n\n")
 
     f.write("""
     for (uint8_t i = 0; i < array_len; i++) {
@@ -209,7 +197,7 @@ def write_get_spi_af(f, af_map: dict) -> None:
 
     write_af_arrays(f, af_map, "SPI")
 
-    f.write("    AF_Info* array = NULL;\n    uint8_t array_len = 0;\n\n")
+    f.write("    AF_Info* array = NULL;\n    uint8_t array_len = 0;\n\n\n")
 
     for peripheral in af_map['SPI'].keys():
         if af_map['SPI'][peripheral]:
