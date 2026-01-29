@@ -4,5 +4,5 @@ on: [push]
 jobs:
   Testing-Github-Actions-Runner:
     runs-on: self-hosted
-    test:
+    steps:
       - run: echo "HELLO WORLD!"
