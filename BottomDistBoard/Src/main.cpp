@@ -38,6 +38,7 @@
 #include "Timeout.h"
 #include "lock.h"
 #include "log.h"
+#include "SPI.h"
 
 extern "C" void app_main(void *argument)
 {
@@ -47,6 +48,7 @@ extern "C" void app_main(void *argument)
   log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
   /* USER CODE END Init */
 
+  /*
   DigitalOut LED1(PB_0);
 
   while (1)
@@ -54,5 +56,20 @@ extern "C" void app_main(void *argument)
     log_debug("%s","HERE");
     HAL_Delay(1000);
     LED1.write(!LED1.read());
+  }
+  */
+
+  SPI spi4(PE_6, PE_5, PE_2, 100000);
+
+  uint8_t rx;
+  uint8_t tx;
+
+  while (1) {
+    // Read 1 byte
+    spi4.read(&rx, 1);
+
+    // Write it back
+    tx = rx;
+    spi4.write(&tx, 1);
   }
 }
