@@ -43,21 +43,35 @@
   // #define FLASH_BANK1_BASE          (0x08000000UL) /*!< Base address of : (up to 1 MB) Flash Bank1 accessible over AXI                          */
   // #define FLASH_BANK2_BASE          (0x08100000UL) /*!< Base address of : (up to 1 MB) Flash Bank2 accessible over AXI 
 
-  void flash_bank2_ex (void) {
+  //Flash Word: 32 Bytes
+  void flash_bank2_ex (uint32_t num_flash_words) {
 
     log_debug("%s", "ENTERING FLASH BANK 2 EXAMPLE");
+    log_debug("NUMBER OF FLASH WORDS: %ld", num_flash_words);
+    log_debug("DATA SIZE: %ld", num_flash_words * 32);
+
+    uint32_t start;
+    uint32_t stop;
+    uint32_t erase_time;
+    uint32_t write_time; 
+    uint32_t total_time;
+    uint32_t flash_addr = FLASH_BANK2_BASE;
 
     //Example Data 256-bit
-    uint32_t data[8] = {
-        0xDEADBEEF, 0xCAFEBABE, 0x12345678, 0x87654321,
-        0xAAAAAAAA, 0xBBBBBBBB, 0xCCCCCCCC, 0xDDDDDDDD
-    };
+    uint32_t *test_data = (uint32_t *) malloc(num_flash_words * 8 * sizeof(uint32_t));
+    
+    for (uint32_t i = 0; i<num_flash_words*8; i++) {
+      test_data[i] = i; 
+    }
+
+    log_debug("%s", "TEST DATA COMPLETE");
 
     //Disable Cache; Crashes???
     // SCB_DisableICache();
     // SCB_DisableDCache();
 
-    // log_debug("%s", "DISABLE CACHE");
+    //Measure Erase
+    start = HAL_GetTick();
 
     HAL_FLASH_Unlock();
     log_debug("%s", "UNLOCK FLASH BLOCKS");
@@ -76,15 +90,41 @@
         log_debug("%s", "FLASH ERASE FAILED");
         log_debug("%lx", (long unsigned int) sector_error);
     }
-
-    HAL_Delay(200); // Delay after erase (just in case)
-
+    
+    stop = HAL_GetTick();
+    erase_time = stop - start;
     log_debug("%s", "FLASH ERASE END");
+    log_debug("Erase Time (ms): %ld", erase_time);
 
     //Mass Erase function call from example HAL flash code
     // FLASH_MassErase(FLASH_VOLTAGE_RANGE_3, FLASH_BANK_2);
 
-    HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, FLASH_BANK2_BASE, (uint32_t)data);
+    //Start Flash Write
+    start = HAL_GetTick();
+
+    for (uint32_t i = 0; i < num_flash_words; i++)
+    {
+      if (HAL_FLASH_Program(
+        FLASH_TYPEPROGRAM_FLASHWORD,
+        flash_addr,
+        (uint32_t)&test_data[i * 8]) != HAL_OK)
+      {
+        log_debug("FLASH PROGRAM FAIL @ 0x%08lX", flash_addr);
+        log_debug("ERR = 0x%08lX", HAL_FLASH_GetError());
+      }
+
+      flash_addr += 32;
+    }
+
+    stop = HAL_GetTick();
+
+    write_time = stop - start;
+    total_time = erase_time + write_time;
+    
+    log_debug("Write Time (ms): %ld", write_time);
+
+    log_debug("Total Time (ms): %ld", total_time);
+
 
     HAL_FLASH_Lock();
 
@@ -104,11 +144,12 @@ extern "C" void app_main(void *argument)
 
   DigitalOut LED1(PB_0);
 
-  flash_bank2_ex();
+ 
 
-  while (1)
+  for(int i = 0; i < 3; i++ )
   {
-    log_debug("%s","HERE");
+    log_debug("%s","-----------------------------------------------");
+    flash_bank2_ex(320);
     HAL_Delay(1000);
     LED1.write(!LED1.read());
   }
