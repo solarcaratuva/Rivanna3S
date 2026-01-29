@@ -18,7 +18,9 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "SPI.h"
+#include "stm32h7xx_hal.h"
+#include "pinmap.h"
+#include "peripheralmap.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -61,7 +63,7 @@ void MX_SPI1_Init(uint32_t baudrate_prescaler)
   hspi1.Init.IOSwap = SPI_IO_SWAP_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler();
   }
   /* USER CODE BEGIN SPI1_Init 2 */
 
