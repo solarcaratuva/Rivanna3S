@@ -1,0 +1,8 @@
+name: GitHub Actions Runner Demo
+run-name: ${{ github.actor }} is testing out GitHub Actions
+on: [push]
+jobs:
+  Testing-Github-Actions-Runner:
+    runs-on: self-hosted
+    test:
+      - run: echo "HELLO WORLD!"
