@@ -1,0 +1,79 @@
+===============================================================================
+TELEMETRY GROUP: LTE EMBEDDED CODEBASE GUIDE
+===============================================================================
+
+Welcome to the team! This document outlines the standards and procedures for 
+implementing LTE functionality on the car using the Rivanna3S repository.
+
+-------------------------------------------------------------------------------
+1. CODE ARCHITECTURE & LOCATION
+-------------------------------------------------------------------------------
+* Repository: https://github.com/solarcaratuva/Rivanna3S/tree/main/
+* File Placement: 
+    - Source files: TelemetryBoard/Src/
+    - Header files: TelemetryBoard/Inc/
+* Modularization: Keep TelemetryBoard/Src/main.cpp as clean as possible. 
+  Encapsulate your logic in dedicated files rather than dumping code into main.
+
+-------------------------------------------------------------------------------
+2. TELEMETRY CODE STRUCTURE
+-------------------------------------------------------------------------------
+The telemetry logic is organized into three primary components:
+
+1. Telemetry Publishing Script: 
+   The core logic responsible for packaging and transmitting data over the 
+   network via the LTE modem.
+   
+2. Certifications: 
+   Contains the security credentials and SSL/TLS certificates required for 
+   authenticated communication with our backend servers.
+   
+3. CAN Bus JSON Parser: 
+   Dedicated file for converting raw data received from the CAN Bus system 
+   into JSON format for standardized data transmission.
+
+-------------------------------------------------------------------------------
+3. ESSENTIAL APIs & DRIVERS
+-------------------------------------------------------------------------------
+Use the standardized interfaces in the Common/ directory:
+
+* UART (Common/Drivers/Inc/UART.h): 
+    - Interfaces with LTE hardware at the lowest level.
+    - Handles sending/receiving raw byte buffers.
+
+* OS Utilities (Common/Libs/Inc/):
+    - Thread.h: For creating and managing concurrent tasks.
+    - Timeout.h: For implementing logic guards and timeouts.
+    - Clock.h: For handling timestamps and system time.
+
+* CAN Bus: 
+    - Use CAN message reception as the stimulus for LTE actions. 
+    - Status: Under active development (ready in a few meetings).
+
+-------------------------------------------------------------------------------
+4. COMPILATION & ENVIRONMENT
+-------------------------------------------------------------------------------
+We use Docker to ensure the environment is identical for all developers.
+
+1. Install Docker Desktop.
+2. Open your terminal (WSL command prompt if on Windows).
+3. Run: python3 compile.py --install
+4. Refer to the Team Wiki for full setup details.
+
+Note: We are finalizing the TelemetryBoard build targets. You can compile 
+now, but it may currently default to different hardware profiles.
+
+-------------------------------------------------------------------------------
+5. DEVELOPMENT GUIDELINES
+-------------------------------------------------------------------------------
+* FreeRTOS: The codebase is built on FreeRTOS, but you should NEVER use 
+  FreeRTOS functions directly. Use the abstractions in Common/Libs/. 
+  If you think you need a direct OS call, ask a lead first.
+  
+* Workflow: 
+    - DO NOT push changes directly to the 'main' branch.
+    - Ensure your code compiles locally before requesting a merge.
+
+-------------------------------------------------------------------------------
+Questions? Reach out to the leads or post in the group channel.
+===============================================================================
