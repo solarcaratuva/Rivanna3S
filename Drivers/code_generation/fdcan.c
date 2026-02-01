@@ -47,7 +47,7 @@ void MX_FDCAN1_Init(uint32_t baudrate) // <-- This line changed when importing
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
-  hfdcan1.Init.NominalPrescaler  = 1000 / (baudrate * 200); // <-- This line changed when importing
+  hfdcan1.Init.NominalPrescaler = 20000 / (baudrate * 100); // <-- This line changed when importing
   hfdcan1.Init.NominalSyncJumpWidth = 1;
   hfdcan1.Init.NominalTimeSeg1 = 1;
   hfdcan1.Init.NominalTimeSeg2 = 1;
@@ -68,12 +68,12 @@ void MX_FDCAN1_Init(uint32_t baudrate) // <-- This line changed when importing
 
 }
 
-void HAL_UART_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t af) // <-- This line changed when importing
+void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t af) // <-- This line changed when importing
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
-  if(uartHandle == FDCAN1) // <-- This line changed when importing)
+  if(fdcanHandle == FDCAN1) // <-- This line changed when importing)
   {
   /* USER CODE BEGIN FDCAN1_MspInit 0 */
 
@@ -96,7 +96,7 @@ void HAL_UART_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t 
     PA12     ------> FDCAN1_TX
     PA11     ------> FDCAN1_RX
     */
-    GPIO_InitStruct.Pin = pin.block_mask \| pin.block_mask; // <-- This line changed when importing
+    GPIO_InitStruct.Pin = pin.block_mask | pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -117,7 +117,7 @@ void HAL_UART_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t 
 
 FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef *hadc) {
     if (hadc == FDCAN1) {
-        MX_FDCAN1_Init();
+        MX_FDCAN1_Init(baudrate);
         return &hfdcan1;
     }
     else {

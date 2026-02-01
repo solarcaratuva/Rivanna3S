@@ -14,13 +14,11 @@ def regex_replace_once(text: str, pattern: str, replacement: str) -> str:
 
     return re.sub(pattern, _repl, text, count=1, flags=re.MULTILINE)
 
-
 def regex_replace_all(text: str, pattern: str, replacement: str) -> str:
     def _repl(match: re.Match) -> str:
         return match.expand(replacement) + CHANGE_COMMENT
 
     return re.sub(pattern, _repl, text, count=0, flags=re.MULTILINE)
-
 
 def remove_function_by_name(text: str, func_name: str) -> str:
     pattern = re.compile(
@@ -183,7 +181,7 @@ def insert_fdcan_dispatcher(text: str) -> str:
         else:
             func += f"    else if (hadc == {instance_name}) {{\n"
 
-        func += f"        {init_name}();\n"
+        func += f"        {init_name}(baudrate);\n"
         func += f"        return &hfdcan{instance_name[-1]};\n"
         func += "    }\n"
 
@@ -191,6 +189,45 @@ def insert_fdcan_dispatcher(text: str) -> str:
         "    else {\n"
         "        // Unsupported FDCAN instance\n"
         f"        return &hfdcan{fdcan_inits[0][1][-1]};\n"
+        "    }\n"
+        "}\n"
+    )
+
+    return text.rstrip() + func
+
+def insert_spi_dispatcher(text: str) -> str:
+    import re
+
+    # Find all MX_FDCANx_Init functions
+    spi_matches = re.findall(r'\b(MX_(SPI\d+)_Init)\s*\(', text)
+
+    # Deduplicate while preserving order
+    seen = set()
+    spi_inits = []
+    for full, instance in spi_matches:
+        if full not in seen:
+            seen.add(full)
+            spi_inits.append((full, instance))
+
+    # Start dispatcher function
+    func = (
+        "\n\nSPI_HandleTypeDef* SPI_init(SPI_TypeDef *spiHandle, uint32_t baudrate_prescaler) {\n"
+    )
+
+    for idx, (init_name, instance_name) in enumerate(spi_inits):
+        if idx == 0:
+            func += f"    if (spiHandle == {instance_name}) {{\n"
+        else:
+            func += f"    else if (spiHandle == {instance_name}) {{\n"
+
+        func += f"        {init_name}(baudrate_prescaler);\n"
+        func += f"        return &hspi{instance_name[-1]};\n"
+        func += "    }\n"
+
+    func += (
+        "    else {\n"
+        "        // Unsupported SPI instance\n"
+        f"        return &hspi{spi_inits[0][1][-1]};\n"
         "    }\n"
         "}\n"
     )
@@ -391,21 +428,21 @@ def fix_fdcan_c(text: str) -> str:
     text = regex_replace_once(
         text,
         r'void\s+HAL_FDCAN_MspInit\s*\(\s*FDCAN_HandleTypeDef\s*\*\s*fdcanHandle\s*\)',
-        'void HAL_UART_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t af)'
+        'void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t af)'
     )
 
-    # replace uartHandle->Instance -> uartHandle
+    # replace fdcanHandle->Instance -> fdcanHandle
     text = regex_replace_all(
         text,
         r'fdcanHandle\s*->\s*Instance\s*==\s*([A-Za-z_]\w*\d+)',
-        r'uartHandle == \1)'
+        r'fdcanHandle == \1)'
     )
 
     # GPIO pin
     text = regex_replace_all(
         text,
         r'^(\s*GPIO_InitStruct\.Pin\s*=\s*).*?;',
-        r'\1pin.block_mask \| pin.block_mask;'
+        r'\1pin.block_mask | pin.block_mask;'
     )
 
     # GPIO init
@@ -430,10 +467,86 @@ def fix_fdcan_c(text: str) -> str:
 
     return text
 
+def fix_spi_c(text: str) -> str:
+    # fix include
+    include_pattern = r'^\s*#include\s+"spi\.h"\s*$'
+    include_replacement = (
+        '#include "pinmap.h"\n'
+        '#include "peripheralmap.h"\n'
+        '#include "stm32h7xx_hal.h"\n'
+    )
+
+    text = regex_replace_all(text,include_pattern,include_replacement)
+
+    # comment out error handler
+    text = regex_replace_all(
+        text,
+        r'Error_Handler\(\);',
+        '//Error_Handler();'
+    )
+
+    # fix fdcan init signature
+    text = regex_replace_all(
+        text,
+        r'void\s+(MX_.*_Init)\s*\(\s*void\s*\)',
+        r'void \1(uint32_t baudrate_prescaler)'
+    )
+
+    # replace .Init.NominalPrescaler = <any>;
+    text = regex_replace_all(
+        text,
+        r'\.Init\.BaudRatePrescaler\s*=\s*\d+;',
+        r'.Init.BaudRatePrescaler = baudrate_prescaler;'
+    )
+
+    # replace fdcan_MspInit
+    text = regex_replace_once(
+        text,
+        r'void\s+HAL_SPI_MspInit\s*\(\s*SPI_HandleTypeDef\s*\*\s*spiHandle\s*\)',
+        'void HAL_SPI_MspInit_custom(SPI_TypeDef* spiHandle, Pin pin, uint8_t af)'
+    )
+
+    # replace spi->Instance -> spi
+    text = regex_replace_all(
+        text,
+        r'spiHandle\s*->\s*Instance\s*==\s*([A-Za-z_]\w*\d+)',
+        r'spiHandle == \1)'
+    )
+
+    # GPIO pin
+    text = regex_replace_all(
+        text,
+        r'^(\s*GPIO_InitStruct\.Pin\s*=\s*).*?;',
+        r'\1pin.block_mask;'
+    )
+
+    # GPIO init
+    text = regex_replace_all(
+        text,
+        r'HAL_GPIO_Init\s*\(\s*[A-Z0-9_]+,\s*&GPIO_InitStruct\s*\);',
+        'HAL_GPIO_Init(pin.block, &GPIO_InitStruct);'
+    )
+
+    # af
+    text = regex_replace_all(
+        text,
+        r'^(\s*GPIO_InitStruct\.Alternate\s*=\s*).*?;',
+        r'\1af;'
+    )
+
+    # remove HAL_FDCAN_MspDeInit
+    text = remove_function_by_name(text, "HAL_SPI_MspDeInit")
+
+    # insert dispatcher
+    text = insert_spi_dispatcher(text)   
+
+    return text
+
 FIXERS = {
     "adc.c": fix_adc_c,
     "usart.c": fix_usart_c,
-    "fdcan.c": fix_fdcan_c
+    "fdcan.c": fix_fdcan_c,
+    "spi.c": fix_spi_c
 }
 
 # ---- main logic --------------------------------------------
