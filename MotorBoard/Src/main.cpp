@@ -39,6 +39,7 @@
 #include "lock.h"
 #include "log.h"
 #include "can.h"
+#include "BPSCanStructs.h"
 
 extern "C" void app_main(void *argument)
 {
@@ -49,10 +50,21 @@ extern "C" void app_main(void *argument)
   /* USER CODE END Init */
 
 
+  
+  //LED1.write(true);
   DigitalOut LED1(PB_0);
 
   CAN can(PB_9, PB_8, 250000);
   SerializedCanMessage msg;
+  BPSStatus message;
+
+  message.pack_voltage = 1234;
+  message.Pack_Current = 567;
+  message.Pack_SOC = 89;
+
+  message.serialize(&msg);
+  can.write(msg);
+
   int rc = -1;
   while (rc <= 0){
      rc = can.read(&msg);

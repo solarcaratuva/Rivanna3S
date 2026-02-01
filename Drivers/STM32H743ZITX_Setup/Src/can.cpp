@@ -172,6 +172,10 @@ FDCAN_Peripheral *CAN::findCANPin(Pin tx, Pin rx)
     for (uint8_t i = 0; i < FDCAN_PERIPHERAL_COUNT; i++)
     {
         FDCAN_Peripheral *peripheral = &FDCAN_Peripherals[i];
+        log_debug("tx universal mask: %d", tx.universal_mask);
+        log_debug("rx universal mask: %d", rx.universal_mask);
+        log_debug("txd universal mask: %d", peripheral->txd_valid_pins);
+        log_debug("txd universal mask: %d", peripheral->rxd_valid_pins);
         if (((*peripheral).txd_valid_pins & tx.universal_mask) &&
             ((*peripheral).rxd_valid_pins & rx.universal_mask))
         {
