@@ -3,7 +3,7 @@ TELEMETRY GROUP: LTE EMBEDDED CODEBASE GUIDE
 ===============================================================================
 
 Welcome to the team! This document outlines the standards and procedures for 
-implementing LTE functionality on the car using the Rivanna3S repository.
+implementing changes to the Telemetry board on the car using the Rivanna3S repository.
 
 -------------------------------------------------------------------------------
 1. CODE ARCHITECTURE & LOCATION
@@ -20,17 +20,17 @@ implementing LTE functionality on the car using the Rivanna3S repository.
 -------------------------------------------------------------------------------
 The telemetry logic is organized into three primary components:
 
-1. Telemetry Publishing Script: 
-   The core logic responsible for packaging and transmitting data over the 
-   network via the LTE modem.
-   
-2. Certifications: 
-   Contains the security credentials and SSL/TLS certificates required for 
-   authenticated communication with our backend servers.
-   
-3. CAN Bus JSON Parser: 
+1. CAN BUS Receiver
+   Process of CAN Message to C Struct
+    
+
+2. TCAN Bus JSON Parser: 
    Dedicated file for converting raw data received from the CAN Bus system 
    into JSON format for standardized data transmission.
+
+3. XBee Relay
+   Process of sending the json files to the Xbee for transmission
+
 
 -------------------------------------------------------------------------------
 3. ESSENTIAL APIs & DRIVERS
@@ -76,4 +76,5 @@ now, but it may currently default to different hardware profiles.
 
 -------------------------------------------------------------------------------
 Questions? Reach out to the leads or post in the group channel.
+
 ===============================================================================
