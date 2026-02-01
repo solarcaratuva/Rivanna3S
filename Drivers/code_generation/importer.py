@@ -234,6 +234,45 @@ def insert_spi_dispatcher(text: str) -> str:
 
     return text.rstrip() + func
 
+def insert_i2c_dispatcher(text: str) -> str:
+    import re
+
+    # Find all MX_FDCANx_Init functions
+    i2c_matches = re.findall(r'\b(MX_(I2C\d+)_Init)\s*\(', text)
+
+    # Deduplicate while preserving order
+    seen = set()
+    i2c_inits = []
+    for full, instance in i2c_matches:
+        if full not in seen:
+            seen.add(full)
+            i2c_inits.append((full, instance))
+
+    # Start dispatcher function
+    func = (
+        "\n\nSPI_HandleTypeDef* SPI_init(SPI_TypeDef *i2cHandle, uint32_t baudrate_prescaler) {\n"
+    )
+
+    for idx, (init_name, instance_name) in enumerate(i2c_inits):
+        if idx == 0:
+            func += f"    if (i2cHandle == {instance_name}) {{\n"
+        else:
+            func += f"    else if (i2cHandle == {instance_name}) {{\n"
+
+        func += f"        {init_name}(baudrate_prescaler);\n"
+        func += f"        return &hi2c{instance_name[-1]};\n"
+        func += "    }\n"
+
+    func += (
+        "    else {\n"
+        "        // Unsupported I2C instance\n"
+        f"        return &hi2c{i2c_inits[0][1][-1]};\n"
+        "    }\n"
+        "}\n"
+    )
+
+    return text.rstrip() + func
+
 # per-file fixes
 
 def fix_adc_c(text: str) -> str:
@@ -542,11 +581,87 @@ def fix_spi_c(text: str) -> str:
 
     return text
 
+def fix_i2c_c(text: str) -> str:
+    # fix include
+    include_pattern = r'^\s*#include\s+"i2c\.h"\s*$'
+    include_replacement = (
+        '#include "pinmap.h"\n'
+        '#include "peripheralmap.h"\n'
+        '#include "stm32h7xx_hal.h"\n'
+    )
+
+    text = regex_replace_all(text,include_pattern,include_replacement)
+
+    # comment out error handler
+    text = regex_replace_all(
+        text,
+        r'Error_Handler\(\);',
+        '//Error_Handler();'
+    )
+
+    # fix i2c init signature
+    text = regex_replace_all(
+        text,
+        r'void\s+(MX_.*_Init)\s*\(\s*void\s*\)',
+        r'void \1(uint32_t timing)'
+    )
+
+    # replace .Init.Timing; (Placeholder for now)
+    text = regex_replace_all(
+        text,
+        r'\.Init\.Timing\s*=\s*(?:\d+|0x[0-9A-Fa-f]+);',
+        r'.Init.Timing = timing;'
+    )
+
+    # replace fdcan_MspInit
+    text = regex_replace_once(
+        text,
+        r'void\s+HAL_I2C_MspInit\s*\(\s*I2C_HandleTypeDef\s*\*\s*i2cHandle\s*\)',
+        'void HAL_SPI_MspInit_custom(I2C_TypeDef* i2cHandle, Pin pin, uint8_t af)'
+    )
+
+    # replace spi->Instance -> spi
+    text = regex_replace_all(
+        text,
+        r'i2cHandle\s*->\s*Instance\s*==\s*([A-Za-z_]\w*\d+)',
+        r'i2cHandle == \1)'
+    )
+
+    # GPIO pin
+    text = regex_replace_all(
+        text,
+        r'^(\s*GPIO_InitStruct\.Pin\s*=\s*).*?;',
+        r'\1pin.block_mask;'
+    )
+
+    # GPIO init
+    text = regex_replace_all(
+        text,
+        r'HAL_GPIO_Init\s*\(\s*[A-Z0-9_]+,\s*&GPIO_InitStruct\s*\);',
+        'HAL_GPIO_Init(pin.block, &GPIO_InitStruct);'
+    )
+
+    # af
+    text = regex_replace_all(
+        text,
+        r'^(\s*GPIO_InitStruct\.Alternate\s*=\s*).*?;',
+        r'\1af;'
+    )
+
+    # remove HAL_i2c_MspDeInit
+    text = remove_function_by_name(text, "HAL_I2C_MspDeInit")
+
+    # insert dispatcher
+    text = insert_i2c_dispatcher(text)   
+
+    return text
+
 FIXERS = {
     "adc.c": fix_adc_c,
     "usart.c": fix_usart_c,
     "fdcan.c": fix_fdcan_c,
-    "spi.c": fix_spi_c
+    "spi.c": fix_spi_c,
+    "i2c.c": fix_i2c_c
 }
 
 # ---- main logic --------------------------------------------
