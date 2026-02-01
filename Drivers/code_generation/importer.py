@@ -158,6 +158,45 @@ def insert_uart_dispatcher(text: str) -> str:
 
     return text.rstrip() + func
 
+def insert_fdcan_dispatcher(text: str) -> str:
+    import re
+
+    # Find all MX_FDCANx_Init functions
+    fdcan_matches = re.findall(r'\b(MX_(FDCAN\d+)_Init)\s*\(', text)
+
+    # Deduplicate while preserving order
+    seen = set()
+    fdcan_inits = []
+    for full, instance in fdcan_matches:
+        if full not in seen:
+            seen.add(full)
+            fdcan_inits.append((full, instance))
+
+    # Start dispatcher function
+    func = (
+        "\n\nFDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef *hadc) {\n"
+    )
+
+    for idx, (init_name, instance_name) in enumerate(fdcan_inits):
+        if idx == 0:
+            func += f"    if (hadc == {instance_name}) {{\n"
+        else:
+            func += f"    else if (hadc == {instance_name}) {{\n"
+
+        func += f"        {init_name}();\n"
+        func += f"        return &hfdcan{instance_name[-1]};\n"
+        func += "    }\n"
+
+    func += (
+        "    else {\n"
+        "        // Unsupported FDCAN instance\n"
+        f"        return &hfdcan{fdcan_inits[0][1][-1]};\n"
+        "    }\n"
+        "}\n"
+    )
+
+    return text.rstrip() + func
+
 # per-file fixes
 
 def fix_adc_c(text: str) -> str:
@@ -311,10 +350,90 @@ def fix_usart_c(text: str) -> str:
 
     return text
 
+def fix_fdcan_c(text: str) -> str:
+    # prompt user for clock
+    clock_rate = input("Enter the clock rate for fdcan: ")
+    nbtq = input("Enter the nbtq for fdcan: ")
+
+    # fix include
+    include_pattern = r'^\s*#include\s+"fdcan\.h"\s*$'
+    include_replacement = (
+        '#include "fdcan.h"\n'
+        '#include "pinmap.h"\n'
+        '#include "peripheralmap.h"\n'
+        '#include "stm32h7xx_hal.h"\n'
+    )
+
+    text = regex_replace_all(text,include_pattern,include_replacement)
+
+    # comment out error handler
+    text = regex_replace_all(
+        text,
+        r'Error_Handler\(\);',
+        '//Error_Handler();'
+    )
+
+    # fix fdcan init signature
+    text = regex_replace_all(
+        text,
+        r'void\s+(MX_.*_Init)\s*\(\s*void\s*\)',
+        r'void \1(uint32_t baudrate)'
+    )
+
+    # replace .Init.NominalPrescaler = <any>;
+    text = regex_replace_all(
+        text,
+        r'\.Init\.NominalPrescaler\s*=\s*\d+;',
+        f".Init.NominalPrescaler = {clock_rate} / (baudrate * {nbtq});"
+    )
+
+    # replace fdcan_MspInit
+    text = regex_replace_once(
+        text,
+        r'void\s+HAL_FDCAN_MspInit\s*\(\s*FDCAN_HandleTypeDef\s*\*\s*fdcanHandle\s*\)',
+        'void HAL_UART_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t af)'
+    )
+
+    # replace uartHandle->Instance -> uartHandle
+    text = regex_replace_all(
+        text,
+        r'fdcanHandle\s*->\s*Instance\s*==\s*([A-Za-z_]\w*\d+)',
+        r'uartHandle == \1)'
+    )
+
+    # GPIO pin
+    text = regex_replace_all(
+        text,
+        r'^(\s*GPIO_InitStruct\.Pin\s*=\s*).*?;',
+        r'\1pin.block_mask \| pin.block_mask;'
+    )
+
+    # GPIO init
+    text = regex_replace_all(
+        text,
+        r'HAL_GPIO_Init\s*\(\s*[A-Z0-9_]+,\s*&GPIO_InitStruct\s*\);',
+        'HAL_GPIO_Init(pin.block, &GPIO_InitStruct);'
+    )
+
+    # af
+    text = regex_replace_all(
+        text,
+        r'^(\s*GPIO_InitStruct\.Alternate\s*=\s*).*?;',
+        r'\1af;'
+    )
+
+    # remove HAL_FDCAN_MspDeInit
+    text = remove_function_by_name(text, "HAL_FDCAN_MspDeInit")
+
+    # insert dispatcher
+    text = insert_fdcan_dispatcher(text)   
+
+    return text
 
 FIXERS = {
     "adc.c": fix_adc_c,
-    "usart.c": fix_usart_c
+    "usart.c": fix_usart_c,
+    "fdcan.c": fix_fdcan_c
 }
 
 # ---- main logic --------------------------------------------
