@@ -50,24 +50,24 @@ extern "C" void app_main(void *argument)
   /* USER CODE END Init */
 
 
-  
+  //black is rx purple is tx
   //LED1.write(true);
   DigitalOut LED1(PB_0);
 
   CAN can(PB_9, PB_8, 250000);
   SerializedCanMessage msg;
-  BPSStatus message;
+  BpsStatus message;
 
-  message.pack_voltage = 1234;
-  message.Pack_Current = 567;
-  message.Pack_SOC = 89;
-
+  message.pack_soc = 60;
+ 
   message.serialize(&msg);
-  can.write(msg);
+  
 
   int rc = -1;
-  while (rc <= 0){
-     rc = can.read(&msg);
+  while (rc < 0){
+    rc = can.read(&msg);
+    //can.write(msg);
+    HAL_Delay(100);
   }
   LED1.write(true);
 

@@ -17,6 +17,8 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
         return;
     }
 
+    gpio_clock_enable(tx.block);
+    gpio_clock_enable(rx.block);
     
     FDCAN_GlobalTypeDef *fdcan_handle = fdcan_periph->handle;
    
@@ -30,6 +32,8 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     uint16_t res = HAL_FDCAN_Start(m_hfdcan);
     log_debug("FDCAN Start result: %d", res);
 
+    
+
     // Default Tx header setup; fields that change per-frame will be set in write().
     m_txHeader.IdType = FDCAN_STANDARD_ID;
     m_txHeader.TxFrameType = FDCAN_DATA_FRAME;
@@ -39,6 +43,7 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     m_txHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
     m_txHeader.MessageMarker = 0;
 
+    initialized = true;
 }
 
 // Write a raw frame
@@ -52,6 +57,10 @@ int CAN::write(const SerializedCanMessage &msg)
     HAL_StatusTypeDef status =
         HAL_FDCAN_AddMessageToTxFifoQ(m_hfdcan, &m_txHeader,
                                       const_cast<uint8_t *>(msg.data));
+
+   // log_debug("FDCAN AddMessageToTxFifoQ status: %d", status);
+    log_debug("FDCAN AddMessageToTxFifoQ status description: %d", m_hfdcan -> ErrorCode);
+    log_debug("FDCAN status: %d", status);
 
     m_txMutex.unlock();
 
