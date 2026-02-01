@@ -3,7 +3,7 @@
 #define rivanna3_CAN_Structs
 
 #include "can.h"
-#include "can_structs/rivanna3.h"
+#include "rivanna3.h"
 #include "log.h"
 
 typedef struct AuxBatteryStatus : CanMessage, rivanna3_aux_battery_status_t {
@@ -87,57 +87,57 @@ typedef struct DashboardCommands : CanMessage, rivanna3_dashboard_commands_t {
 } DashboardCommands;
 
 
-typedef struct Heartbeat : CanMessage, rivanna3_heartbeat_t {
-    void serialize(SerializedCanMessage *message) {
-        rivanna3_heartbeat_pack(message->data, this,
-            RIVANNA3_HEARTBEAT_LENGTH);
-        message->len = RIVANNA3_HEARTBEAT_LENGTH;
-        message->id = RIVANNA3_HEARTBEAT_FRAME_ID;
-    }
+// typedef struct Heartbeat : CanMessage, rivanna3_heartbeat_t {
+//     void serialize(SerializedCanMessage *message) {
+//         rivanna3_heartbeat_pack(message->data, this,
+//             RIVANNA3_HEARTBEAT_LENGTH);
+//         message->len = RIVANNA3_HEARTBEAT_LENGTH;
+//         message->id = RIVANNA3_HEARTBEAT_FRAME_ID;
+//     }
 
-    void deserialize(SerializedCanMessage *message) {
-        rivanna3_heartbeat_unpack(this, message->data,
-            RIVANNA3_HEARTBEAT_LENGTH);
-    }
+//     void deserialize(SerializedCanMessage *message) {
+//         rivanna3_heartbeat_unpack(this, message->data,
+//             RIVANNA3_HEARTBEAT_LENGTH);
+//     }
 
-    static uint16_t get_message_ID() { return RIVANNA3_HEARTBEAT_FRAME_ID; }
+//     static uint16_t get_message_ID() { return RIVANNA3_HEARTBEAT_FRAME_ID; }
 
-    void log_msg(LogLevel level) const {
-        log(level, __FILE__, __LINE__,
-            "Heartbeat: FromWheelBoard %u, FromPowerBoard %u, FromTelemetryBoard %u",
-            FromWheelBoard, FromPowerBoard, FromTelemetryBoard);
-    }
+//     void log_msg(LogLevel level) const {
+//         log(level, __FILE__, __LINE__,
+//             "Heartbeat: FromWheelBoard %u, FromPowerBoard %u, FromTelemetryBoard %u",
+//             FromWheelBoard, FromPowerBoard, FromTelemetryBoard);
+//     }
 
-    bool has_active_fault() {
-        return 0; // this message has no fault signals
-    }
-} Heartbeat;
+//     bool has_active_fault() {
+//         return 0; // this message has no fault signals
+//     }
+// } Heartbeat;
 
 
-typedef struct ChargingMode : CanMessage, rivanna3_charging_mode_t {
-    void serialize(SerializedCanMessage *message) {
-        rivanna3_charging_mode_pack(message->data, this,
-            RIVANNA3_CHARGING_MODE_LENGTH);
-        message->len = RIVANNA3_CHARGING_MODE_LENGTH;
-        message->id = RIVANNA3_CHARGING_MODE_FRAME_ID;
-    }
+// typedef struct ChargingMode : CanMessage, rivanna3_charging_mode_t {
+//     void serialize(SerializedCanMessage *message) {
+//         rivanna3_charging_mode_pack(message->data, this,
+//             RIVANNA3_CHARGING_MODE_LENGTH);
+//         message->len = RIVANNA3_CHARGING_MODE_LENGTH;
+//         message->id = RIVANNA3_CHARGING_MODE_FRAME_ID;
+//     }
 
-    void deserialize(SerializedCanMessage *message) {
-        rivanna3_charging_mode_unpack(this, message->data,
-            RIVANNA3_CHARGING_MODE_LENGTH);
-    }
+//     void deserialize(SerializedCanMessage *message) {
+//         rivanna3_charging_mode_unpack(this, message->data,
+//             RIVANNA3_CHARGING_MODE_LENGTH);
+//     }
 
-    static uint16_t get_message_ID() { return RIVANNA3_CHARGING_MODE_FRAME_ID; }
+//     static uint16_t get_message_ID() { return RIVANNA3_CHARGING_MODE_FRAME_ID; }
 
-    void log_msg(LogLevel level) const {
-        log(level, __FILE__, __LINE__,
-            "ChargingMode: ChargingModeEnable %u",
-            ChargingModeEnable);
-    }
+//     void log_msg(LogLevel level) const {
+//         log(level, __FILE__, __LINE__,
+//             "ChargingMode: ChargingModeEnable %u",
+//             ChargingModeEnable);
+//     }
 
-    bool has_active_fault() {
-        return 0; // this message has no fault signals
-    }
-} ChargingMode;
+//     bool has_active_fault() {
+//         return 0; // this message has no fault signals
+//     }
+// } ChargingMode;
 
 #endif
