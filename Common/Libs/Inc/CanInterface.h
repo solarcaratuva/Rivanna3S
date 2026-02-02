@@ -15,6 +15,19 @@
  */
 using CanCallback = void (*)(const SerializedCanMessage &msg);
 
+enum class CanNetwork {
+    Main = 0,
+    Motor = 1
+};
+
+static inline const char* CanNetworkToString(CanNetwork net) {
+    switch (net) {
+        case CanNetwork::Main: return "Main";
+        case CanNetwork::Motor: return "Motor";
+        default: return "Unknown";
+    }
+}
+
 /**
  * @brief High-level CAN interface with automatic message dispatching
  * 
@@ -23,12 +36,14 @@ using CanCallback = void (*)(const SerializedCanMessage &msg);
  * - Automatic dispatching of messages to registered ID-specific callbacks
  * - Optional "always" callback invoked for every received message
  * - Thread-safe message transmission
+ * - Multiple independent CAN networks (Main, Motor, etc.) via the CanNetwork enum
  * 
  * The receiver thread runs continuously after construction and can be paused/resumed
  * as needed using stop_receiver_execution() and restart_receiver_execution().
  * 
- * @note Callback registration is not thread-safe and should be done during initialization
- *       before the receiver thread begins processing messages.
+ * Multiple instances of CanInterface can coexist simultaneously, each configured
+ * for a different CAN network type. Each instance maintains its own receiver thread,
+ * callback registrations, and message processing pipeline.
  * 
  * Example usage:
  * @code
@@ -36,8 +51,11 @@ using CanCallback = void (*)(const SerializedCanMessage &msg);
  *     // Process message with ID 0x123
  * }
  * 
- * CanInterface can_if(TX_PIN, RX_PIN, 500000);
- * can_if.register_callback(0x123, my_callback);
+ * // Create separate instances for different CAN networks
+ * CanInterface main_can(TX_PIN_1, RX_PIN_1, 500000, CanNetwork::Main);
+ * CanInterface motor_can(TX_PIN_2, RX_PIN_2, 500000, CanNetwork::Motor);
+ * 
+ * main_can.register_callback(0x123, my_callback);
  * @endcode
  */
 class CanInterface
@@ -50,13 +68,18 @@ public:
      * and baudrate, and immediately starts a background thread that continuously receives
      * CAN messages and dispatches them to registered callbacks.
      * 
+     * The network parameter specifies which CAN network this interface belongs to (Main or Motor).
+     * Multiple CanInterface instances can exist simultaneously, each serving a different network.
+     * This allows independent message handling for separate CAN buses.
+     * 
      * @param tx Transmit pin used by the CAN peripheral
      * @param rx Receive pin used by the CAN peripheral
      * @param baudrate CAN bus baudrate in bits per second (e.g., 500000 for 500 kbps)
+     * @param network The CAN network type this interface belongs to (default: CanNetwork::Main)
      * 
      * @note The receiver thread starts immediately upon construction
      */
-    CanInterface(Pin tx, Pin rx, uint32_t baudrate);
+    CanInterface(Pin tx, Pin rx, uint32_t baudrate, CanNetwork network = CanNetwork::Main);
 
     /**
      * @brief Transmit a CAN message on the bus
@@ -82,8 +105,6 @@ public:
      * callback will be invoked with the deserialized message as its argument.
      * The callback is executed in the context of the receiver thread.
      * 
-     * @warning This function is not thread-safe and should only be called from a single
-     *          context (e.g., during initialization) before messages start being processed.
      * @warning Only one callback per CAN ID is supported. Registering multiple callbacks
      *          for the same ID will result in only the first registered callback being invoked.
      * @warning Maximum of 16 callbacks can be registered (configurable via max_callbacks).
@@ -112,8 +133,6 @@ public:
      * 
      * This is useful for logging, diagnostics, or implementing custom message routing.
      * 
-     * @warning This function is not thread-safe and must only be called from a single
-     *          context (e.g., during initialization).
      * 
      * @param callback Function pointer of type CanCallback to be invoked for
      *                 every received message. Must not be nullptr.
@@ -154,6 +173,7 @@ private:
     bool    receiverRunning;                      ///< Flag to control receiver thread execution
     Thread  interface_thread;                     ///< Background thread for message reception
     Lock    callback_lock;                        ///< Mutex protecting callback arrays and registration
+    CanNetwork network;                        ///< CAN network type (Main or Motor)
 
     int num_callbacks = 0;                        ///< Current number of registered ID-specific callbacks
 

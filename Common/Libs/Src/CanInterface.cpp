@@ -2,24 +2,32 @@
 #include "can.h"
 
 // global pointer used by the lambda
-static CanInterface* g_canInterfaceInstance = nullptr;
-// TODO: change this so multiple CanInterface instances can exist at the same time (Main CAN + Motor CAN)
+static CanInterface* main_can_interface_instance = nullptr;
+static CanInterface* motor_can_interface_instance = nullptr;
 
-// TODO: concurrncy issues with register_callback if called while receiver thread is running?
 
-CanInterface::CanInterface(Pin tx, Pin rx, uint32_t baudrate)
+CanInterface::CanInterface(Pin tx, Pin rx, uint32_t baudrate, CanNetwork network)
     : my_can(tx, rx, baudrate),
       receiverRunning(true),
       interface_thread(),
-      alwayscallback(nullptr)
+      alwayscallback(nullptr),
+      network(network)
 {
     // Remember this instance so the thread can call back into it
-    g_canInterfaceInstance = this;
+    if (network == CanNetwork::Main) {
+        main_can_interface_instance = this;
+        interface_thread.start(+[]() {
+            main_can_interface_instance->receiver_thread();
+        });
+    } else if (network == CanNetwork::Motor) {
+        motor_can_interface_instance = this;
+        interface_thread.start(+[]() {
+            motor_can_interface_instance->receiver_thread();
+        });
+    } else {
+        log_warn("CanInterface: Unknown network type, receiver thread not started");
+    }
 
-    // Start a FreeRTOS task using our Thread wrapper.
-    interface_thread.start(+[]() { // Cannot use a non-static function with thread.start(), so we wrap it in Lambda
-        g_canInterfaceInstance->receiver_thread();
-    });
 }
 
 int CanInterface::write(CanMessage *msg)
