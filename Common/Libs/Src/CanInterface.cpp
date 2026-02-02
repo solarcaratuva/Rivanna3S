@@ -37,7 +37,10 @@ int CanInterface::register_callback(uint16_t msg_id, CanCallback callback)
         return -1;
     }
 
+    callback_lock.lock();
+
     if (num_callbacks >= max_callbacks) { // too many callbacks
+        callback_lock.unlock();
         return -2;
     }
 
@@ -46,6 +49,7 @@ int CanInterface::register_callback(uint16_t msg_id, CanCallback callback)
 
     num_callbacks++;
 
+    callback_lock.unlock();
     return 0;
 }
 
@@ -55,7 +59,9 @@ int CanInterface::register_always_callback(CanCallback callback)
         return -1;
     }
 
+    callback_lock.lock();
     alwayscallback = callback;
+    callback_lock.unlock();
 
     return 0;
 }
@@ -94,6 +100,8 @@ void CanInterface::receive()
         return;
     }
 
+    callback_lock.lock();
+
     // Find index of matching CAN ID
     int idx = -1;
     for (int i = 0; i < num_callbacks; ++i) {
@@ -115,4 +123,6 @@ void CanInterface::receive()
     if (alwayscallback) {
         alwayscallback(msg);
     }
+
+    callback_lock.unlock();
 }

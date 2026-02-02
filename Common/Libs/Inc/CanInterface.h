@@ -153,6 +153,7 @@ private:
     CAN     my_can;                              ///< Underlying CAN peripheral driver
     bool    receiverRunning;                      ///< Flag to control receiver thread execution
     Thread  interface_thread;                     ///< Background thread for message reception
+    Lock    callback_lock;                        ///< Mutex protecting callback arrays and registration
 
     int num_callbacks = 0;                        ///< Current number of registered ID-specific callbacks
 
