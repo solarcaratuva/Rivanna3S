@@ -19,6 +19,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "usart.h"
+#include "pinmap.h"
+#include "peripheralmap.h"
 
 /* USER CODE BEGIN 0 */
 
@@ -640,3 +642,134 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
+
+void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t af)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  if (uartHandle == UART4) {
+    __HAL_RCC_UART4_CLK_ENABLE();
+  } else if (uartHandle == UART5) {
+    __HAL_RCC_UART5_CLK_ENABLE();
+  } else if (uartHandle == USART1) {
+    __HAL_RCC_USART1_CLK_ENABLE();
+  } else if (uartHandle == USART2) {
+    __HAL_RCC_USART2_CLK_ENABLE();
+  } else if (uartHandle == USART3) {
+    __HAL_RCC_USART3_CLK_ENABLE();
+  } else {
+    return;
+  }
+
+  if (pin.block == GPIOA) {
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+  } else if (pin.block == GPIOB) {
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+  } else if (pin.block == GPIOC) {
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+  } else if (pin.block == GPIOD) {
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+  } else if (pin.block == GPIOE) {
+    __HAL_RCC_GPIOE_CLK_ENABLE();
+  } else if (pin.block == GPIOF) {
+    __HAL_RCC_GPIOF_CLK_ENABLE();
+  } else if (pin.block == GPIOG) {
+    __HAL_RCC_GPIOG_CLK_ENABLE();
+  }
+  GPIO_InitStruct.Pin = pin.block_mask;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = af;
+  HAL_GPIO_Init(pin.block, &GPIO_InitStruct);
+}
+
+UART_HandleTypeDef* UART_init(const USART_TypeDef* uart, uint32_t baudrate)
+{
+  UART_HandleTypeDef* handle = NULL;
+
+  if (uart == UART4) {
+    handle = &huart4;
+    handle->Instance = UART4;
+    handle->Init.BaudRate = baudrate;
+    handle->Init.WordLength = UART_WORDLENGTH_8B;
+    handle->Init.StopBits = UART_STOPBITS_1;
+    handle->Init.Parity = UART_PARITY_NONE;
+    handle->Init.Mode = UART_MODE_TX_RX;
+    handle->Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    handle->Init.OverSampling = UART_OVERSAMPLING_16;
+    handle->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+    handle->Init.ClockPrescaler = UART_PRESCALER_DIV1;
+    handle->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  } else if (uart == UART5) {
+    handle = &huart5;
+    handle->Instance = UART5;
+    handle->Init.BaudRate = baudrate;
+    handle->Init.WordLength = UART_WORDLENGTH_8B;
+    handle->Init.StopBits = UART_STOPBITS_1;
+    handle->Init.Parity = UART_PARITY_NONE;
+    handle->Init.Mode = UART_MODE_TX_RX;
+    handle->Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    handle->Init.OverSampling = UART_OVERSAMPLING_16;
+    handle->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+    handle->Init.ClockPrescaler = UART_PRESCALER_DIV1;
+    handle->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  } else if (uart == USART1) {
+    handle = &huart1;
+    handle->Instance = USART1;
+    handle->Init.BaudRate = baudrate;
+    handle->Init.WordLength = UART_WORDLENGTH_8B;
+    handle->Init.StopBits = UART_STOPBITS_1;
+    handle->Init.Parity = UART_PARITY_NONE;
+    handle->Init.Mode = UART_MODE_TX_RX;
+    handle->Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    handle->Init.OverSampling = UART_OVERSAMPLING_16;
+    handle->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+    handle->Init.ClockPrescaler = UART_PRESCALER_DIV1;
+    handle->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  } else if (uart == USART2) {
+    handle = &huart2;
+    handle->Instance = USART2;
+    handle->Init.BaudRate = baudrate;
+    handle->Init.WordLength = UART_WORDLENGTH_8B;
+    handle->Init.StopBits = UART_STOPBITS_1;
+    handle->Init.Parity = UART_PARITY_NONE;
+    handle->Init.Mode = UART_MODE_TX_RX;
+    handle->Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    handle->Init.OverSampling = UART_OVERSAMPLING_16;
+    handle->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+    handle->Init.ClockPrescaler = UART_PRESCALER_DIV1;
+    handle->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  } else if (uart == USART3) {
+    handle = &huart3;
+    handle->Instance = USART3;
+    handle->Init.BaudRate = baudrate;
+    handle->Init.WordLength = UART_WORDLENGTH_8B;
+    handle->Init.StopBits = UART_STOPBITS_1;
+    handle->Init.Parity = UART_PARITY_NONE;
+    handle->Init.Mode = UART_MODE_TX_RX;
+    handle->Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    handle->Init.OverSampling = UART_OVERSAMPLING_16;
+    handle->Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+    handle->Init.ClockPrescaler = UART_PRESCALER_DIV1;
+    handle->AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  } else {
+    return NULL;
+  }
+
+  if (HAL_UART_Init(handle) != HAL_OK) {
+    return NULL;
+  }
+
+  if (HAL_UARTEx_SetTxFifoThreshold(handle, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK) {
+    return NULL;
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(handle, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK) {
+    return NULL;
+  }
+  if (HAL_UARTEx_DisableFifoMode(handle) != HAL_OK) {
+    return NULL;
+  }
+
+  return handle;
+}

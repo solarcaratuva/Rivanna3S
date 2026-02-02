@@ -29,7 +29,7 @@
 #ifndef I2C_H
 #define I2C_H
 
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
 

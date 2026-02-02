@@ -10,7 +10,7 @@
 
 
 #include "pinmap.h"
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 
 /**
  * @brief Pull resistor configuration for digital input pins

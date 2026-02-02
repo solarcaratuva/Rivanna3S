@@ -22,6 +22,8 @@ list(GET BOARD_STARTUP_CANDIDATES 0 STARTUP_S)
 
 file(GLOB APP_C_SOURCES "${BOARD_SETUP_SRC}/*.c")
 file(GLOB APP_CPP_SOURCES "${BOARD_SETUP_SRC}/*.cpp")
+list(REMOVE_ITEM APP_C_SOURCES "${BOARD_SETUP_SRC}/main.c")
+list(REMOVE_ITEM APP_CPP_SOURCES "${BOARD_SETUP_SRC}/main.cpp")
 set_source_files_properties(${APP_CPP_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu++14 -fno-exceptions -fno-rtti -fno-use-cxa-atexit")
 set_source_files_properties(${APP_C_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu11")
 

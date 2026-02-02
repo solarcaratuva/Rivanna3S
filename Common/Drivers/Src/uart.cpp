@@ -1,6 +1,6 @@
 
 #include "UART.h"
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
 
@@ -64,6 +64,5 @@ UART_Peripheral* UART::find_uart_pins(Pin tx, Pin rx) {
     }
     return nullptr; // No matching peripheral found
 }
-
 
 
