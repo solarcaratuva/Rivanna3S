@@ -18,10 +18,10 @@
  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "fdcan.h"
+#include "stm32h7xx_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
-#include "stm32h7xx_hal.h"
+#include "fdcan.h"
 
 /* USER CODE BEGIN 0 */
 
