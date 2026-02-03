@@ -1,5 +1,8 @@
 #include "CanInterface.h"
 #include "can.h"
+#include "log.h"
+#include "thread.h"
+#include "lock.h"
 
 // global pointer used by the lambda
 static CanInterface* main_can_interface_instance = nullptr;
@@ -36,7 +39,13 @@ int CanInterface::write(CanMessage *msg)
         return -1; // invalid argument
     }
 
-    return my_can.write(msg);
+    int status = my_can.write(msg);
+    if (status == 0) {
+        uint8_t data_hex[17]; // 16 bytes + null terminator
+        bytes_to_hex(msg->data, msg->len, reinterpret_cast<char*>(data_hex), sizeof(data_hex));
+        log_debug("CanInterface: Sent CAN message with ID %d Length %d Data 0x%s", msg->id, msg->len, data_hex);
+    }
+    return status;
 }
 
 int CanInterface::register_callback(uint16_t msg_id, CanCallback callback)
@@ -107,6 +116,11 @@ void CanInterface::receive()
     if (ret != 0) {
         return;
     }
+    else {
+        uint8_t data_hex[17]; // 16 bytes + null terminator
+        bytes_to_hex(msg.data, msg.len, reinterpret_cast<char*>(data_hex), sizeof(data_hex));
+        log_debug("CanInterface: Received CAN message with ID %d Length %d Data 0x%s", msg.id, msg.len, data_hex);
+    }
 
     callback_lock.lock();
 
@@ -133,4 +147,23 @@ void CanInterface::receive()
     }
 
     callback_lock.unlock();
+}
+
+
+void CanInterface::bytes_to_hex(const uint8_t* data, uint8_t len, char* out_str, size_t out_str_size)
+{
+    const char hex_chars[] = "0123456789ABCDEF";
+
+    if (out_str_size < (len * 2 + 1)) { // Check if there is enough space in output string
+        if (out_str_size > 0) {
+            out_str[0] = '\0';
+        }
+        return;
+    }
+
+    for (uint8_t i = 0; i < len; i++) {
+        out_str[i * 2]     = hex_chars[(data[i] >> 4) & 0x0F];
+        out_str[i * 2 + 1] = hex_chars[data[i] & 0x0F];
+    }
+    out_str[len * 2] = '\0'; // Null-terminate the string
 }

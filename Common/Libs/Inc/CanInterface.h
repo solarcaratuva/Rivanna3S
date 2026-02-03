@@ -211,5 +211,24 @@ private:
      */
     void receive();
 
+    /**
+     * @brief Convert a byte array to a hexadecimal string representation
+     * 
+     * This utility function converts raw binary data into a human-readable hexadecimal
+     * string format. Each byte is represented as two hexadecimal characters (e.g., 0xAB -> "AB").
+     * 
+     * This is useful for logging, debugging, and displaying CAN message payloads in a readable format.
+     * 
+     * @param[in] data Pointer to the byte array to be converted. Must not be nullptr.
+     * @param[in] len Number of bytes in the data array to convert
+     * @param[out] out_str Pointer to the output character buffer where the hexadecimal string
+     *                     will be written. Must not be nullptr and must be large enough to hold
+     *                     the result (minimum size: 2*len + 1 bytes for null terminator).
+     * @param[in] out_str_size Size of the output buffer in bytes
+     * 
+     * @note The output string will be null-terminated
+     */
+    void bytes_to_hex(const uint8_t* data, uint8_t len, char* out_str, size_t out_str_size);
+
 };
 #endif
