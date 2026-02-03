@@ -63,7 +63,7 @@ int CAN::write(const SerializedCanMessage &msg)
                                       const_cast<uint8_t *>(msg.data));
 
     if (status != HAL_OK) {
-        log_warn("CAN write failed: status %d, error code %ld", status, hfdcan->ErrorCode);
+        log_warn("CAN write failed: status %d, error code %lx", status, hfdcan->ErrorCode);
         instance_lock.unlock();
         return 2;
     }
@@ -96,6 +96,11 @@ int CAN::read(SerializedCanMessage *msg)
     while (pending == 0) {
         pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
     }
+
+    // Check if the RX queue is full, meaning some messages were likely dropped
+    if (pending == hfdcan->Init.RxFifo0ElmtsNbr) {
+        log_warn("CAN RX FIFO0 full; messages were likely dropped");
+    }
     
     uint8_t rxData[8] = {0};
 
@@ -104,7 +109,7 @@ int CAN::read(SerializedCanMessage *msg)
 
     if (status != HAL_OK)
     {
-        log_warn("CAN read failed: status %d, error code %ld", status, hfdcan->ErrorCode);
+        log_warn("CAN read failed: status %d, error code %lx", status, hfdcan->ErrorCode);
         instance_lock.unlock();
         return 2;
     }
