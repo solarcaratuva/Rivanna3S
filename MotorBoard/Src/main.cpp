@@ -47,12 +47,20 @@ extern "C" void app_main(void *argument)
   log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
   /* USER CODE END Init */
 
+  UART test_uart = UART(PF_7, PF_6, 115200);
+  char *data = "hello solar car"; 
+  char recieved_data[16]; 
   DigitalOut LED1(PB_0);
+
 
   while (1)
   {
-    log_debug("%s","HERE");
-    HAL_Delay(1000);
+    log_debug("%s","START UART TEST");
+    test_uart.write((uint8_t *) data, 16);
+    log_debug("%s","UART WAITING TO RECIEVE DATA");
+    test_uart.read((uint8_t *) recieved_data, 16);
+    log_debug("%s","DATA RECIEVED:");
+    test_uart.write((uint8_t *) recieved_data, 16);
     LED1.write(!LED1.read());
   }
 }

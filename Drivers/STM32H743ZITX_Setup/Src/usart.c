@@ -421,6 +421,9 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
 
   /* USER CODE BEGIN UART4_MspInit 1 */
 
+    HAL_NVIC_SetPriority(UART4_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(UART4_IRQn);
+
   /* USER CODE END UART4_MspInit 1 */
   }
   else if(uartHandle==UART5)
@@ -455,6 +458,9 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
 
   /* USER CODE BEGIN UART5_MspInit 1 */
 
+    HAL_NVIC_SetPriority(UART5_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(UART5_IRQn);
+
   /* USER CODE END UART5_MspInit 1 */
   }
   else if(uartHandle==UART7)
@@ -488,6 +494,8 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct);
 
   /* USER CODE BEGIN UART7_MspInit 1 */
+    HAL_NVIC_SetPriority(UART7_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(UART7_IRQn);
 
   /* USER CODE END UART7_MspInit 1 */
   }
@@ -522,6 +530,8 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct);
 
   /* USER CODE BEGIN UART8_MspInit 1 */
+    HAL_NVIC_SetPriority(UART8_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(UART8_IRQn);
 
   /* USER CODE END UART8_MspInit 1 */
   }
@@ -556,6 +566,8 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct);
 
   /* USER CODE BEGIN USART1_MspInit 1 */
+    HAL_NVIC_SetPriority(USART1_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(USART1_IRQn);
 
   /* USER CODE END USART1_MspInit 1 */
   }
@@ -591,6 +603,8 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
 
 
   /* USER CODE BEGIN USART2_MspInit 1 */
+    HAL_NVIC_SetPriority(USART2_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(USART2_IRQn);
 
   /* USER CODE END USART2_MspInit 1 */
   }
@@ -625,6 +639,8 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct);
 
   /* USER CODE BEGIN USART3_MspInit 1 */
+    HAL_NVIC_SetPriority(USART3_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(USART3_IRQn);
 
   /* USER CODE END USART3_MspInit 1 */
   }
@@ -659,6 +675,8 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct);
 
   /* USER CODE BEGIN USART6_MspInit 1 */
+    HAL_NVIC_SetPriority(USART6_IRQn, 5, 0);
+    HAL_NVIC_EnableIRQ(USART6_IRQn);
 
   /* USER CODE END USART6_MspInit 1 */
   }

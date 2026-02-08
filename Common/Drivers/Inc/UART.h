@@ -36,6 +36,8 @@
 #include "stm32h7xx_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 /**
  * @class UART
@@ -78,6 +80,11 @@ public:
      */
     void write(uint8_t *buffer, uint16_t length);
 
+    static UART* find_from_handle(UART_HandleTypeDef* huart);
+
+    TaskHandle_t txTask = nullptr; /**< TX direct to task handle. */
+    TaskHandle_t rxTask = nullptr; /**< RX direct to task handle. */
+
 private:
     UART_HandleTypeDef* huart;   /**< HAL UART handle used for configuration and I/O. */
 
@@ -97,10 +104,13 @@ private:
      */
     UART_Peripheral* find_uart_pins(Pin tx, Pin rx);
 
+
     Pin tx_;                     /**< TX pin object. */
     Pin rx_;                     /**< RX pin object. */
     uint32_t baud_;              /**< UART baud rate. */
     UART_Peripheral* uart_periph; /**< Pointer to matched UART peripheral. */
+
+    
 };
 
 #endif // UART_H
