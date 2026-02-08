@@ -7,7 +7,7 @@ import os
 CONTAINER = "Rivanna3S_compile"
 HOST_DIR = "$(pwd)"
 CONTAINER_DIR = "/root/code"
-DEFAULT_MCU = "STM32H743ZITX"
+DEFAULT_MCU = "STM32G474RET6"
 DEFAULT_BUILD_DIR = "build"
 APP_TARGETS = {
     "bottomdist": "BottomDistBoard.elf",
@@ -41,10 +41,14 @@ arg_parser.add_argument("-c", "--clean", action="store_true", help="Clean the bu
 arg_parser.add_argument("-s", "--silent", action="store_true", help="Suppress output from the compilation process.")
 arg_parser.add_argument("--install", action="store_true", help="Create the Docker container for the first time.")
 arg_parser.add_argument("--mcu", default=DEFAULT_MCU, help="MCU target (Drivers/<MCU>).")
+arg_parser.add_argument("--testing", action="store_true", help="Build for STM32H743ZITX (testing).")
 arg_parser.add_argument("--app", help="App target (bottomdist, motor, relay, telemetry, topdist, or full CMake target).")
 arg_parser.add_argument("--list-apps", action="store_true", help="List available app targets and exit.")
 arg_parser.add_argument("--build-dir", help="CMake build directory (default: build or build-<MCU> for non-default MCU).")
 args = arg_parser.parse_args()
+
+if args.testing:
+    args.mcu = "STM32H743ZITX"
 
 if args.list_apps:
     print("Available app targets:")
