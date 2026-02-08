@@ -22,7 +22,7 @@ def regex_replace_all(text: str, pattern: str, replacement: str) -> str:
 
 def remove_function_by_name(text: str, func_name: str) -> str:
     pattern = re.compile(
-        rf'void\s+{func_name}\s*\([^)]*\)\s*\{{',
+        rf'\n*\s*void\s+{func_name}\s*\([^)]*\)\s*\{{',
         re.MULTILINE
     )
 
@@ -43,230 +43,73 @@ def remove_function_by_name(text: str, func_name: str) -> str:
 
     return text[:start] + text[i:]
 
-def insert_adc_dispatcher(text: str) -> str:
-    adc_nums = sorted(set(re.findall(r'void\s+MX_ADC(\d+)_Init', text)))
-    if not adc_nums:
+def insert_dispatcher(
+    text: str,
+    *,
+    init_regex: str,
+    dispatcher_name: str,
+    handle_type: str,
+    instance_type: str,
+    instance_prefixes: tuple,
+    handle_prefix: str,
+    init_params: str,
+    init_call_args: str,
+) -> str:
+    matches = re.findall(init_regex, text)
+    if not matches:
         return text
 
-    last_adc = adc_nums[-1]
-
-    insert_pattern = re.compile(
-        rf'void\s+MX_ADC{last_adc}_Init[^\{{]*\{{',
-        re.MULTILINE
-    )
-
-    match = insert_pattern.search(text)
-    if not match:
-        return text
-
-    i = match.end()
-    brace_depth = 1
-    while i < len(text) and brace_depth > 0:
-        if text[i] == '{':
-            brace_depth += 1
-        elif text[i] == '}':
-            brace_depth -= 1
-        i += 1
-
-    func = (
-        "\nADC_HandleTypeDef* ADC_init(const ADC_TypeDef* hadc, uint32_t channel, uint32_t rank) {\n"
-    )
-
-    for idx, n in enumerate(adc_nums):
-        if idx == 0:
-            func += f"  if (hadc == ADC{n}) {{\n"
-        else:
-            func += f"  else if (hadc == ADC{n}) {{\n"
-
-        func += (
-            f"    MX_ADC{n}_Init(channel, rank);\n"
-            f"    return NULL;\n"
-            "  }\n"
-        )
-
-    func += (
-        "\n  return &hadc1; // Default return to avoid compiler warning\n"
-        "}\n"
-    )
-
-    return text[:i] + func + text[i:]
-
-def insert_uart_dispatcher(text: str) -> str:
-    import re
-
-    # Find all MX_UARTx_Init / MX_USARTx_UART_Init functions
-    uart_matches = re.findall(
-        r'\b(MX_(?:UART\d+|USART\d+_UART)_Init)\s*\(',
-        text
-    )
-    if not uart_matches:
-        return text
-
-    # Deduplicate while preserving order
+    # Normalize match list
+    inits = []
     seen = set()
-    uart_inits = []
-    for m in uart_matches:
-        if m not in seen:
-            seen.add(m)
-            uart_inits.append(m)
+    for m in matches:
+        init = m if isinstance(m, str) else m[0]
+        if init not in seen:
+            seen.add(init)
+            inits.append(init)
 
     func = (
-        "\n\nUART_HandleTypeDef* UART_init(const USART_TypeDef* uart, uint32_t baudrate) {\n"
-        "    UART_HandleTypeDef* handle;\n\n"
+        f"\n\n{handle_type}* {dispatcher_name}({instance_type}* inst"
+        f"{', ' + init_params if init_params else ''}) {{\n"
     )
 
-    for idx, init in enumerate(uart_inits):
-        # Strip MX_ and _Init
+    for idx, init in enumerate(inits):
         base = init.replace("MX_", "").replace("_Init", "")
-
-        # Extract UART/USART number
-        num_match = re.search(r'(\d+)', base)
+        num_match = re.search(r'(\d+)(?!.*\d)', base)
         if not num_match:
             continue
 
-        num = num_match.group(1)
+        n = num_match.group(1)
 
-        # Peripheral instance name
-        if base.startswith("USART"):
-            instance = f"USART{num}"
+        # Determine peripheral instance
+        instance = None
+        for p in instance_prefixes:
+            if base.startswith(p):
+                instance = f"{p}{n}"
+                break
+        if instance is None:
+            continue
+
+        if p == "USART":
+            handle = f"huart{n}"
         else:
-            instance = f"UART{num}"
-
-        handle = f"huart{num}"
+            handle = f"{handle_prefix}{p.lower()}{n}"
 
         if idx == 0:
-            func += f"    if (uart == {instance}) {{\n"
+            func += f"    if (inst == {instance}) {{\n"
         else:
-            func += f"    else if (uart == {instance}) {{\n"
+            func += f"    else if (inst == {instance}) {{\n"
 
+        call_args = init_call_args if init_call_args else ""
         func += (
-            f"        {init}(baudrate);\n"
-            f"        handle = &{handle};\n"
+            f"        {init}({call_args});\n"
+            f"        return &{handle};\n"
             "    }\n"
         )
 
     func += (
         "    else {\n"
-        "        // Unsupported UART instance\n"
         "        return NULL;\n"
-        "    }\n\n"
-        "    return handle;\n"
-        "}\n"
-    )
-
-    return text.rstrip() + func
-
-def insert_fdcan_dispatcher(text: str) -> str:
-    import re
-
-    # Find all MX_FDCANx_Init functions
-    fdcan_matches = re.findall(r'\b(MX_(FDCAN\d+)_Init)\s*\(', text)
-
-    # Deduplicate while preserving order
-    seen = set()
-    fdcan_inits = []
-    for full, instance in fdcan_matches:
-        if full not in seen:
-            seen.add(full)
-            fdcan_inits.append((full, instance))
-
-    # Start dispatcher function
-    func = (
-        "\n\nFDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef *hadc) {\n"
-    )
-
-    for idx, (init_name, instance_name) in enumerate(fdcan_inits):
-        if idx == 0:
-            func += f"    if (hadc == {instance_name}) {{\n"
-        else:
-            func += f"    else if (hadc == {instance_name}) {{\n"
-
-        func += f"        {init_name}(baudrate);\n"
-        func += f"        return &hfdcan{instance_name[-1]};\n"
-        func += "    }\n"
-
-    func += (
-        "    else {\n"
-        "        // Unsupported FDCAN instance\n"
-        f"        return &hfdcan{fdcan_inits[0][1][-1]};\n"
-        "    }\n"
-        "}\n"
-    )
-
-    return text.rstrip() + func
-
-def insert_spi_dispatcher(text: str) -> str:
-    import re
-
-    # Find all MX_FDCANx_Init functions
-    spi_matches = re.findall(r'\b(MX_(SPI\d+)_Init)\s*\(', text)
-
-    # Deduplicate while preserving order
-    seen = set()
-    spi_inits = []
-    for full, instance in spi_matches:
-        if full not in seen:
-            seen.add(full)
-            spi_inits.append((full, instance))
-
-    # Start dispatcher function
-    func = (
-        "\n\nSPI_HandleTypeDef* SPI_init(SPI_TypeDef *spiHandle, uint32_t baudrate_prescaler) {\n"
-    )
-
-    for idx, (init_name, instance_name) in enumerate(spi_inits):
-        if idx == 0:
-            func += f"    if (spiHandle == {instance_name}) {{\n"
-        else:
-            func += f"    else if (spiHandle == {instance_name}) {{\n"
-
-        func += f"        {init_name}(baudrate_prescaler);\n"
-        func += f"        return &hspi{instance_name[-1]};\n"
-        func += "    }\n"
-
-    func += (
-        "    else {\n"
-        "        // Unsupported SPI instance\n"
-        f"        return &hspi{spi_inits[0][1][-1]};\n"
-        "    }\n"
-        "}\n"
-    )
-
-    return text.rstrip() + func
-
-def insert_i2c_dispatcher(text: str) -> str:
-    import re
-
-    # Find all MX_FDCANx_Init functions
-    i2c_matches = re.findall(r'\b(MX_(I2C\d+)_Init)\s*\(', text)
-
-    # Deduplicate while preserving order
-    seen = set()
-    i2c_inits = []
-    for full, instance in i2c_matches:
-        if full not in seen:
-            seen.add(full)
-            i2c_inits.append((full, instance))
-
-    # Start dispatcher function
-    func = (
-        "\n\nSPI_HandleTypeDef* SPI_init(SPI_TypeDef *i2cHandle, uint32_t baudrate_prescaler) {\n"
-    )
-
-    for idx, (init_name, instance_name) in enumerate(i2c_inits):
-        if idx == 0:
-            func += f"    if (i2cHandle == {instance_name}) {{\n"
-        else:
-            func += f"    else if (i2cHandle == {instance_name}) {{\n"
-
-        func += f"        {init_name}(baudrate_prescaler);\n"
-        func += f"        return &hi2c{instance_name[-1]};\n"
-        func += "    }\n"
-
-    func += (
-        "    else {\n"
-        "        // Unsupported I2C instance\n"
-        f"        return &hi2c{i2c_inits[0][1][-1]};\n"
         "    }\n"
         "}\n"
     )
@@ -276,22 +119,6 @@ def insert_i2c_dispatcher(text: str) -> str:
 # per-file fixes
 
 def fix_adc_c(text: str) -> str:
-    # fix include
-    include_pattern = r'^\s*#include\s+"adc\.h"\s*$'
-    include_replacement = (
-        '#include "stm32h7xx_hal.h"\n'
-        '#include "pinmap.h"\n'
-        '#include "peripheralmap.h"\n'
-    )
-
-    text = regex_replace_once(text, include_pattern, include_replacement)
-
-    # comment out error handler
-    initname_pattern = r'Error_Handler\(\);'
-    initname_replacement = r'//Error_Handler();'
-
-    text = regex_replace_all(text, initname_pattern, initname_replacement)
-
     # fix ADC resolution
     resolution_pattern = r'ADC_RESOLUTION_\d+B'
     resolution_replacement = r'ADC_RESOLUTION_12B'
@@ -305,13 +132,13 @@ def fix_adc_c(text: str) -> str:
 
     # fix channels
     pattern = r'^\s*sConfig\.Channel\s*=.*?;'
-    replacement = r'    sConfig.Channel = channel;'
+    replacement = r'  sConfig.Channel = channel;'
 
     text = regex_replace_all(text, pattern, replacement)
 
     # fix ranks
     pattern = r'^\s*sConfig\.Rank\s*=.*?;'
-    replacement = r'sConfig.Rank = rank;'
+    replacement = r'  sConfig.Rank = rank;'
 
     text = regex_replace_all(text, pattern, replacement)
 
@@ -336,39 +163,25 @@ def fix_adc_c(text: str) -> str:
         '    GPIO_InitStruct.Pin = pin.block_mask;'
     )
 
-    # fix GPIO init name
-    text = regex_replace_all(
-        text,
-        r'HAL_GPIO_Init\s*\(\s*GPIO[A-Z]+\s*,\s*&GPIO_InitStruct\s*\)\s*;',
-        '    HAL_GPIO_Init(pin.block, &GPIO_InitStruct);'
-    )
-
     # remove deinit
     text = remove_function_by_name(text, "HAL_ADC_MspDeInit")
 
     # insert adc_dispatcher
-    text = insert_adc_dispatcher(text)
+    text = insert_dispatcher(
+        text,
+        init_regex=r'\bMX_ADC\d+_Init\s*',
+        dispatcher_name="ADC_init",
+        handle_type="ADC_HandleTypeDef",
+        instance_type="ADC_TypeDef",
+        instance_prefixes=("ADC",),
+        handle_prefix="h",
+        init_params="uint32_t channel, uint32_t rank",
+        init_call_args="channel, rank",
+    )
 
     return text
 
 def fix_usart_c(text: str) -> str:
-    # fix include
-    include_pattern = r'^\s*#include\s+"usart\.h"\s*$'
-    include_replacement = (
-        '#include "stm32h7xx_hal.h"\n'
-        '#include "pinmap.h"\n'
-        '#include "peripheralmap.h"\n'
-    )
-
-    text = regex_replace_all(text,include_pattern,include_replacement)
-
-    # comment out error handler
-    text = regex_replace_all(
-        text,
-        r'Error_Handler\(\);',
-        '//Error_Handler();'
-    )
-
     # fix UART init signature
     text = regex_replace_all(
         text,
@@ -404,50 +217,27 @@ def fix_usart_c(text: str) -> str:
         r'\1pin.block_mask;'
     )
 
-    # GPIO init
-    text = regex_replace_all(
-        text,
-        r'HAL_GPIO_Init\s*\(\s*[A-Z0-9_]+,\s*&GPIO_InitStruct\s*\);',
-        'HAL_GPIO_Init(pin.block, &GPIO_InitStruct);'
-    )
-
-    # af
-    text = regex_replace_all(
-        text,
-        r'^(\s*GPIO_InitStruct\.Alternate\s*=\s*).*?;',
-        r'\1af;'
-    )
-
     # remove HAL_UART_MspDeInit
     text = remove_function_by_name(text, "HAL_UART_MspDeInit")
 
     # insert dispatcher
-    text = insert_uart_dispatcher(text)
+    text = insert_dispatcher(
+        text,
+        init_regex=r'\b(MX_(?:UART\d+|USART\d+_UART)_Init)\s*\(',
+        dispatcher_name="UART_init",
+        handle_type="UART_HandleTypeDef",
+        instance_type="USART_TypeDef",
+        instance_prefixes=("UART", "USART", "LPUART"),
+        handle_prefix="h",
+        init_params="uint32_t baudrate",
+        init_call_args="baudrate",
+    )
 
     return text
 
 def fix_fdcan_c(text: str) -> str:
     # prompt user for clock
     clock_rate = input("Enter the clock rate for fdcan: ")
-    nbtq = input("Enter the nbtq for fdcan: ")
-
-    # fix include
-    include_pattern = r'^\s*#include\s+"fdcan\.h"\s*$'
-    include_replacement = (
-        '#include "fdcan.h"\n'
-        '#include "pinmap.h"\n'
-        '#include "peripheralmap.h"\n'
-        '#include "stm32h7xx_hal.h"\n'
-    )
-
-    text = regex_replace_all(text,include_pattern,include_replacement)
-
-    # comment out error handler
-    text = regex_replace_all(
-        text,
-        r'Error_Handler\(\);',
-        '//Error_Handler();'
-    )
 
     # fix fdcan init signature
     text = regex_replace_all(
@@ -459,9 +249,10 @@ def fix_fdcan_c(text: str) -> str:
     # replace .Init.NominalPrescaler = <any>;
     text = regex_replace_all(
         text,
-        r'\.Init\.NominalPrescaler\s*=\s*\d+;',
-        f".Init.NominalPrescaler = {clock_rate} / (baudrate * {nbtq});"
+        r'(hfdcan\d+)\.Init\.NominalPrescaler\s*=\s*\d+;',
+        rf"\g<1>.Init.NominalPrescaler = calculate_prescaler(\g<1>, {clock_rate}, baudrate);"
     )
+
 
     # replace fdcan_MspInit
     text = regex_replace_once(
@@ -484,46 +275,36 @@ def fix_fdcan_c(text: str) -> str:
         r'\1pin.block_mask | pin.block_mask;'
     )
 
-    # GPIO init
-    text = regex_replace_all(
-        text,
-        r'HAL_GPIO_Init\s*\(\s*[A-Z0-9_]+,\s*&GPIO_InitStruct\s*\);',
-        'HAL_GPIO_Init(pin.block, &GPIO_InitStruct);'
-    )
-
-    # af
-    text = regex_replace_all(
-        text,
-        r'^(\s*GPIO_InitStruct\.Alternate\s*=\s*).*?;',
-        r'\1af;'
-    )
-
     # remove HAL_FDCAN_MspDeInit
     text = remove_function_by_name(text, "HAL_FDCAN_MspDeInit")
 
     # insert dispatcher
-    text = insert_fdcan_dispatcher(text)   
+    text = insert_dispatcher(
+        text,
+        init_regex=r'\b(MX_FDCAN\d+_Init)\s*\(',
+        dispatcher_name="FDCAN_init",
+        handle_type="FDCAN_HandleTypeDef",
+        instance_type="FDCAN_GlobalTypeDef",
+        instance_prefixes=("FDCAN",),
+        handle_prefix="h",
+        init_params="uint32_t baudrate",
+        init_call_args="baudrate",
+    )
+
+    # insert calculate prescaler function
+    func = """
+uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate)
+{
+    uint32_t time_quanta = 1 + hfdcan->Init.NominalTimeSeg1 + hfdcan->Init.NominalTimeSeg2;
+    return peripheral_clock / (baudrate * time_quanta);
+}
+    """
+    decl = "uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate);\n"
+    text = decl + "\n" + text.rstrip() + "\n\n" + func
 
     return text
 
 def fix_spi_c(text: str) -> str:
-    # fix include
-    include_pattern = r'^\s*#include\s+"spi\.h"\s*$'
-    include_replacement = (
-        '#include "pinmap.h"\n'
-        '#include "peripheralmap.h"\n'
-        '#include "stm32h7xx_hal.h"\n'
-    )
-
-    text = regex_replace_all(text,include_pattern,include_replacement)
-
-    # comment out error handler
-    text = regex_replace_all(
-        text,
-        r'Error_Handler\(\);',
-        '//Error_Handler();'
-    )
-
     # fix fdcan init signature
     text = regex_replace_all(
         text,
@@ -559,46 +340,26 @@ def fix_spi_c(text: str) -> str:
         r'\1pin.block_mask;'
     )
 
-    # GPIO init
-    text = regex_replace_all(
-        text,
-        r'HAL_GPIO_Init\s*\(\s*[A-Z0-9_]+,\s*&GPIO_InitStruct\s*\);',
-        'HAL_GPIO_Init(pin.block, &GPIO_InitStruct);'
-    )
-
-    # af
-    text = regex_replace_all(
-        text,
-        r'^(\s*GPIO_InitStruct\.Alternate\s*=\s*).*?;',
-        r'\1af;'
-    )
 
     # remove HAL_FDCAN_MspDeInit
     text = remove_function_by_name(text, "HAL_SPI_MspDeInit")
 
     # insert dispatcher
-    text = insert_spi_dispatcher(text)   
+    text = insert_dispatcher(
+        text,
+        init_regex=r'\b(MX_SPI\d+_Init)\s*\(',
+        dispatcher_name="SPI_init",
+        handle_type="SPI_HandleTypeDef",
+        instance_type="SPI_TypeDef",
+        instance_prefixes=("SPI",),
+        handle_prefix="h",
+        init_params = "uint32_t baudrate_prescaler",
+        init_call_args="baudrate_prescaler",
+    )
 
     return text
 
 def fix_i2c_c(text: str) -> str:
-    # fix include
-    include_pattern = r'^\s*#include\s+"i2c\.h"\s*$'
-    include_replacement = (
-        '#include "pinmap.h"\n'
-        '#include "peripheralmap.h"\n'
-        '#include "stm32h7xx_hal.h"\n'
-    )
-
-    text = regex_replace_all(text,include_pattern,include_replacement)
-
-    # comment out error handler
-    text = regex_replace_all(
-        text,
-        r'Error_Handler\(\);',
-        '//Error_Handler();'
-    )
-
     # fix i2c init signature
     text = regex_replace_all(
         text,
@@ -634,25 +395,21 @@ def fix_i2c_c(text: str) -> str:
         r'\1pin.block_mask;'
     )
 
-    # GPIO init
-    text = regex_replace_all(
-        text,
-        r'HAL_GPIO_Init\s*\(\s*[A-Z0-9_]+,\s*&GPIO_InitStruct\s*\);',
-        'HAL_GPIO_Init(pin.block, &GPIO_InitStruct);'
-    )
-
-    # af
-    text = regex_replace_all(
-        text,
-        r'^(\s*GPIO_InitStruct\.Alternate\s*=\s*).*?;',
-        r'\1af;'
-    )
-
     # remove HAL_i2c_MspDeInit
     text = remove_function_by_name(text, "HAL_I2C_MspDeInit")
 
     # insert dispatcher
-    text = insert_i2c_dispatcher(text)   
+    text = insert_dispatcher(
+        text,
+        init_regex=r'\b(MX_I2C\d+_Init)\s*\(',
+        dispatcher_name="I2C_init",
+        handle_type="I2C_HandleTypeDef",
+        instance_type="I2C_TypeDef",
+        instance_prefixes=("I2C",),
+        handle_prefix="h",
+        init_params="uint32_t timing",
+        init_call_args="timing",
+    ) 
 
     return text
 
@@ -669,6 +426,37 @@ FIXERS = {
 def process_file(src: Path, dst: Path):
     text = src.read_text(encoding="utf-8")
 
+    # fix includes
+    include_pattern = r'^\s*#include\s+"[^"]+\.h"\s*$'
+    include_replacement = (
+        '#include "pinmap.h"\n'
+        '#include "peripheralmap.h"\n'
+        '#include "stm32h7xx_hal.h"\n'
+    )
+
+    text = regex_replace_all(text,include_pattern,include_replacement)
+
+    # fix alternate function
+    text = regex_replace_all(
+        text,
+        r'^(\s*GPIO_InitStruct\.Alternate\s*=\s*).*?;',
+        r'\1af;'
+    )
+
+    # fix GPIO init
+    text = regex_replace_all(
+        text,
+        r'HAL_GPIO_Init\s*\(\s*[A-Z0-9_]+,\s*&GPIO_InitStruct\s*\);',
+        'HAL_GPIO_Init(pin.block, &GPIO_InitStruct);'
+    )
+
+    # comment out error handler
+    text = regex_replace_all(
+        text,
+        r'Error_Handler\(\);',
+        '//Error_Handler();'
+    )
+
     fixer = FIXERS.get(src.name)
     if fixer:
         text = fixer(text)
@@ -678,20 +466,23 @@ def process_file(src: Path, dst: Path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("src_file", help="CubeIDE-generated source file")
-    parser.add_argument("dst_file", help="Destination output file")
+    parser.add_argument("src_dir", help="directory with CubeIDE-generated source files")
+    parser.add_argument("dst_dir", help="directory for destination output files")
     args = parser.parse_args()
 
-    src = Path(args.src_file)
-    dst = Path(args.dst_file)
+    src = Path(args.src_dir)
+    dst = Path(args.dst_dir)
 
     if not src.exists():
-        raise FileNotFoundError(f"Source file not found: {src}")
+        raise FileNotFoundError(f"Source directory not found: {src}")
 
-    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.mkdir(parents=True, exist_ok=True)
 
-    process_file(src, dst)
-    print(f"Imported {src.name} -> {dst}")
+    for file in src.iterdir():
+        if file.is_file():
+            out = dst / file.name
+            process_file(file, out)
+            print(f"Imported {file.name} -> {out}")
 
 
 if __name__ == "__main__":
