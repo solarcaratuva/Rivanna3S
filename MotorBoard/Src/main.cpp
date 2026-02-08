@@ -47,6 +47,7 @@ extern "C" void app_main(void *argument)
   log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
   /* USER CODE END Init */
 
+  log_debug("%s","UART SETUP");
   UART test_uart = UART(PF_7, PF_6, 115200);
   char *data = "hello solar car"; 
   char recieved_data[16]; 
