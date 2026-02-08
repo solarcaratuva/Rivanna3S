@@ -59,17 +59,22 @@ extern "C" void app_main(void *argument)
   }
   */
 
+  log_debug("%s","SPI CONFIG");
   SPI spi4(PE_6, PE_5, PE_2, 100000);
+  DigitalOut LED1(PB_0);
 
   uint8_t rx;
-  uint8_t tx;
+  uint8_t tx = 3;
 
   while (1) {
-    // Read 1 byte
-    spi4.read(&rx, 1);
+    // // Read 1 byte
+    // spi4.read(&rx, 1);
 
     // Write it back
-    tx = rx;
+    // tx = rx;
+    log_debug("%s","SPI TEST");
     spi4.write(&tx, 1);
+    LED1.write(!LED1.read());
+    HAL_Delay(500);
   }
 }
