@@ -40,6 +40,12 @@ FDCAN_HandleTypeDef *FDCAN_init(FDCAN_GlobalTypeDef *hadc, uint32_t baudrate)
   return &hfdcan1; // Default return to avoid compiler warning
 }
 
+uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate)
+{
+  uint32_t time_quanta = 1 + hfdcan->Init.NominalTimeSeg1 + hfdcan->Init.NominalTimeSeg2;
+  return peripheral_clock / (baudrate * time_quanta);
+}
+
 /* FDCAN1 init function */
 void MX_FDCAN1_Init(uint32_t baudrate)
 {
@@ -58,8 +64,6 @@ void MX_FDCAN1_Init(uint32_t baudrate)
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
 
-  // Set prescaler based on desired baudrate using calculate_Prescaler function
-  hfdcan1.Init.NominalPrescaler = 32;
   hfdcan1.Init.NominalSyncJumpWidth = 1;
   hfdcan1.Init.NominalTimeSeg1 = 2;
   hfdcan1.Init.NominalTimeSeg2 = 2;
@@ -81,6 +85,7 @@ void MX_FDCAN1_Init(uint32_t baudrate)
   hfdcan1.Init.TxFifoQueueElmtsNbr = 8;
   hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
   hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
+  hfdcan1.Init.NominalPrescaler = calculate_prescaler(&hfdcan1, 40000000, baudrate);
   if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
   {
     Error_Handler();
@@ -90,15 +95,6 @@ void MX_FDCAN1_Init(uint32_t baudrate)
   /* USER CODE END FDCAN1_Init 2 */
 }
 
-uint32_t calculate_Prescaler(uint32_t baudrate)
-{
-  // This function can be used to set the prescaler based on desired baudrate
-  // Implementation depends on specific requirements and hardware capabilities
-  const uint32_t fdcan_ker_clk = 160000000UL;
-  const uint32_t nbtq = 20UL; // Nominal Bit Time Quantum
-
-  return (fdcan_ker_clk / (baudrate * nbtq));
-}
 
 void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t af)
 {
