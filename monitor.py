@@ -20,18 +20,19 @@ if OS != "Linux":
 
 def get_args():
     parser = argparse.ArgumentParser(description="Monitor a board's debug log through a ST-Link")
-    parser.add_argument("-l", "--log", type=str, help="Log file path")
+    parser.add_argument("-l", "--level", type=str, help="Log level")
+    parser.add_argument("-s", "--save", type=str, help="Log file path")
     parser.add_argument("-f", "--filter", type=str, help="Filter out messages without this string, use '|' to separate multiple strings")
     return parser.parse_args()
 
 def compress_args(args):
     s = ""
-    if args.log:
-        args.log = os.path.abspath(args.log)
-        process = subprocess.run(f"wslpath -w {args.log}", capture_output=True, shell=True, text=True, check=True)
+    if args.save:
+        args.save = os.path.abspath(args.save)
+        process = subprocess.run(f"wslpath -w {args.save}", capture_output=True, shell=True, text=True, check=True)
         path = process.stdout.strip()
         path = path.replace("\\", "\\\\")  # Escape backslashes for Windows command line
-        s += f" --log {path}"
+        s += f" --save {path}"
     if args.filter:
         s += f" --filter {args.filter}"
     return s
@@ -66,6 +67,18 @@ def colorize(text: str) -> str:
         return f"\033[94m{text}\033[0m" # blue
     else:
         return text
+    
+def in_level(text: str, level: str) -> bool:
+    if len(text) < 20:
+        return text
+    front = text[5:20]
+    level = level.lower()
+
+    if "DEBUG" in front and level == 'debug': return True
+    if "INFO" in front and (level == 'debug' or level == 'info'): return True
+    if "WARN" in front and (level == 'debug' or level == 'info' or level == 'warn'): return True
+    if "FAULT" in front or "ERROR" in front: return True
+    return False
 
 def token_in_line(line: str, tokens: str) -> bool:
     token_list = tokens.lower().split("|")
@@ -103,6 +116,10 @@ def log(args, port: str) -> None:
                 text = f"EXCEPTION THROWN: {e}"
                 errorCount += 1
 
+            # handle the log level (if there is one)
+            if args.level and not in_level(text, args.level): # if there is a level and the text does not pass it, skip it
+                continue
+
             # handle the filter (if there is one)
             if args.filter and not token_in_line(text, args.filter): # if there is a filter and the text does not pass it, skip it
                 continue
@@ -112,8 +129,8 @@ def log(args, port: str) -> None:
             # saving and printing the text
             text_color = colorize(text)
             print(text_color)
-            if args.log:
-                with open(args.log, "a", encoding="utf-8") as logFile:
+            if args.save:
+                with open(args.save, "a", encoding="utf-8") as logFile:
                     logFile.write(text + "\n")
 
     # handle termination of the script
