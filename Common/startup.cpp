@@ -3,7 +3,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "stm32h7xx_hal.h"
-extern "C" void app_main(void * argument);
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
