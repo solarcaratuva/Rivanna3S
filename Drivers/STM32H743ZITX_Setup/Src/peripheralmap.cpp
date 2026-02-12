@@ -5,6 +5,7 @@ UART_Peripheral UART_Peripherals[] = {
     {UART4, (PA_1.universal_mask), (PA_0.universal_mask), NC, NC, false},
     {UART7, (PF_6.universal_mask | PE_7.universal_mask), (PF_7.universal_mask | PE_8.universal_mask), NC, NC, false},
     {USART2, (PA_3.universal_mask), (PA_2.universal_mask), NC, NC, false},
+    {USART3, (PD_9.universal_mask), (PD_8.universal_mask), NC, NC, false},
 };
 
 extern const uint8_t UART_PERIPHERAL_COUNT = sizeof(UART_Peripherals) / sizeof(UART_Peripherals[0]);
