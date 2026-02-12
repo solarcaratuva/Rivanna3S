@@ -2,7 +2,7 @@
 #define INC_M95_H_
 
 #include "main.h"
-#include "spi.h"
+#include "SPI.h"
 
 #define M95040		0
 #define M95256		1

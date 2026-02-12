@@ -2,7 +2,7 @@
 #include "SPI.h"
 #include "stm32h7xx_hal.h"
 
-SPI spi4(PE_6, PE_5, PE_2, 100000);
+//SPI spi4(PE_6, PE_5, PE_2, 100000);
 
 void EnableChipSelectM95(uint8_t M95Type) //DONE
 {
