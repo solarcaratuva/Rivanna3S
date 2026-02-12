@@ -100,6 +100,28 @@ UART* UART::find_from_handle(UART_HandleTypeDef* huart){
 
 // Call Back functions
 extern "C"{
+    extern UART_HandleTypeDef huart3;
+    extern UART_HandleTypeDef huart7; 
+
+    void USART3_IRQHandler(void){
+        /* USER CODE BEGIN USART2_IRQn 0 */
+
+        /* USER CODE END USART2_IRQn 0 */
+        HAL_UART_IRQHandler(&huart3);
+        /* USER CODE BEGIN USART2_IRQn 1 */
+
+        /* USER CODE END USART2_IRQn 1 */
+    }
+
+    void UART7_IRQHandler(void){
+        /* USER CODE BEGIN USART2_IRQn 0 */
+
+        /* USER CODE END USART2_IRQn 0 */
+        HAL_UART_IRQHandler(&huart7);
+        /* USER CODE BEGIN USART2_IRQn 1 */
+
+        /* USER CODE END USART2_IRQn 1 */
+    }
 
     void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
         UART* uart = UART::find_from_handle(huart);
