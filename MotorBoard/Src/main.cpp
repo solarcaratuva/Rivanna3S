@@ -41,9 +41,8 @@
 #include "BPSCanStructs.h"
 #include "Rivanna3CanStructs.h"
 
-extern "C" void app_main(void *argument)
+void app_main()
 {
-  (void)argument;
 
   /* USER CODE BEGIN Init */
   log_configure(WARN_LVL, PD_8, PD_9, 921600);
