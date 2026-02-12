@@ -27,7 +27,6 @@ target_include_directories(common PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/Inc
   ${CMAKE_CURRENT_SOURCE_DIR}/Libs/Inc
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Inc
-  ${CMAKE_SOURCE_DIR}/Core/Inc
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy
   ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Include

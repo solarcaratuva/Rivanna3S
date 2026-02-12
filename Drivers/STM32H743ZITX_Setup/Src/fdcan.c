@@ -88,7 +88,7 @@ void MX_FDCAN1_Init(uint32_t baudrate)
   hfdcan1.Init.NominalPrescaler = calculate_prescaler(&hfdcan1, 40000000, baudrate);
   if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
   {
-    Error_Handler();
+    // Error_Handler();
   }
   /* USER CODE BEGIN FDCAN1_Init 2 */
 
