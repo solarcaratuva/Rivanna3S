@@ -46,30 +46,64 @@ UART::UART(Pin tx, Pin rx, uint32_t baud)
 
 
 
-void UART::read(uint8_t *buffer, uint16_t length){
+int UART::read(uint8_t *buffer, uint16_t length){
 	if(initialized) {
+        last_error = HAL_UART_ERROR_NONE;
+
         rxTask = xTaskGetCurrentTaskHandle();
 
         UART_Start_Receive_IT(huart, buffer, length);
 
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+        return last_error;
 	}
+
+    return -1; //unitialized
 }
 
-void UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
+int UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
 	if(initialized) {
-		HAL_UART_Receive(huart, buffer, length, timeout_ms);
+        last_error = HAL_UART_ERROR_NONE;
+
+        rxTask = xTaskGetCurrentTaskHandle();
+
+        HAL_UART_Receive_IT(huart, buffer, length);
+
+        TickType_t timeoutTicks =
+        (timeout_ms == portMAX_DELAY)
+            ? portMAX_DELAY
+            : pdMS_TO_TICKS(timeout_ms);
+
+        uint32_t notified = ulTaskNotifyTake(pdTRUE, timeoutTicks);
+
+        // -------- CASE 1: TIMEOUT --------
+        if (notified == 0) {
+            // Abort transfer safely
+            HAL_UART_Abort_IT(huart);
+            rxTask = nullptr;
+            return -2;  // timeout error
+        }
+
+        return last_error; 
 	}
+
+    return -1; //unitialized
 }
 
-void UART::write(uint8_t* buffer, uint16_t length) {
+int UART::write(uint8_t* buffer, uint16_t length) {
 	if(initialized) {
+        last_error = HAL_UART_ERROR_NONE;
         txTask = xTaskGetCurrentTaskHandle();
 
 		HAL_UART_Transmit_IT(huart, buffer, length);
 
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+        return last_error;
 	}
+
+    return -1; //unitialized
 }
         
 UART_Peripheral* UART::find_uart_pins(Pin tx, Pin rx) {
@@ -100,28 +134,6 @@ UART* UART::find_from_handle(UART_HandleTypeDef* huart){
 
 // Call Back functions
 extern "C"{
-    extern UART_HandleTypeDef huart3;
-    extern UART_HandleTypeDef huart7; 
-
-    void USART3_IRQHandler(void){
-        /* USER CODE BEGIN USART2_IRQn 0 */
-
-        /* USER CODE END USART2_IRQn 0 */
-        HAL_UART_IRQHandler(&huart3);
-        /* USER CODE BEGIN USART2_IRQn 1 */
-
-        /* USER CODE END USART2_IRQn 1 */
-    }
-
-    void UART7_IRQHandler(void){
-        /* USER CODE BEGIN USART2_IRQn 0 */
-
-        /* USER CODE END USART2_IRQn 0 */
-        HAL_UART_IRQHandler(&huart7);
-        /* USER CODE BEGIN USART2_IRQn 1 */
-
-        /* USER CODE END USART2_IRQn 1 */
-    }
 
     void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
         UART* uart = UART::find_from_handle(huart);
@@ -157,7 +169,38 @@ extern "C"{
     void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
         UART* uart = UART::find_from_handle(huart);
         if (!uart) return;
-        return;
+
+        // Capture HAL error flags
+        uart->last_error = HAL_UART_GetError(huart);
+
+        BaseType_t woken = pdFALSE;
+
+        // Wake RX task if waiting
+        if (uart->rxTask) {
+            xTaskNotifyFromISR(
+                uart->rxTask,
+                0,
+                eNoAction,
+                &woken
+            );
+            uart->rxTask = nullptr;
+        }
+
+        // Wake TX task if waiting
+        if (uart->txTask) {
+            xTaskNotifyFromISR(
+                uart->txTask,
+                0,
+                eNoAction,
+                &woken
+            );
+            uart->txTask = nullptr;
+        }
+
+        // Abort ongoing transfers (important!)
+        HAL_UART_Abort_IT(huart);
+
+        portYIELD_FROM_ISR(woken);
     }
 
 
