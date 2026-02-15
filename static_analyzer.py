@@ -14,11 +14,23 @@ ARGS = [
 ]
 
 SOURCES = [
-    "Core/Src/"
+    "BottomDistBoard/Src/",
+    "MotorBoard/Src/",
+    "RelayBoard/Src/",
+    "TelemetryBoard/Src/",
+    "TopDistBoard/Src/",
+    "Common/Drivers/Src/",
+    "Common/Libs/Src/"
 ]
 
 INCLUDES = ["-I " + s for s in [
-    "Core/Inc/",
+    "BottomDistBoard/Inc/",
+    "MotorBoard/Inc/",
+    "RelayBoard/Inc/",
+    "TelemetryBoard/Inc/",
+    "TopDistBoard/Inc/",
+    "Common/Drivers/Inc/",
+    "Common/Libs/Inc/"
 ]]
 
 SUPPRESSES = ["--suppress=" + s for s in [
