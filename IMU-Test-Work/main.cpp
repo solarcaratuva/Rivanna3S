@@ -1,30 +1,44 @@
-#include <iostream>
-#include <thread>
-#include <chrono>
 #include "vn200_linux.h"
+#include <iomanip>
+#include <iostream>
+#include <unistd.h>
 
 int main() {
-    VN200 sensor;
+  VN200 sensor;
+  VNData data;
 
-    std::cout << "Attempting to connect to VN-200 on /dev/ttyUSB0..." << std::endl;
+  if (!sensor.connect("/dev/ttyUSB0", 115200)) {
+    std::cerr << "ERROR: Could not open /dev/ttyUSB0. Try: sudo chmod 666 "
+                 "/dev/ttyUSB0"
+              << std::endl;
+    return 1;
+  }
 
-    if (sensor.connect("/dev/ttyUSB0", 115200)) {
-        std::cout << "Connected!" << std::endl;
+  std::cout << "Connected to VN-200. Waiting for data..." << std::endl;
 
-        // 1. Read the Model Number (Register 1)
-        std::cout << "Model Info: " << sensor.readRegister(1) << std::endl;
+  while (true) {
+    std::string line = sensor.readRawLine();
 
-        // 2. Loop to read streaming IMU data (YPR, Accel, etc.)
-        std::cout << "Streaming data for 5 seconds..." << std::endl;
-        for(int i = 0; i < 50; ++i) {
-            std::cout << "Data: " << sensor.readRawLine() << std::endl;
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-
-        sensor.disconnect();
-    } else {
-        std::cerr << "Failed to connect. Check permissions (sudo chmod 666 /dev/ttyUSB0)" << std::endl;
+    if (!line.empty()) {
+      if (sensor.parseVNINS(line, data)) {
+        // Successful Parse
+        std::cout << "\033[2J\033[H"; // Clear Screen
+        std::cout << "--- VECTORNAV VN-200 (INS MODE) ---" << std::endl;
+        std::cout << std::fixed << std::setprecision(3);
+        std::cout << "YAW:   " << data.yaw << " deg" << std::endl;
+        std::cout << "PITCH: " << data.pitch << " deg" << std::endl;
+        std::cout << "ROLL:  " << data.roll << " deg" << std::endl;
+        std::cout << std::setprecision(6);
+        std::cout << "LAT:   " << data.latitude << std::endl;
+        std::cout << "LON:   " << data.longitude << std::endl;
+        std::cout << "ALT:   " << data.altitude << " m" << std::endl;
+      } else if (line.find("$VN") != std::string::npos) {
+        // Fallback: If it's a VN message but not INS, print raw so you know
+        // it's working
+        std::cout << "RAW DATA: " << line << std::endl;
+      }
     }
-
-    return 0;
+    usleep(1000); // 1ms
+  }
+  return 0;
 }

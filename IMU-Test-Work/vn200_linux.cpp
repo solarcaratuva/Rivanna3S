@@ -1,61 +1,93 @@
 #include "vn200_linux.h"
+#include <cstring>
 #include <fcntl.h>
+#include <iostream>
+#include <sstream>
 #include <termios.h>
 #include <unistd.h>
-#include <cstring>
-#include <iostream>
 
-VN200::VN200() : fd(-1) {}
+VN200::VN200() : fd(-1), remainder("") {}
 
 VN200::~VN200() { disconnect(); }
 
-bool VN200::connect(const std::string& port, int baudrate) {
-    fd = open(port.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
-    if (fd == -1) return false;
+bool VN200::connect(const std::string &port, int baudrate) {
+  fd = open(port.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
+  if (fd == -1)
+    return false;
 
-    struct termios tty;
-    tcgetattr(fd, &tty);
+  struct termios tty;
+  if (tcgetattr(fd, &tty) != 0)
+    return false;
 
-    // Set Baud Rate (Assuming 115200)
-    cfsetispeed(&tty, B115200);
-    cfsetospeed(&tty, B115200);
+  // Set Baud Rate (Default 115200)
+  cfsetispeed(&tty, B115200);
+  cfsetospeed(&tty, B115200);
 
-    tty.c_cflag |= (CLOCAL | CREAD);    // Ignore modem controls, enable reading
-    tty.c_cflag &= ~CSIZE;              // Clear size bits
-    tty.c_cflag |= CS8;                 // 8-bit characters
-    tty.c_cflag &= ~PARENB;             // No parity
-    tty.c_cflag &= ~CSTOPB;             // 1 stop bit
+  tty.c_cflag |= (CLOCAL | CREAD | CS8);
+  tty.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // Raw mode
+  tty.c_iflag &= ~(IXON | IXOFF | IXANY);
+  tty.c_oflag &= ~OPOST;
 
-    tcsetattr(fd, TCSANOW, &tty);
-    return true;
+  tcflush(fd, TCIFLUSH);
+  tcsetattr(fd, TCSANOW, &tty);
+  return true;
 }
 
 void VN200::disconnect() {
-    if (fd != -1) {
-        close(fd);
-        fd = -1;
-    }
+  if (fd != -1) {
+    close(fd);
+    fd = -1;
+  }
 }
 
-// Sends a command to read a specific register
-std::string VN200::readRegister(int regId) {
-    if (fd == -1) return "Not Connected";
-
-    // Format: $VNRRG,RegID\r\n
-    std::string cmd = "$VNRRG," + std::to_string(regId) + "\r\n";
-    write(fd, cmd.c_str(), cmd.length());
-
-    return readRawLine();
-}
-
-// Reads one line from the sensor
 std::string VN200::readRawLine() {
-    char buf[256];
-    memset(buf, 0, sizeof(buf));
-    
-    // Simple read (in a real app, you'd buffer this until \n)
-    usleep(100000); // Wait 100ms for response
-    int bytes = read(fd, buf, sizeof(buf) - 1);
-    
-    return (bytes > 0) ? std::string(buf) : "No Data";
+  char buf[1024];
+  int n = read(fd, buf, sizeof(buf) - 1);
+
+  if (n > 0) {
+    buf[n] = '\0';
+    remainder += std::string(buf);
+  }
+
+  size_t newline_pos = remainder.find("\n");
+  if (newline_pos != std::string::npos) {
+    std::string line = remainder.substr(0, newline_pos);
+    remainder = remainder.substr(newline_pos + 1);
+    return line;
+  }
+  return "";
+}
+
+bool VN200::parseVNINS(const std::string &line, VNData &data) {
+  size_t start = line.find("$VNINS");
+  if (start == std::string::npos)
+    return false;
+
+  std::string clean = line.substr(start + 7);
+  size_t asterisk = clean.find('*');
+  if (asterisk != std::string::npos)
+    clean = clean.substr(0, asterisk);
+
+  std::vector<std::string> tokens;
+  std::string token;
+  std::stringstream ss(clean);
+  while (std::getline(ss, token, ',')) {
+    tokens.push_back(token);
+  }
+
+  if (tokens.size() < 10)
+    return false;
+
+  try {
+    data.time = std::stod(tokens[0]);
+    data.yaw = std::stof(tokens[3]);
+    data.pitch = std::stof(tokens[4]);
+    data.roll = std::stof(tokens[5]);
+    data.latitude = std::stod(tokens[6]);
+    data.longitude = std::stod(tokens[7]);
+    data.altitude = std::stod(tokens[8]);
+    return true;
+  } catch (...) {
+    return false;
+  }
 }
