@@ -239,8 +239,8 @@ typedef struct UpdateData : CanMessage, rivanna3_s_update_data_t {
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "UpdateData: data %llu",
-            static_cast<unsigned long long>(data));
+            "UpdateData: data %u",
+            data);
     }
 
     bool has_active_fault() {

@@ -9,8 +9,9 @@
 
 #define CAN_TX NC
 #define CAN_RX NC
-#define BAUDRATE 250000
 
+#define LOG_TX NC
+#define LOG_RX NC
 
 
 

@@ -13,7 +13,7 @@
  * User-defined callbacks receive a const reference to the received raw CAN frame.
  * The callback should process the message quickly to avoid blocking the receiver thread.
  */
-using CanCallback = void (*)(const SerializedCanMessage &msg);
+using CanCallback = void (*)(SerializedCanMessage &msg);
 
 enum class CanNetwork {
     Main = 0,

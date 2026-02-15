@@ -23,8 +23,8 @@ typedef struct MG0Status : CanMessage, mppt_mg0_status_t {
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "MG0Status: MG0InputCurrent %f, MG0InputVoltage %f",
-            mg0_input_current, mg0_input_voltage);
+            "MG0Status: "
+            );
     }
 
     bool has_active_fault() {
@@ -50,8 +50,8 @@ typedef struct MG1Status : CanMessage, mppt_mg1_status_t {
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "MG1Status: MG1InputCurrent %f, MG1InputVoltage %f",
-            mg1_input_current, mg1_input_voltage);
+            "MG1Status: "
+            );
     }
 
     bool has_active_fault() {
@@ -77,8 +77,8 @@ typedef struct MG0OutputVoltageInputPower : CanMessage, mppt_mg0_output_voltage_
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "MG0OutputVoltageInputPower: MG0OutputVoltage %f, MG0InputPower %f",
-            mg0_output_voltage, mg0_input_power);
+            "MG0OutputVoltageInputPower: "
+            );
     }
 
     bool has_active_fault() {
@@ -104,8 +104,8 @@ typedef struct MG1OutputVoltageInputPower : CanMessage, mppt_mg1_output_voltage_
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "MG1OutputVoltageInputPower: MG1OutputVoltage %f, MG1InputPower %f",
-            mg1_output_voltage, mg1_input_power);
+            "MG1OutputVoltageInputPower: "
+            );
     }
 
     bool has_active_fault() {
@@ -131,7 +131,7 @@ typedef struct MG0PCBMOSFETTemperature : CanMessage, mppt_mg0_pcbmosfet_temperat
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "MG0PCBMOSFETTemperature: MG0PCBTemperature %d, MG0MOSFETTemperature %d",
+            "MG0PCBMOSFETTemperature: MG0PCBTemperature %u, MG0MOSFETTemperature %u",
             mg0_pcb_temperature, mg0_mosfet_temperature);
     }
 
@@ -158,7 +158,7 @@ typedef struct MG1PCBMOSFETTemperature : CanMessage, mppt_mg1_pcbmosfet_temperat
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "MG1PCBMOSFETTemperature: MG1PCBTemperature %d, MG1MOSFETTemperature %d",
+            "MG1PCBMOSFETTemperature: MG1PCBTemperature %u, MG1MOSFETTemperature %u",
             mg1_pcb_temperature, mg1_mosfet_temperature);
     }
 
