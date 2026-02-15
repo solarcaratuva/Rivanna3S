@@ -1,15 +1,18 @@
-## Build Common sources (Drivers + Libs) as a static library
+## Build shared firmware code (common drivers/libs/startup) as a static library.
 
+# Collect reusable driver implementation files.
 file(GLOB COMMON_DRIVERS_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/Src/*.c
   ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/Src/*.cpp
 )
 
+# Collect common application support libraries.
 file(GLOB COMMON_LIBS_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/Libs/Src/*.c
   ${CMAKE_CURRENT_SOURCE_DIR}/Libs/Src/*.cpp
 )
 
+# Collect vendor STM helper sources used by multiple boards.
 file(GLOB COMMON_STM_LIBS_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/STM_Libs/*.c
 )
@@ -23,6 +26,7 @@ set(COMMON_SOURCES
 
 add_library(common STATIC ${COMMON_SOURCES})
 
+# Export all public include roots needed by any target linking `common`.
 target_include_directories(common PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/Inc
   ${CMAKE_CURRENT_SOURCE_DIR}/Libs/Inc
@@ -37,7 +41,7 @@ target_include_directories(common PUBLIC
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
 )
 
-# Inherit MCU/optimization flags from parent if present
+# Inherit architecture/build flags from parent scope if provided.
 if(DEFINED MCU_FLAGS)
   target_compile_options(common PRIVATE ${MCU_FLAGS} ${OPT_FLAGS} ${WARN_FLAGS})
 endif()
@@ -53,4 +57,5 @@ set_target_properties(common PROPERTIES
   CXX_STANDARD_REQUIRED ON
 )
 
+# Helpful configure-time log so you can see which files were globbed.
 message(STATUS "Common: built ${COMMON_SOURCES}")

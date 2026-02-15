@@ -18,6 +18,7 @@ add_library(freertos_kernel STATIC
 )
 
 # --- MCU port selection ---
+# FREERTOS_PORT is expected to come from board/toolchain config.
 set(FREERTOS_PORT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/portable/GCC/${FREERTOS_PORT})
 if(NOT EXISTS "${FREERTOS_PORT_DIR}")
     set(FREERTOS_FALLBACK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/portable/GCC/ARM_CM4F)

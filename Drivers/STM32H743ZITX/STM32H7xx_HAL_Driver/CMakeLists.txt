@@ -6,6 +6,7 @@ file(GLOB HAL_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/Src/*.c"
 )
 
+# Build vendor HAL as a static archive to avoid relinking every consumer target.
 add_library(STM32H7xx_HAL_DRIVER STATIC ${HAL_SOURCES})
 
 target_include_directories(STM32H7xx_HAL_DRIVER PUBLIC
