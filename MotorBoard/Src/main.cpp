@@ -17,7 +17,6 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -38,10 +37,12 @@
 #include "Timeout.h"
 #include "lock.h"
 #include "log.h"
+#include "can.h"
+#include "BPSCanStructs.h"
+#include "Rivanna3CanStructs.h"
 
-extern "C" void app_main(void *argument)
+void app_main()
 {
-  (void)argument;
 
   /* USER CODE BEGIN Init */
 #if defined(STM32G474xx)
@@ -51,12 +52,43 @@ extern "C" void app_main(void *argument)
 #endif
   /* USER CODE END Init */
 
-  DigitalOut LED1(PB_0);
 
-  while (1)
-  {
-    log_debug("%s","HERE");
-    HAL_Delay(1000);
-    LED1.write(!LED1.read());
+  //black is rx purple is tx
+  //LED1.write(true);
+  DigitalOut LED1(PB_0);
+    LED1.write(false);
+
+
+  CAN can(PB_9, PB_8, 250000);
+  SerializedCanMessage msg;
+  BpsStatus message;
+
+  message.pack_soc = 60;
+ 
+  message.serialize(&msg);
+  while (1) {
+    can.write(msg);
+    HAL_Delay(100);
   }
+
+  
+  //code to read
+  // while (1){
+  //   can.read(&msg);
+  //   //can.write(msg);
+  //   DashboardCommands dashboard_msg;
+  //   dashboard_msg.deserialize(&msg);
+  //   dashboard_msg.log_msg(WARN_LVL);
+  //   HAL_Delay(100);
+  // }
+  
+  // log_debug("Received Dashboard Commands CAN Message: left_turn_signal=%u, right_turn_signal=%u", dashboard_msg.left_turn_signal, dashboard_msg.right_turn_signal);
+  LED1.write(true);
+
+  // while (1)
+  // {
+  //   log_debug("%s","HERE");
+  //   HAL_Delay(1000);
+  //   LED1.write(!LED1.read());
+  // }
 }

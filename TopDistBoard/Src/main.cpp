@@ -17,7 +17,6 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -39,9 +38,8 @@
 #include "lock.h"
 #include "log.h"
 
-extern "C" void app_main(void *argument)
+void app_main()
 {
-  (void)argument;
 
   /* USER CODE BEGIN Init */
 #if defined(STM32G474xx)

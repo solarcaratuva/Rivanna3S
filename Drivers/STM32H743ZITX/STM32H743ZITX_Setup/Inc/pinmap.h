@@ -72,7 +72,7 @@ typedef struct Pin {
 // manually added for testing
 #define PD_8 (Pin){GPIOD, 1 << 8, 1ULL << 60}
 #define PD_9 (Pin){GPIOD, 1 << 9, 1ULL << 61}
-#define PB_8 (Pin){GPIOB, 1 << 0, 1ULL << 50}
-#define PB_9 (Pin){GPIOB, 1 << 1, 1ULL << 51}
+#define PB_8 (Pin){GPIOB, 1 << 8, 1ULL << 50}
+#define PB_9 (Pin){GPIOB, 1 << 9, 1ULL << 51}
 
 #endif /* PINMAP */

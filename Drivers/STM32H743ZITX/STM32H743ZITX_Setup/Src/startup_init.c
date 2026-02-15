@@ -1,39 +1,17 @@
-#include "startup.h"
-#include "thread.h"
-#include "FreeRTOS.h"
-#include "task.h"
 #include "stm32h7xx_hal.h"
 
+void SystemClock_Config(void);
+void PeriphCommonClock_Config(void);
+static void MPU_Config(void);
+void Error_Handler(void);
 
 
-int main(void)
+void startup_init()
 {
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MPU Configuration--------------------------------------------------------*/
-#if defined(STM32H743xx)
   MPU_Config();
-#else
-  MPU_Config();
-#endif
-
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
-  /* Configure the system clock */
   SystemClock_Config();
-
-  /* USER CODE BEGIN 2 */
-  xTaskCreate(app_main, "app_main", 512, NULL, tskIDLE_PRIORITY + 1, NULL);
-  vTaskStartScheduler();
-
-  while (1)
-  {
-  }
+  PeriphCommonClock_Config();
 }
 
 /**
@@ -42,7 +20,6 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
-#if defined(STM32H743xx)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -55,6 +32,10 @@ void SystemClock_Config(void)
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
+
+  /** Macro to configure the PLL clock source
+  */
+  __HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSI);
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -85,83 +66,38 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-#elif defined(STM32G474xx)
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+}
 
-  HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
+/**
+  * @brief Peripherals Common Clock Configuration
+  * @retval None
+  */
+void PeriphCommonClock_Config(void)
+{
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  /** Initializes the peripherals clock
+  */
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADC|RCC_PERIPHCLK_SPI1
+                              |RCC_PERIPHCLK_FDCAN;
+  PeriphClkInitStruct.PLL2.PLL2M = 32;
+  PeriphClkInitStruct.PLL2.PLL2N = 100;
+  PeriphClkInitStruct.PLL2.PLL2P = 5;
+  PeriphClkInitStruct.PLL2.PLL2Q = 5;
+  PeriphClkInitStruct.PLL2.PLL2R = 2;
+  PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_1;
+  PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+  PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+  PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL2;
+  PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
+  PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_PLL2;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
     Error_Handler();
   }
-
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-#elif defined(STM32U5A9xx)
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-
-  HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
-
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-#else
-  #error "SystemClock_Config not implemented for this MCU."
-#endif
 }
 
 /* USER CODE BEGIN 4 */
-
-// FreeRTOS error hooks for debugging
-extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
-    // Stack overflow detected - handle error
-    (void)xTask;
-    (void)pcTaskName;
-    __disable_irq();
-    while(1) {
-        // Blink an LED or trigger a breakpoint here for debugging
-    }
-}
-
-extern "C" void vApplicationMallocFailedHook(void) {
-    // Memory allocation failed - handle error
-    __disable_irq();
-    while(1) {
-        // Blink an LED or trigger a breakpoint here for debugging
-    }
-}
 
 /* USER CODE END 4 */
 
@@ -169,7 +105,6 @@ extern "C" void vApplicationMallocFailedHook(void) {
 
 void MPU_Config(void)
 {
-#if defined(STM32H743xx)
   MPU_Region_InitTypeDef MPU_InitStruct = {0};
 
   /* Disables the MPU */
@@ -192,9 +127,6 @@ void MPU_Config(void)
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
   /* Enables the MPU */
   HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
-#else
-  // No MPU configuration required for this MCU.
-#endif
 
 }
 
