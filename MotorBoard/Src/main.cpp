@@ -59,7 +59,7 @@ void app_main()
     LED1.write(false);
 
 
-  CAN can(PB_9, PB_8, 250000);
+  CAN can(PB_9, PB_2, 250000);
   SerializedCanMessage msg;
   BpsStatus message;
 
