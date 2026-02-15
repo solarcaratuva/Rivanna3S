@@ -2,6 +2,7 @@
 
 import subprocess
 import argparse
+import sys
 
 CONTAINER = "Rivanna3S_compile"
 HOST_DIR = "$(pwd)"
@@ -9,7 +10,6 @@ CONTAINER_DIR = "/root/code"
 DEFAULT_MCU = "STM32G474RET6"
 TESTING_MCU = "STM32H743ZITX"
 HIL_MCU = "STM32U5A9NJH6Q" # drivers not done for this yet
-
 
 def container_exists(name):
     result = subprocess.run(f"docker ps -a --format '{{{{.Names}}}}'", shell=True, capture_output=True, text=True)
@@ -33,10 +33,11 @@ arg_parser.add_argument("args", nargs="*", help="Arguments to pass to `cmake --b
 arg_parser.add_argument("-c", "--clean", action="store_true", help="Clean the build before compiling.")
 arg_parser.add_argument("-s", "--silent", action="store_true", help="Suppress output from the compilation process.")
 arg_parser.add_argument("--install", action="store_true", help="Create the Docker container for the first time.")
-arg_parser.add_argument("--testing", action="store_true", help="Build for STM32H743ZITX (testing).")
 args = arg_parser.parse_args()
 
-mcu = TESTING_MCU if args.testing else DEFAULT_MCU
+testing_mode = "testing" in args.args
+args.args = [arg for arg in args.args if arg != "testing"]
+mcu = TESTING_MCU if testing_mode else DEFAULT_MCU
 build_dir = "build"
 
 if args.install:
