@@ -53,18 +53,18 @@ extern "C" void app_main(void *argument)
   log_debug("%s","UART SETUP");
   UART test_uart = UART(PF_7, PF_6, 115200);
   char *data = "hello solar car"; 
-  char recieved_data[16]; 
+  char recieved_data[6]; 
   
   LED1.write(!LED1.read());
 
   while (1)
   {
     log_debug("%s","START UART TEST");
-    test_uart.write((uint8_t *) data, 16);
-    // log_debug("%s","UART WAITING TO RECIEVE DATA");
-    // test_uart.read((uint8_t *) recieved_data, 16);
-    // log_debug("%s","DATA RECIEVED:");
-    // test_uart.write((uint8_t *) recieved_data, 16);
+    // test_uart.write((uint8_t *) data, 16);
+    log_debug("%s","UART WAITING TO RECIEVE DATA");
+    test_uart.read((uint8_t *) recieved_data, 6);
+    log_debug("%s","DATA RECIEVED:");
+    test_uart.write((uint8_t *) recieved_data, 6);
     LED1.write(!LED1.read());
     HAL_Delay(500);
   }
