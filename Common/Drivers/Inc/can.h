@@ -1,7 +1,7 @@
 #ifndef CAN_H
 #define CAN_H
 
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "lock.h"
