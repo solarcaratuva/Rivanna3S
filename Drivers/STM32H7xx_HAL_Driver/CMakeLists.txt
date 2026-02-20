@@ -11,7 +11,6 @@ add_library(STM32H7xx_HAL_DRIVER STATIC ${HAL_SOURCES})
 target_include_directories(STM32H7xx_HAL_DRIVER PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc/Legacy
-    ${CMAKE_SOURCE_DIR}/Core/Inc
     ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Inc
     ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Include
     ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Include

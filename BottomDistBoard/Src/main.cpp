@@ -17,7 +17,6 @@
  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -125,9 +124,12 @@ void send_pedal_status()
 }
 
 
-extern "C" void app_main(void *argument)
+void app_main()
 {
+<<<<<<< HEAD
     (void)argument;
+=======
+>>>>>>> origin/main
 
     log_configure(INFO_LVL, LOG_TX, LOG_RX, 250000);
     log_info("Bottom Distance Board starting up...");

@@ -26,7 +26,6 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
 #include "pinmap.h"
 
 

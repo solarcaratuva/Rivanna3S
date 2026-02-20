@@ -22,7 +22,6 @@
 /*-----------------------------------------------------------------------------/
 / Additional user header to be used
 /-----------------------------------------------------------------------------*/
-#include "main.h"
 #include "stm32h7xx_hal.h"
 #include "cmsis_os.h" /* _FS_REENTRANT set to 1 and CMSIS API chosen */
 

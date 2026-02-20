@@ -176,7 +176,11 @@ typedef struct Contactor12Error : CanMessage, rivanna3_s_contactor12_error_t {
         message->id = RIVANNA3_S_CONTACTOR12_ERROR_FRAME_ID;
     }
 
+<<<<<<< HEAD
     void deserialize(SerializedCanMessage *message) {
+=======
+    void deserialize(const SerializedCanMessage *message) {
+>>>>>>> origin/main
         rivanna3_s_contactor12_error_unpack(this, message->data,
             RIVANNA3_S_CONTACTOR12_ERROR_LENGTH);
     }
