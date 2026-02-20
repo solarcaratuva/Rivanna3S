@@ -149,7 +149,9 @@ extern "C"{
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         return;
     }
+}
 
+extern "C"{
     void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
         UART* uart = UART::find_from_handle(huart);
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -165,7 +167,9 @@ extern "C"{
 
         return;
     }
+}
 
+extern "C"{
     void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
         UART* uart = UART::find_from_handle(huart);
         if (!uart) return;
@@ -202,8 +206,6 @@ extern "C"{
 
         portYIELD_FROM_ISR(woken);
     }
-
-
 }
 
 
