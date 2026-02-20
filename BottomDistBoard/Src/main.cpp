@@ -53,7 +53,7 @@ const bool PIN_OFF = false;
 #define SIGNAL_FLASH_PERIOD 500
 #define PEDAL_STATUS 100
 
-CanInterface main_can = CanInterface(CAN_TX, CAN_RX, 250000, CanNetwork::Main);
+CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
 
 Thread signal_thread;
 Thread pedal_thread;
@@ -126,10 +126,6 @@ void send_pedal_status()
 
 void app_main()
 {
-<<<<<<< HEAD
-    (void)argument;
-=======
->>>>>>> origin/main
 
     log_configure(INFO_LVL, LOG_TX, LOG_RX, 250000);
     log_info("Bottom Distance Board starting up...");

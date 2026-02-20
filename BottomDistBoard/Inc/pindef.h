@@ -9,9 +9,9 @@
 
 #define CAN_TX NC
 #define CAN_RX NC
+#define CAN_STANDBY NC
 
 #define LOG_TX NC
 #define LOG_RX NC
-
 
 
