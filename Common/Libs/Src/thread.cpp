@@ -23,4 +23,9 @@ BaseType_t Thread::start(void (*fn)()) {
             "HELPER", STACK_SIZE,
             reinterpret_cast<void*>(fn), // Pass the function pointer as parameter
             PRIORITY, &handle_);
-    }
+}
+
+static TaskHandle_t get_task_handle(){
+    return xTaskGetCurrentTaskHandle();
+}
+

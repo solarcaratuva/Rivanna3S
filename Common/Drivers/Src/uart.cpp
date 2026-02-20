@@ -5,6 +5,7 @@
 #include "peripheralmap.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "thread.h"
 
 
 extern "C" void HAL_UART_MspInit_custom(USART_TypeDef* uartHandle, Pin pin, uint8_t af);
@@ -50,7 +51,7 @@ int UART::read(uint8_t *buffer, uint16_t length){
 	if(initialized) {
         last_error = HAL_UART_ERROR_NONE;
 
-        rxTask = xTaskGetCurrentTaskHandle();
+        rxTask = Thread::get_task_handle();
 
         UART_Start_Receive_IT(huart, buffer, length);
 
@@ -66,7 +67,7 @@ int UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
 	if(initialized) {
         last_error = HAL_UART_ERROR_NONE;
 
-        rxTask = xTaskGetCurrentTaskHandle();
+        rxTask = Thread::get_task_handle();
 
         HAL_UART_Receive_IT(huart, buffer, length);
 
@@ -94,7 +95,7 @@ int UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
 int UART::write(uint8_t* buffer, uint16_t length) {
 	if(initialized) {
         last_error = HAL_UART_ERROR_NONE;
-        txTask = xTaskGetCurrentTaskHandle();
+        txTask = Thread::get_task_handle();
 
 		HAL_UART_Transmit_IT(huart, buffer, length);
 
@@ -200,9 +201,6 @@ extern "C"{
             );
             uart->txTask = nullptr;
         }
-
-        // Abort ongoing transfers (important!)
-        HAL_UART_Abort_IT(huart);
 
         portYIELD_FROM_ISR(woken);
     }

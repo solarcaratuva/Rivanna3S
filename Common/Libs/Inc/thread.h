@@ -30,6 +30,24 @@ public:
      */
     BaseType_t start(void(*fn)());
 
+    /**
+     * @brief Get the handle of the currently executing FreeRTOS task
+     * @return TaskHandle_t Handle of the calling task
+     * 
+     * Returns the FreeRTOS task handle associated with the task that
+     * invokes this function. This is a thin wrapper around the
+     * FreeRTOS API function xTaskGetCurrentTaskHandle().
+     * 
+     * This function is static and does not require a Thread instance.
+     * It can be called from any task context to obtain its own handle,
+     * which can then be used with other FreeRTOS APIs (e.g., task
+     * notifications, suspension, or deletion).
+     * 
+     * @note Must be called from a task context. Behavior is undefined
+     *       if called before the scheduler starts or from an ISR.
+     */
+    static TaskHandle_t get_task_handle();
+
 private:
     TaskHandle_t handle_;
 };
