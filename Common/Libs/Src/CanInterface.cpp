@@ -9,8 +9,9 @@ static CanInterface* main_can_interface_instance = nullptr;
 static CanInterface* motor_can_interface_instance = nullptr;
 
 
-CanInterface::CanInterface(Pin tx, Pin rx, uint32_t baudrate, CanNetwork network)
+CanInterface::CanInterface(Pin tx, Pin rx, Pin standby, uint32_t baudrate, CanNetwork network)
     : my_can(tx, rx, baudrate),
+      standby_pin(standby),
       receiverRunning(true),
       interface_thread(),
       alwayscallback(nullptr),
@@ -30,6 +31,8 @@ CanInterface::CanInterface(Pin tx, Pin rx, uint32_t baudrate, CanNetwork network
     } else {
         log_warn("CanInterface: Unknown network type, receiver thread not started");
     }
+
+    standby_pin.write(false); // ensure standby is low (transceiver enabled)
 
 }
 

@@ -6,6 +6,7 @@
 #include "can.h"        // CAN wrapper (CAN, CanMessage, SerializedCanMessage)
 #include "thread.h"
 #include "Clock.h"
+#include "DigitalOut.h"
 
 /**
  * @brief Callback function type for CAN message reception
@@ -74,12 +75,13 @@ public:
      * 
      * @param tx Transmit pin used by the CAN peripheral
      * @param rx Receive pin used by the CAN peripheral
+     * @param standby Standby pin used by the CAN peripheral
      * @param baudrate CAN bus baudrate in bits per second (e.g., 500000 for 500 kbps)
      * @param network The CAN network type this interface belongs to (default: CanNetwork::Main)
      * 
      * @note The receiver thread starts immediately upon construction
      */
-    CanInterface(Pin tx, Pin rx, uint32_t baudrate, CanNetwork network = CanNetwork::Main);
+    CanInterface(Pin tx, Pin rx, Pin standby, uint32_t baudrate, CanNetwork network = CanNetwork::Main);
 
     /**
      * @brief Transmit a CAN message on the bus
@@ -170,6 +172,7 @@ public:
 
 private:
     CAN     my_can;                              ///< Underlying CAN peripheral driver
+    DigitalOut standby_pin;                      ///< Standby pin for controlling CAN transceiver power state
     bool    receiverRunning;                      ///< Flag to control receiver thread execution
     Thread  interface_thread;                     ///< Background thread for message reception
     Lock    callback_lock;                        ///< Mutex protecting callback arrays and registration
