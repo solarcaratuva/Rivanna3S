@@ -36,6 +36,8 @@
 #include "stm32h7xx_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 /**
  * @class UART
@@ -61,7 +63,7 @@ public:
      * @param buffer Pointer to the buffer where received data will be stored.
      * @param length Number of bytes to read.
      */
-    void read(uint8_t *buffer, uint16_t length);
+    int read(uint8_t *buffer, uint16_t length);
 
     /**
      * @brief Reads data from the UART with a timeout.
@@ -69,14 +71,46 @@ public:
      * @param length Number of bytes to read.
      * @param timeout_ms Timeout in milliseconds before aborting the read.
      */
-    void read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms);
+    int read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms);
 
     /**
      * @brief Writes data to the UART (blocking call).
      * @param buffer Pointer to the data buffer to be transmitted.
      * @param length Number of bytes to transmit.
      */
-    void write(uint8_t *buffer, uint16_t length);
+    int write(uint8_t *buffer, uint16_t length);
+
+
+    /**
+     * @brief Retrieves the UART object associated with a HAL UART handle.
+     *
+     * This static function maps a HAL-provided UART handle
+     * (`UART_HandleTypeDef*`) back to the corresponding C++ `UART`
+     * instance that owns it.
+     *
+     * It is primarily used inside HAL interrupt callback functions
+     * (e.g., `HAL_UART_TxCpltCallback`, `HAL_UART_RxCpltCallback`)
+     * where only the HAL handle is available. This allows the callback
+     * to access instance-specific state such as task handles,
+     * configuration data, or internal buffers.
+     *
+     * Internally, the function searches a static lookup table that
+     * associates each initialized UART peripheral with its
+     * corresponding `UART` object.
+     *
+     * @param huart Pointer to the HAL UART handle provided by the
+     *              STM32 HAL interrupt or driver layer.
+     * @return Pointer to the corresponding `UART` object if found,
+     *         or nullptr if the handle is not registered.
+     *
+     * @note This function is ISR-safe provided that the internal
+     *       lookup table is only modified during initialization.
+     */
+    static UART* find_from_handle(UART_HandleTypeDef* huart);
+
+    TaskHandle_t txTask = nullptr; /**< TX direct to task handle. */
+    TaskHandle_t rxTask = nullptr; /**< RX direct to task handle. */
+    volatile uint32_t last_error = HAL_UART_ERROR_NONE; /*Last error code of the UART*/
 
 private:
     UART_HandleTypeDef* huart;   /**< HAL UART handle used for configuration and I/O. */
@@ -97,10 +131,12 @@ private:
      */
     UART_Peripheral* find_uart_pins(Pin tx, Pin rx);
 
+
     Pin tx_;                     /**< TX pin object. */
     Pin rx_;                     /**< RX pin object. */
     uint32_t baud_;              /**< UART baud rate. */
     UART_Peripheral* uart_periph; /**< Pointer to matched UART peripheral. */
+    
 };
 
 #endif // UART_H

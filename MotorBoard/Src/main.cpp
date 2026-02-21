@@ -44,47 +44,26 @@
 void app_main()
 {
 
+
   /* USER CODE BEGIN Init */
-  log_configure(WARN_LVL, PD_8, PD_9, 921600);
+  log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
   /* USER CODE END Init */
 
-
-  //black is rx purple is tx
-  //LED1.write(true);
   DigitalOut LED1(PB_0);
-    LED1.write(false);
 
+  UART test(PF_7, PF_6, 115200);
+  char data[6];
 
-  CAN can(PB_9, PB_8, 250000);
-  SerializedCanMessage msg;
-  BpsStatus message;
+  log_debug("%s", "BEGIN UART TEST");
+  while (1)
+  {
+    LED1.write(!LED1.read());
+    log_debug("%s","Waiting to recieve msg\n");
+    test.read((uint8_t *) data, 6);
+    log_debug("%s","Message recieved: \n");
+    test.write((uint8_t *) data, 6);
 
-  message.pack_soc = 60;
- 
-  message.serialize(&msg);
-  while (1) {
-    can.write(msg);
-    HAL_Delay(100);
+    
   }
 
-  
-  //code to read
-  // while (1){
-  //   can.read(&msg);
-  //   //can.write(msg);
-  //   DashboardCommands dashboard_msg;
-  //   dashboard_msg.deserialize(&msg);
-  //   dashboard_msg.log_msg(WARN_LVL);
-  //   HAL_Delay(100);
-  // }
-  
-  // log_debug("Received Dashboard Commands CAN Message: left_turn_signal=%u, right_turn_signal=%u", dashboard_msg.left_turn_signal, dashboard_msg.right_turn_signal);
-  LED1.write(true);
-
-  // while (1)
-  // {
-  //   log_debug("%s","HERE");
-  //   HAL_Delay(1000);
-  //   LED1.write(!LED1.read());
-  // }
 }

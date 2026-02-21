@@ -33,7 +33,7 @@ def get_args():
     return parser.parse_args()
 
 def copy_file_to_windows(wsl_path: str) -> None:
-    path = "/" + os.path.join("mnt", "c", "Windows", "Temp", "firmware.bin")
+    path = "/" + os.path.join("mnt", "c", "Windows", "Temp", "firmware.elf")
     shutil.copy(wsl_path, path)
 
 def is_wsl() -> bool:
@@ -68,7 +68,7 @@ def main() -> None:
             else:  # actually WSL in Windows
                 copy_file_to_windows(BOARD_MAP[board])
                 cmd_erase = f"powershell.exe \"& '{EXE_PATH}' {CMD_ARGS_ERASE}\""
-                firmware_path = "C:\\Windows\\Temp\\firmware.bin"
+                firmware_path = "C:\\Windows\\Temp\\firmware.elf"
                 cmd_flash = f"powershell.exe \"& '{EXE_PATH}' {CMD_ARGS_FLASH.format(firmware_path)}\""
         case "Darwin":  # Mac:
             path = BOARD_MAP[board]
