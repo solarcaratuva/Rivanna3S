@@ -25,7 +25,7 @@ BaseType_t Thread::start(void (*fn)()) {
             PRIORITY, &handle_);
 }
 
-static TaskHandle_t get_task_handle(){
+TaskHandle_t Thread::get_task_handle(){
     return xTaskGetCurrentTaskHandle();
 }
 
