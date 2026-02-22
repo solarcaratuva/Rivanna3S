@@ -19,6 +19,7 @@ public:
   void disconnect();
   std::string readRawLine();
   bool parseVNINS(const std::string &line, VNData &data);
+  bool pollOnce(VNData &data, int timeout_ms = 2000);
 
 private:
   int fd;

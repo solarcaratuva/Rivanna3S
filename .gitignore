@@ -12,3 +12,4 @@ Drivers/code_generation/pinmap.h
 Drivers/code_generation/pycache
 Drivers/code_generation/input
 build
+.cache

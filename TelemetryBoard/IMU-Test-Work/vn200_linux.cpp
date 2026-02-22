@@ -91,3 +91,17 @@ bool VN200::parseVNINS(const std::string &line, VNData &data) {
     return false;
   }
 }
+
+bool VN200::pollOnce(VNData &data, int timeout_ms) {
+  int elapsed = 0;
+  const int interval = 1000; // 1 ms in microseconds
+
+  while (elapsed < timeout_ms * 1000) {
+    std::string line = readRawLine();
+    if (!line.empty() && parseVNINS(line, data))
+      return true;
+    usleep(interval);
+    elapsed += interval;
+  }
+  return false;
+}
