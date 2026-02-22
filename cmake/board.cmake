@@ -26,6 +26,9 @@ set(BOARD_INCLUDE_DIRS
   ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Include
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
+    ${CMAKE_SOURCE_DIR}/FATFS/App
+    ${CMAKE_SOURCE_DIR}/FATFS/Target
+    ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FatFs/src
 )
 
 set(STARTUP_S ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/startup_stm32h743zitx.s)
