@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32_hal.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -36,12 +36,15 @@ extern SPI_HandleTypeDef hspi1;
 
 extern SPI_HandleTypeDef hspi2;
 
+extern SPI_HandleTypeDef hspi3;
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
-void MX_SPI1_Init(void);
-void MX_SPI2_Init(void);
+void MX_SPI1_Init(uint32_t baudrate_prescaler);
+void MX_SPI2_Init(uint32_t baudrate_prescaler);
+void MX_SPI3_Init(uint32_t baudrate_prescaler);
 
 /* USER CODE BEGIN Prototypes */
 

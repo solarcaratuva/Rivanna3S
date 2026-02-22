@@ -1,3 +1,15 @@
+#include <stdint.h>
+static uint32_t baudrate_to_hash(uint32_t baudrate)
+{
+    switch (baudrate)
+    {
+    case 100000: return 0x00503D58;
+    case 400000: return 0x00300617;
+    case 1000000: return 0x00200105;
+    default: return 0;
+    }
+}
+
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
@@ -18,8 +30,10 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "i2c.h"
-
+#include "pinmap.h"
+#include "peripheralmap.h"
+#include "stm32_hal.h"
+ // <-- This line changed when importing
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -30,7 +44,7 @@ I2C_HandleTypeDef hi2c3;
 I2C_HandleTypeDef hi2c4;
 
 /* I2C1 init function */
-void MX_I2C1_Init(void)
+void MX_I2C1_Init(uint32_t baudrate) // <-- This line changed when importing
 {
 
   /* USER CODE BEGIN I2C1_Init 0 */
@@ -41,7 +55,7 @@ void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00503D58;
+  hi2c1.Init.Timing = baudrate_to_hash(baudrate); // <-- This line changed when importing
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -51,29 +65,33 @@ void MX_I2C1_Init(void)
   hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
   if (HAL_I2C_Init(&hi2c1) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
 
   /** Configure Analogue filter
   */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
 
   /** Configure Digital filter
   */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
+
+  /** I2C Fast mode Plus enable
+  */
+  HAL_I2CEx_EnableFastModePlus(I2C_FASTMODEPLUS_I2C1);
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
 
 }
 /* I2C2 init function */
-void MX_I2C2_Init(void)
+void MX_I2C2_Init(uint32_t baudrate) // <-- This line changed when importing
 {
 
   /* USER CODE BEGIN I2C2_Init 0 */
@@ -84,7 +102,7 @@ void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x00503D58;
+  hi2c2.Init.Timing = baudrate_to_hash(baudrate); // <-- This line changed when importing
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -94,29 +112,33 @@ void MX_I2C2_Init(void)
   hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
   if (HAL_I2C_Init(&hi2c2) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
 
   /** Configure Analogue filter
   */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
 
   /** Configure Digital filter
   */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
+
+  /** I2C Fast mode Plus enable
+  */
+  HAL_I2CEx_EnableFastModePlus(I2C_FASTMODEPLUS_I2C2);
   /* USER CODE BEGIN I2C2_Init 2 */
 
   /* USER CODE END I2C2_Init 2 */
 
 }
 /* I2C3 init function */
-void MX_I2C3_Init(void)
+void MX_I2C3_Init(uint32_t baudrate) // <-- This line changed when importing
 {
 
   /* USER CODE BEGIN I2C3_Init 0 */
@@ -127,7 +149,7 @@ void MX_I2C3_Init(void)
 
   /* USER CODE END I2C3_Init 1 */
   hi2c3.Instance = I2C3;
-  hi2c3.Init.Timing = 0x00503D58;
+  hi2c3.Init.Timing = baudrate_to_hash(baudrate); // <-- This line changed when importing
   hi2c3.Init.OwnAddress1 = 0;
   hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -137,29 +159,33 @@ void MX_I2C3_Init(void)
   hi2c3.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
   if (HAL_I2C_Init(&hi2c3) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
 
   /** Configure Analogue filter
   */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c3, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
 
   /** Configure Digital filter
   */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c3, 0) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
+
+  /** I2C Fast mode Plus enable
+  */
+  HAL_I2CEx_EnableFastModePlus(I2C_FASTMODEPLUS_I2C3);
   /* USER CODE BEGIN I2C3_Init 2 */
 
   /* USER CODE END I2C3_Init 2 */
 
 }
 /* I2C4 init function */
-void MX_I2C4_Init(void)
+void MX_I2C4_Init(uint32_t baudrate) // <-- This line changed when importing
 {
 
   /* USER CODE BEGIN I2C4_Init 0 */
@@ -170,7 +196,7 @@ void MX_I2C4_Init(void)
 
   /* USER CODE END I2C4_Init 1 */
   hi2c4.Instance = I2C4;
-  hi2c4.Init.Timing = 0x00503D58;
+  hi2c4.Init.Timing = baudrate_to_hash(baudrate); // <-- This line changed when importing
   hi2c4.Init.OwnAddress1 = 0;
   hi2c4.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c4.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -180,34 +206,38 @@ void MX_I2C4_Init(void)
   hi2c4.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
   if (HAL_I2C_Init(&hi2c4) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
 
   /** Configure Analogue filter
   */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c4, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
 
   /** Configure Digital filter
   */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c4, 0) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
+
+  /** I2C Fast mode Plus enable
+  */
+  HAL_I2CEx_EnableFastModePlus(I2C_FASTMODEPLUS_I2C4);
   /* USER CODE BEGIN I2C4_Init 2 */
 
   /* USER CODE END I2C4_Init 2 */
 
 }
 
-void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
+void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin pin, uint8_t af) // <-- This line changed when importing
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
-  if(i2cHandle->Instance==I2C1)
+  if(i2cHandle == I2C1) // <-- This line changed when importing)
   {
   /* USER CODE BEGIN I2C1_MspInit 0 */
 
@@ -219,7 +249,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
-      Error_Handler();
+      //Error_Handler(); // <-- This line changed when importing
     }
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -227,12 +257,12 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     PA13     ------> I2C1_SCL
     PA14     ------> I2C1_SDA
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14;
+    GPIO_InitStruct.Pin = pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
     /* I2C1 clock enable */
     __HAL_RCC_I2C1_CLK_ENABLE();
@@ -240,7 +270,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
 
   /* USER CODE END I2C1_MspInit 1 */
   }
-  else if(i2cHandle->Instance==I2C2)
+  else if(i2cHandle == I2C2) // <-- This line changed when importing)
   {
   /* USER CODE BEGIN I2C2_MspInit 0 */
 
@@ -252,28 +282,28 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     PeriphClkInit.I2c2ClockSelection = RCC_I2C2CLKSOURCE_PCLK1;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
-      Error_Handler();
+      //Error_Handler(); // <-- This line changed when importing
     }
 
     __HAL_RCC_GPIOF_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
     /**I2C2 GPIO Configuration
     PF0-OSC_IN     ------> I2C2_SDA
-    PC4     ------> I2C2_SCL
+    PA9     ------> I2C2_SCL
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_0;
+    GPIO_InitStruct.Pin = pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
-    HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+    GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
-    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Pin = pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
     /* I2C2 clock enable */
     __HAL_RCC_I2C2_CLK_ENABLE();
@@ -281,7 +311,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
 
   /* USER CODE END I2C2_MspInit 1 */
   }
-  else if(i2cHandle->Instance==I2C3)
+  else if(i2cHandle == I2C3) // <-- This line changed when importing)
   {
   /* USER CODE BEGIN I2C3_MspInit 0 */
 
@@ -293,7 +323,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     PeriphClkInit.I2c3ClockSelection = RCC_I2C3CLKSOURCE_PCLK1;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
-      Error_Handler();
+      //Error_Handler(); // <-- This line changed when importing
     }
 
     __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -301,12 +331,12 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     PC8     ------> I2C3_SCL
     PC9     ------> I2C3_SDA
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
+    GPIO_InitStruct.Pin = pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF8_I2C3;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
     /* I2C3 clock enable */
     __HAL_RCC_I2C3_CLK_ENABLE();
@@ -314,7 +344,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
 
   /* USER CODE END I2C3_MspInit 1 */
   }
-  else if(i2cHandle->Instance==I2C4)
+  else if(i2cHandle == I2C4) // <-- This line changed when importing)
   {
   /* USER CODE BEGIN I2C4_MspInit 0 */
 
@@ -326,7 +356,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     PeriphClkInit.I2c4ClockSelection = RCC_I2C4CLKSOURCE_PCLK1;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
-      Error_Handler();
+      //Error_Handler(); // <-- This line changed when importing
     }
 
     __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -334,12 +364,12 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
     PC6     ------> I2C4_SCL
     PC7     ------> I2C4_SDA
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+    GPIO_InitStruct.Pin = pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF8_I2C4;
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
     /* I2C4 clock enable */
     __HAL_RCC_I2C4_CLK_ENABLE();
@@ -349,91 +379,28 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef* i2cHandle)
   }
 }
 
-void HAL_I2C_MspDeInit(I2C_HandleTypeDef* i2cHandle)
-{
-
-  if(i2cHandle->Instance==I2C1)
-  {
-  /* USER CODE BEGIN I2C1_MspDeInit 0 */
-
-  /* USER CODE END I2C1_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_I2C1_CLK_DISABLE();
-
-    /**I2C1 GPIO Configuration
-    PA13     ------> I2C1_SCL
-    PA14     ------> I2C1_SDA
-    */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_13);
-
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_14);
-
-  /* USER CODE BEGIN I2C1_MspDeInit 1 */
-
-  /* USER CODE END I2C1_MspDeInit 1 */
-  }
-  else if(i2cHandle->Instance==I2C2)
-  {
-  /* USER CODE BEGIN I2C2_MspDeInit 0 */
-
-  /* USER CODE END I2C2_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_I2C2_CLK_DISABLE();
-
-    /**I2C2 GPIO Configuration
-    PF0-OSC_IN     ------> I2C2_SDA
-    PC4     ------> I2C2_SCL
-    */
-    HAL_GPIO_DeInit(GPIOF, GPIO_PIN_0);
-
-    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_4);
-
-  /* USER CODE BEGIN I2C2_MspDeInit 1 */
-
-  /* USER CODE END I2C2_MspDeInit 1 */
-  }
-  else if(i2cHandle->Instance==I2C3)
-  {
-  /* USER CODE BEGIN I2C3_MspDeInit 0 */
-
-  /* USER CODE END I2C3_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_I2C3_CLK_DISABLE();
-
-    /**I2C3 GPIO Configuration
-    PC8     ------> I2C3_SCL
-    PC9     ------> I2C3_SDA
-    */
-    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_8);
-
-    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_9);
-
-  /* USER CODE BEGIN I2C3_MspDeInit 1 */
-
-  /* USER CODE END I2C3_MspDeInit 1 */
-  }
-  else if(i2cHandle->Instance==I2C4)
-  {
-  /* USER CODE BEGIN I2C4_MspDeInit 0 */
-
-  /* USER CODE END I2C4_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_I2C4_CLK_DISABLE();
-
-    /**I2C4 GPIO Configuration
-    PC6     ------> I2C4_SCL
-    PC7     ------> I2C4_SDA
-    */
-    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_6);
-
-    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_7);
-
-  /* USER CODE BEGIN I2C4_MspDeInit 1 */
-
-  /* USER CODE END I2C4_MspDeInit 1 */
-  }
-}
-
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
+
+I2C_HandleTypeDef* I2C_init(I2C_TypeDef* inst, uint32_t baudrate) {
+    if (inst == I2C1) {
+        MX_I2C1_Init(baudrate);
+        return &hi2c1;
+    }
+    else if (inst == I2C2) {
+        MX_I2C2_Init(baudrate);
+        return &hi2c2;
+    }
+    else if (inst == I2C3) {
+        MX_I2C3_Init(baudrate);
+        return &hi2c3;
+    }
+    else if (inst == I2C4) {
+        MX_I2C4_Init(baudrate);
+        return &hi2c4;
+    }
+    else {
+        return NULL;
+    }
+}

@@ -97,10 +97,17 @@ int CAN::read(SerializedCanMessage *msg)
         pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
     }
 
-    // Check if the RX queue is full, meaning some messages were likely dropped
+    // Check if the RX queue is full (field name differs across STM32 families).
+#if defined(STM32G474xx)
+    if (pending > 0) {
+        // G4 HAL does not expose FIFO element count in the init struct.
+        log_warn("CAN RX pending=%lu; monitor for dropped frames", pending);
+    }
+#else
     if (pending == hfdcan->Init.RxFifo0ElmtsNbr) {
         log_warn("CAN RX FIFO0 full; messages were likely dropped");
     }
+#endif
     
     uint8_t rxData[8] = {0};
 

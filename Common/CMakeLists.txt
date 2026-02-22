@@ -37,13 +37,9 @@ target_include_directories(common PUBLIC
   ${BOARD_CMSIS_DEVICE_INC}
   ${BOARD_CMSIS_INC}
   ${CMAKE_CURRENT_SOURCE_DIR}/can_structs/Inc
-  ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Inc
-  ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc
-  ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Inc/Legacy
-  ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Device/ST/STM32H7xx/Include
-  ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Include
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/include
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
+  ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/${FREERTOS_PORT}
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
 )
 

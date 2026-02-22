@@ -13,6 +13,20 @@ set(BOARD_SETUP_DIR "${BOARD_ROOT}/${BOARD}_Setup")
 set(BOARD_SETUP_INC "${BOARD_SETUP_DIR}/Inc")
 set(BOARD_SETUP_SRC "${BOARD_SETUP_DIR}/Src")
 
+if(NOT EXISTS "${BOARD_SETUP_INC}/pinmap.h")
+  message(FATAL_ERROR
+    "Missing ${BOARD_SETUP_INC}/pinmap.h for BOARD=${BOARD}. "
+    "Generate/import board pinmap files before building this target."
+  )
+endif()
+
+if(NOT EXISTS "${BOARD_SETUP_SRC}/peripheralmap.cpp")
+  message(FATAL_ERROR
+    "Missing ${BOARD_SETUP_SRC}/peripheralmap.cpp for BOARD=${BOARD}. "
+    "Generate/import board peripheral map files before building this target."
+  )
+endif()
+
 file(GLOB BOARD_STARTUP_CANDIDATES "${BOARD_SETUP_SRC}/startup_*.s")
 list(LENGTH BOARD_STARTUP_CANDIDATES BOARD_STARTUP_COUNT)
 if(NOT BOARD_STARTUP_COUNT EQUAL 1)

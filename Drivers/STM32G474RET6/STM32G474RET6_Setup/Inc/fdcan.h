@@ -26,7 +26,8 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32_hal.h"
+#include "pinmap.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -42,11 +43,13 @@ extern FDCAN_HandleTypeDef hfdcan3;
 
 /* USER CODE END Private defines */
 
-void MX_FDCAN1_Init(void);
-void MX_FDCAN2_Init(void);
-void MX_FDCAN3_Init(void);
+void MX_FDCAN1_Init(uint32_t baudrate);
+void MX_FDCAN2_Init(uint32_t baudrate);
+void MX_FDCAN3_Init(uint32_t baudrate);
 
 /* USER CODE BEGIN Prototypes */
+FDCAN_HandleTypeDef *FDCAN_init(FDCAN_GlobalTypeDef *hadc, uint32_t baudrate);
+void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t af);
 
 /* USER CODE END Prototypes */
 

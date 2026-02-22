@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32_hal.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -44,10 +44,10 @@ extern I2C_HandleTypeDef hi2c4;
 
 /* USER CODE END Private defines */
 
-void MX_I2C1_Init(void);
-void MX_I2C2_Init(void);
-void MX_I2C3_Init(void);
-void MX_I2C4_Init(void);
+void MX_I2C1_Init(uint32_t baudrate);
+void MX_I2C2_Init(uint32_t baudrate);
+void MX_I2C3_Init(uint32_t baudrate);
+void MX_I2C4_Init(uint32_t baudrate);
 
 /* USER CODE BEGIN Prototypes */
 

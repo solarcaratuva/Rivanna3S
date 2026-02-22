@@ -1,3 +1,7 @@
+#include <stdint.h>
+#include "stm32_hal.h"
+uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate);
+
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
@@ -18,8 +22,10 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include "fdcan.h"
-
+#include "pinmap.h"
+#include "peripheralmap.h"
+#include "stm32_hal.h"
+ // <-- This line changed when importing
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -29,7 +35,7 @@ FDCAN_HandleTypeDef hfdcan2;
 FDCAN_HandleTypeDef hfdcan3;
 
 /* FDCAN1 init function */
-void MX_FDCAN1_Init(void)
+void MX_FDCAN1_Init(uint32_t baudrate) // <-- This line changed when importing
 {
 
   /* USER CODE BEGIN FDCAN1_Init 0 */
@@ -46,7 +52,7 @@ void MX_FDCAN1_Init(void)
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
-  hfdcan1.Init.NominalPrescaler = 16;
+  hfdcan1.Init.NominalPrescaler = calculate_prescaler(&hfdcan1, 16000000, baudrate); // <-- This line changed when importing
   hfdcan1.Init.NominalSyncJumpWidth = 1;
   hfdcan1.Init.NominalTimeSeg1 = 1;
   hfdcan1.Init.NominalTimeSeg2 = 1;
@@ -59,7 +65,7 @@ void MX_FDCAN1_Init(void)
   hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
   if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
   /* USER CODE BEGIN FDCAN1_Init 2 */
 
@@ -67,7 +73,7 @@ void MX_FDCAN1_Init(void)
 
 }
 /* FDCAN2 init function */
-void MX_FDCAN2_Init(void)
+void MX_FDCAN2_Init(uint32_t baudrate) // <-- This line changed when importing
 {
 
   /* USER CODE BEGIN FDCAN2_Init 0 */
@@ -84,7 +90,7 @@ void MX_FDCAN2_Init(void)
   hfdcan2.Init.AutoRetransmission = DISABLE;
   hfdcan2.Init.TransmitPause = DISABLE;
   hfdcan2.Init.ProtocolException = DISABLE;
-  hfdcan2.Init.NominalPrescaler = 16;
+  hfdcan2.Init.NominalPrescaler = calculate_prescaler(&hfdcan2, 16000000, baudrate); // <-- This line changed when importing
   hfdcan2.Init.NominalSyncJumpWidth = 1;
   hfdcan2.Init.NominalTimeSeg1 = 1;
   hfdcan2.Init.NominalTimeSeg2 = 1;
@@ -97,7 +103,7 @@ void MX_FDCAN2_Init(void)
   hfdcan2.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
   if (HAL_FDCAN_Init(&hfdcan2) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
   /* USER CODE BEGIN FDCAN2_Init 2 */
 
@@ -105,7 +111,7 @@ void MX_FDCAN2_Init(void)
 
 }
 /* FDCAN3 init function */
-void MX_FDCAN3_Init(void)
+void MX_FDCAN3_Init(uint32_t baudrate) // <-- This line changed when importing
 {
 
   /* USER CODE BEGIN FDCAN3_Init 0 */
@@ -122,7 +128,7 @@ void MX_FDCAN3_Init(void)
   hfdcan3.Init.AutoRetransmission = DISABLE;
   hfdcan3.Init.TransmitPause = DISABLE;
   hfdcan3.Init.ProtocolException = DISABLE;
-  hfdcan3.Init.NominalPrescaler = 16;
+  hfdcan3.Init.NominalPrescaler = calculate_prescaler(&hfdcan3, 16000000, baudrate); // <-- This line changed when importing
   hfdcan3.Init.NominalSyncJumpWidth = 1;
   hfdcan3.Init.NominalTimeSeg1 = 1;
   hfdcan3.Init.NominalTimeSeg2 = 1;
@@ -135,7 +141,7 @@ void MX_FDCAN3_Init(void)
   hfdcan3.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
   if (HAL_FDCAN_Init(&hfdcan3) != HAL_OK)
   {
-    Error_Handler();
+    //Error_Handler(); // <-- This line changed when importing
   }
   /* USER CODE BEGIN FDCAN3_Init 2 */
 
@@ -145,12 +151,12 @@ void MX_FDCAN3_Init(void)
 
 static uint32_t HAL_RCC_FDCAN_CLK_ENABLED=0;
 
-void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
+void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t af) // <-- This line changed when importing
 {
 
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
-  if(fdcanHandle->Instance==FDCAN1)
+  if(fdcanHandle == FDCAN1) // <-- This line changed when importing)
   {
   /* USER CODE BEGIN FDCAN1_MspInit 0 */
 
@@ -162,7 +168,7 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
     PeriphClkInit.FdcanClockSelection = RCC_FDCANCLKSOURCE_PCLK1;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
-      Error_Handler();
+      //Error_Handler(); // <-- This line changed when importing
     }
 
     /* FDCAN1 clock enable */
@@ -176,18 +182,18 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
     PA11     ------> FDCAN1_RX
     PA12     ------> FDCAN1_TX
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_11|GPIO_PIN_12;
+    GPIO_InitStruct.Pin = pin.block_mask | pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN1;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
   /* USER CODE BEGIN FDCAN1_MspInit 1 */
 
   /* USER CODE END FDCAN1_MspInit 1 */
   }
-  else if(fdcanHandle->Instance==FDCAN2)
+  else if(fdcanHandle == FDCAN2) // <-- This line changed when importing)
   {
   /* USER CODE BEGIN FDCAN2_MspInit 0 */
 
@@ -199,7 +205,7 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
     PeriphClkInit.FdcanClockSelection = RCC_FDCANCLKSOURCE_PCLK1;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
-      Error_Handler();
+      //Error_Handler(); // <-- This line changed when importing
     }
 
     /* FDCAN2 clock enable */
@@ -210,21 +216,21 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
 
     __HAL_RCC_GPIOB_CLK_ENABLE();
     /**FDCAN2 GPIO Configuration
-    PB5     ------> FDCAN2_RX
-    PB6     ------> FDCAN2_TX
+    PB12     ------> FDCAN2_RX
+    PB13     ------> FDCAN2_TX
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_6;
+    GPIO_InitStruct.Pin = pin.block_mask | pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN2;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
   /* USER CODE BEGIN FDCAN2_MspInit 1 */
 
   /* USER CODE END FDCAN2_MspInit 1 */
   }
-  else if(fdcanHandle->Instance==FDCAN3)
+  else if(fdcanHandle == FDCAN3) // <-- This line changed when importing)
   {
   /* USER CODE BEGIN FDCAN3_MspInit 0 */
 
@@ -236,7 +242,7 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
     PeriphClkInit.FdcanClockSelection = RCC_FDCANCLKSOURCE_PCLK1;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
-      Error_Handler();
+      //Error_Handler(); // <-- This line changed when importing
     }
 
     /* FDCAN3 clock enable */
@@ -246,24 +252,16 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
     }
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
     /**FDCAN3 GPIO Configuration
+    PA8     ------> FDCAN3_RX
     PA15     ------> FDCAN3_TX
-    PB3     ------> FDCAN3_RX
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_15;
+    GPIO_InitStruct.Pin = pin.block_mask | pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF11_FDCAN3;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-    GPIO_InitStruct.Pin = GPIO_PIN_3;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF11_FDCAN3;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
   /* USER CODE BEGIN FDCAN3_MspInit 1 */
 
@@ -271,76 +269,31 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
   }
 }
 
-void HAL_FDCAN_MspDeInit(FDCAN_HandleTypeDef* fdcanHandle)
-{
-
-  if(fdcanHandle->Instance==FDCAN1)
-  {
-  /* USER CODE BEGIN FDCAN1_MspDeInit 0 */
-
-  /* USER CODE END FDCAN1_MspDeInit 0 */
-    /* Peripheral clock disable */
-    HAL_RCC_FDCAN_CLK_ENABLED--;
-    if(HAL_RCC_FDCAN_CLK_ENABLED==0){
-      __HAL_RCC_FDCAN_CLK_DISABLE();
-    }
-
-    /**FDCAN1 GPIO Configuration
-    PA11     ------> FDCAN1_RX
-    PA12     ------> FDCAN1_TX
-    */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_11|GPIO_PIN_12);
-
-  /* USER CODE BEGIN FDCAN1_MspDeInit 1 */
-
-  /* USER CODE END FDCAN1_MspDeInit 1 */
-  }
-  else if(fdcanHandle->Instance==FDCAN2)
-  {
-  /* USER CODE BEGIN FDCAN2_MspDeInit 0 */
-
-  /* USER CODE END FDCAN2_MspDeInit 0 */
-    /* Peripheral clock disable */
-    HAL_RCC_FDCAN_CLK_ENABLED--;
-    if(HAL_RCC_FDCAN_CLK_ENABLED==0){
-      __HAL_RCC_FDCAN_CLK_DISABLE();
-    }
-
-    /**FDCAN2 GPIO Configuration
-    PB5     ------> FDCAN2_RX
-    PB6     ------> FDCAN2_TX
-    */
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_5|GPIO_PIN_6);
-
-  /* USER CODE BEGIN FDCAN2_MspDeInit 1 */
-
-  /* USER CODE END FDCAN2_MspDeInit 1 */
-  }
-  else if(fdcanHandle->Instance==FDCAN3)
-  {
-  /* USER CODE BEGIN FDCAN3_MspDeInit 0 */
-
-  /* USER CODE END FDCAN3_MspDeInit 0 */
-    /* Peripheral clock disable */
-    HAL_RCC_FDCAN_CLK_ENABLED--;
-    if(HAL_RCC_FDCAN_CLK_ENABLED==0){
-      __HAL_RCC_FDCAN_CLK_DISABLE();
-    }
-
-    /**FDCAN3 GPIO Configuration
-    PA15     ------> FDCAN3_TX
-    PB3     ------> FDCAN3_RX
-    */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_15);
-
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_3);
-
-  /* USER CODE BEGIN FDCAN3_MspDeInit 1 */
-
-  /* USER CODE END FDCAN3_MspDeInit 1 */
-  }
-}
-
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
+
+FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* inst, uint32_t baudrate) {
+    if (inst == FDCAN1) {
+        MX_FDCAN1_Init(baudrate);
+        return &hfdcan1;
+    }
+    else if (inst == FDCAN2) {
+        MX_FDCAN2_Init(baudrate);
+        return &hfdcan2;
+    }
+    else if (inst == FDCAN3) {
+        MX_FDCAN3_Init(baudrate);
+        return &hfdcan3;
+    }
+    else {
+        return NULL;
+    }
+}
+
+
+uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate) {
+    uint32_t time_quanta = 1 + hfdcan->Init.NominalTimeSeg1 + hfdcan->Init.NominalTimeSeg2;
+    return peripheral_clock / (baudrate * time_quanta);
+}
+    

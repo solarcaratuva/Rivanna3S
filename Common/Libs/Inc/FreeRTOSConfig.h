@@ -60,7 +60,7 @@
   #elif defined(STM32U5A9xx)
     #define CMSIS_device_header "stm32u5xx.h"
   #else
-    #define CMSIS_device_header "stm32h7xx.h"
+    #error "Unknown STM32 device define. Expected STM32H743xx, STM32G474xx, or STM32U5A9xx."
   #endif
 #endif /* CMSIS_device_header */
 

@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32_hal.h"
 #include "stm32g4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -138,6 +138,7 @@ void UsageFault_Handler(void)
   }
 }
 
+/* FreeRTOS provides SVC_Handler from the selected port layer. */
 
 /**
   * @brief This function handles Debug monitor.
@@ -152,6 +153,9 @@ void DebugMon_Handler(void)
   /* USER CODE END DebugMonitor_IRQn 1 */
 }
 
+/* FreeRTOS provides PendSV_Handler from the selected port layer. */
+
+/* CMSIS-RTOS layer provides SysTick_Handler. */
 
 /******************************************************************************/
 /* STM32G4xx Peripheral Interrupt Handlers                                    */

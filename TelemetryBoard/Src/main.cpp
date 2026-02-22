@@ -43,18 +43,18 @@ void app_main()
 
   /* USER CODE BEGIN Init */
 #if defined(STM32G474xx)
-  log_configure(DEBUG_LVL, PA_2, PA_3, 921600);
+  log_configure(DEBUG_LVL, PC_12, PD_2, 921600);
 #else
   log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
 #endif
   /* USER CODE END Init */
 
-  DigitalOut LED1(PB_0);
+// []  DigitalOut LED1(PB_0);
 
   while (1)
   {
     log_debug("%s","HERE");
     HAL_Delay(1000);
-    LED1.write(!LED1.read());
+    //LED1.write(!LED1.read());
   }
 }

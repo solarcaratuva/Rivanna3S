@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "stm32_hal.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -48,12 +48,12 @@ extern UART_HandleTypeDef huart3;
 
 /* USER CODE END Private defines */
 
-void MX_LPUART1_UART_Init(void);
-void MX_UART4_Init(void);
-void MX_UART5_Init(void);
-void MX_USART1_UART_Init(void);
-void MX_USART2_UART_Init(void);
-void MX_USART3_UART_Init(void);
+void MX_LPUART1_UART_Init(uint32_t baudrate);
+void MX_UART4_Init(uint32_t baudrate);
+void MX_UART5_Init(uint32_t baudrate);
+void MX_USART1_UART_Init(uint32_t baudrate);
+void MX_USART2_UART_Init(uint32_t baudrate);
+void MX_USART3_UART_Init(uint32_t baudrate);
 
 /* USER CODE BEGIN Prototypes */
 
