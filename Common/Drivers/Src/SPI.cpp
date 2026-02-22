@@ -4,7 +4,7 @@
 #include "peripheralmap.h"
 #include "log.h"
 
-extern "C" SPI_HandleTypeDef* SPI_init(SPI_TypeDef* spi_instance, uint32_t baudrate_prescaler);
+extern "C" SPI_HandleTypeDef* SPI_init(SPI_TypeDef* spi_instance, uint32_t baudrate);
 extern "C" void HAL_SPI_MspInit_custom(SPI_TypeDef* spi_instance, Pin pin, uint8_t af);
 
 
@@ -12,6 +12,7 @@ SPI::SPI(Pin mosi, Pin miso, Pin sck, uint32_t baudrate) {
     spi_periph = findSPIPins(mosi, miso, sck);
     if(spi_periph == nullptr) {
         initialized = false;
+        log_warn("SPI init failed: no matching peripheral for MOSI/MISO/SCK pins");
         return;
     }
     spi_periph->mosi_used = mosi;
@@ -35,24 +36,51 @@ SPI::SPI(Pin mosi, Pin miso, Pin sck, uint32_t baudrate) {
 }
 
 int SPI::write(uint8_t *tx_buffer, uint16_t length) {
-    if(initialized != 0) {
-       HAL_SPI_StateTypeDef state = HAL_SPI_GetState(hspi);
-       log_debug("SPI state before TX: %d", state);
-       uint32_t hal_status = HAL_SPI_Transmit(hspi, tx_buffer, length, HAL_MAX_DELAY);
-       log_debug("error %x", hal_status);
+    if(!initialized) {
+        log_warn("SPI write failed: SPI not initialized");
+        return 1;
     }
+
+    HAL_StatusTypeDef status = HAL_SPI_Transmit(hspi, tx_buffer, length, HAL_MAX_DELAY);
+
+    if (status != HAL_OK) {
+        log_warn("SPI write failed: status %d", status);
+        return 2;
+    }
+
+    return 0;
 }
 
 int SPI::read(uint8_t *rx_buffer, uint16_t length) {
-    if(initialized != 0) {
-        HAL_SPI_Receive(hspi, rx_buffer, length, HAL_MAX_DELAY);
+    if(!initialized) {
+        log_warn("SPI read failed: SPI not initialized");
+        return 1;
     }
+
+    HAL_StatusTypeDef status = HAL_SPI_Receive(hspi, rx_buffer, length, HAL_MAX_DELAY);
+
+    if (status != HAL_OK) {
+        log_warn("SPI read failed: status %d", status);
+        return 2;
+    }
+
+    return 0;
 }
 
 int SPI::transfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t length) {
-    if(initialized != 0) {
-        HAL_SPI_TransmitReceive(hspi, tx_buffer, rx_buffer, length, HAL_MAX_DELAY);
+    if(!initialized) {
+        log_warn("SPI transfer failed: SPI not initialized");
+        return 1;
     }
+
+    HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(hspi, tx_buffer, rx_buffer, length, HAL_MAX_DELAY);
+
+    if(status != HAL_OK) {
+        log_warn("SPI transfer failed: status %d", status);
+        return 2;
+    }
+
+    return 0;
 }
 
 SPI_Peripheral* SPI::findSPIPins(Pin mosi, Pin miso, Pin sck) {
