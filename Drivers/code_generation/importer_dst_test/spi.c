@@ -1,3 +1,5 @@
+static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_baud);
+
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
@@ -46,11 +48,11 @@ void MX_SPI1_Init(uint32_t baudrate_prescaler) // <-- This line changed when imp
   hspi1.Instance = SPI1;
   hspi1.Init.Mode = SPI_MODE_MASTER;
   hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_4BIT;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT; // <-- This line changed when importing
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.BaudRatePrescaler = spi_prescaler_from_baud(20, baudrate_prescaler); // <-- This line changed when importing
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -97,11 +99,11 @@ void MX_SPI2_Init(uint32_t baudrate_prescaler) // <-- This line changed when imp
   hspi2.Instance = SPI2;
   hspi2.Init.Mode = SPI_MODE_MASTER;
   hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi2.Init.DataSize = SPI_DATASIZE_4BIT;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT; // <-- This line changed when importing
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi2.Init.BaudRatePrescaler = spi_prescaler_from_baud(20, baudrate_prescaler); // <-- This line changed when importing
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -148,11 +150,11 @@ void MX_SPI3_Init(uint32_t baudrate_prescaler) // <-- This line changed when imp
   hspi3.Instance = SPI3;
   hspi3.Init.Mode = SPI_MODE_MASTER;
   hspi3.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi3.Init.DataSize = SPI_DATASIZE_8BIT; // <-- This line changed when importing
   hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi3.Init.NSS = SPI_NSS_SOFT;
-  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi3.Init.BaudRatePrescaler = spi_prescaler_from_baud(20, baudrate_prescaler); // <-- This line changed when importing
   hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -341,3 +343,20 @@ SPI_HandleTypeDef* SPI_init(SPI_TypeDef* inst, uint32_t baudrate_prescaler) {
         return NULL;
     }
 }
+
+
+static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_baud)
+{
+    uint32_t div = (periph_clk + target_baud - 1) / target_baud;
+
+    if (div <= 2)   return SPI_BAUDRATEPRESCALER_2;
+    if (div <= 4)   return SPI_BAUDRATEPRESCALER_4;
+    if (div <= 8)   return SPI_BAUDRATEPRESCALER_8;
+    if (div <= 16)  return SPI_BAUDRATEPRESCALER_16;
+    if (div <= 32)  return SPI_BAUDRATEPRESCALER_32;
+    if (div <= 64)  return SPI_BAUDRATEPRESCALER_64;
+    if (div <= 128) return SPI_BAUDRATEPRESCALER_128;
+
+    return SPI_BAUDRATEPRESCALER_256;
+}
+    

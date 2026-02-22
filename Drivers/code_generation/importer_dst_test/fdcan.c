@@ -48,7 +48,7 @@ void MX_FDCAN1_Init(uint32_t baudrate) // <-- This line changed when importing
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
-  hfdcan1.Init.NominalPrescaler = calculate_prescaler(hfdcan1, 4000000, baudrate); // <-- This line changed when importing
+  hfdcan1.Init.NominalPrescaler = calculate_prescaler(hfdcan1, 10000000, baudrate); // <-- This line changed when importing
   hfdcan1.Init.NominalSyncJumpWidth = 1;
   hfdcan1.Init.NominalTimeSeg1 = 1;
   hfdcan1.Init.NominalTimeSeg2 = 1;
@@ -125,8 +125,7 @@ FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* inst, uint32_t baudrate) {
 }
 
 
-uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate)
-{
+uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate) {
     uint32_t time_quanta = 1 + hfdcan->Init.NominalTimeSeg1 + hfdcan->Init.NominalTimeSeg2;
     return peripheral_clock / (baudrate * time_quanta);
 }

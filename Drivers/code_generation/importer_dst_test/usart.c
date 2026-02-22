@@ -614,7 +614,11 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
 /* USER CODE END 1 */
 
 UART_HandleTypeDef* UART_init(USART_TypeDef* inst, uint32_t baudrate) {
-    if (inst == UART4) {
+    if (inst == LPUART1) {
+        MX_LPUART1_UART_Init(baudrate);
+        return &hlpuart1;
+    }
+    else if (inst == UART4) {
         MX_UART4_Init(baudrate);
         return &huart4;
     }

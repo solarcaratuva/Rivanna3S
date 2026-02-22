@@ -1,10 +1,65 @@
-#!/usr/bin/env python3
-
 import argparse
 import re
 from pathlib import Path
 
 CHANGE_COMMENT = " // <-- This line changed when importing"
+
+I2C_HASHES: dict[int, str] = {}
+I2C_HELPER_TEXT: str = ""
+
+# i2c helpers
+def extract_i2c_timing(text: str) -> str | None:
+    m = re.search(
+        r'\.Init\.Timing\s*=\s*(0x[0-9A-Fa-f]+|\d+);',
+        text
+    )
+    return m.group(1) if m else None
+
+def collect_i2c_hashes(src_dir: Path):
+    mapping = {
+        "i2c1.c": 100000,
+        "i2c2.c": 400000,
+        "i2c.c": 1000000,
+    }
+
+    for name, baud in mapping.items():
+        path = src_dir / name
+        if not path.exists():
+            print(f'ERROR: {name} file not found, set timing register hash for the baudrate associated with this file to 0')
+            I2C_HASHES[baud] = 0
+            continue
+
+        text = path.read_text(encoding="utf-8")
+        timing = extract_i2c_timing(text)
+
+        if timing:
+            I2C_HASHES[baud] = timing
+        else:
+            print(f'ERROR: timing in {name} file not found, set timing register hash for the baudrate associated with this file to 0')
+            I2C_HASHES[baud] = 0
+
+def generate_i2c_helper() -> str:
+    if not I2C_HASHES:
+        return ""
+
+    lines = [
+        "static uint32_t baudrate_to_hash(uint32_t baudrate)",
+        "{",
+        "    switch (baudrate)",
+        "    {",
+    ]
+
+    for baud in sorted(I2C_HASHES):
+        lines.append(f"    case {baud}: return {I2C_HASHES[baud]};")
+
+    lines += [
+        "    default: return 0;",
+        "    }",
+        "}",
+        "",
+    ]
+
+    return "\n".join(lines)
 
 # helpers
 
@@ -82,18 +137,23 @@ def insert_dispatcher(
         n = num_match.group(1)
 
         # Determine peripheral instance
+        matched_prefix = None
         instance = None
         for p in instance_prefixes:
             if base.startswith(p):
                 instance = f"{p}{n}"
+                matched_prefix = p
                 break
+
         if instance is None:
             continue
 
-        if p == "USART":
+        if matched_prefix == "USART":
             handle = f"huart{n}"
+        elif matched_prefix == "LPUART":
+            handle = f"hlpuart{n}"
         else:
-            handle = f"{handle_prefix}{p.lower()}{n}"
+            handle = f"{handle_prefix}{matched_prefix.lower()}{n}"
 
         if idx == 0:
             func += f"    if (inst == {instance}) {{\n"
@@ -223,7 +283,7 @@ def fix_usart_c(text: str) -> str:
     # insert dispatcher
     text = insert_dispatcher(
         text,
-        init_regex=r'\b(MX_(?:UART\d+|USART\d+_UART)_Init)\s*\(',
+        init_regex=r'\b(MX_(?:UART\d+|USART\d+_UART|LPUART\d+_UART)_Init)\s*\(',
         dispatcher_name="UART_init",
         handle_type="UART_HandleTypeDef",
         instance_type="USART_TypeDef",
@@ -237,7 +297,7 @@ def fix_usart_c(text: str) -> str:
 
 def fix_fdcan_c(text: str) -> str:
     # prompt user for clock
-    clock_rate = input("Enter the clock rate for fdcan: ")
+    clock_rate = int(input("Enter the clock rate for fdcan (in MHz): ")) * 1000000 # converts MHz to Hz
 
     # fix fdcan init signature
     text = regex_replace_all(
@@ -293,8 +353,7 @@ def fix_fdcan_c(text: str) -> str:
 
     # insert calculate prescaler function
     func = """
-uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate)
-{
+uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate) {
     uint32_t time_quanta = 1 + hfdcan->Init.NominalTimeSeg1 + hfdcan->Init.NominalTimeSeg2;
     return peripheral_clock / (baudrate * time_quanta);
 }
@@ -305,6 +364,9 @@ uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_cl
     return text
 
 def fix_spi_c(text: str) -> str:
+    # prompt user for clock
+    baudrate = input("Enter the baud rate for spi when prescaler is 2: ")
+    clock_rate = int(baudrate) * 2
     # fix fdcan init signature
     text = regex_replace_all(
         text,
@@ -312,11 +374,18 @@ def fix_spi_c(text: str) -> str:
         r'void \1(uint32_t baudrate_prescaler)'
     )
 
+    # make datasize 8 bits
+    text = regex_replace_all(
+        text,
+        r'\.Init\.DataSize\s*=\s*SPI_DATASIZE_\d+BIT;',
+        rf'.Init.DataSize = SPI_DATASIZE_8BIT;'
+    )
+
     # replace .Init.NominalPrescaler = <any>;
     text = regex_replace_all(
         text,
-        r'\.Init\.BaudRatePrescaler\s*=\s*\d+;',
-        r'.Init.BaudRatePrescaler = baudrate_prescaler;'
+        r'\.Init\.BaudRatePrescaler\s*=\s*SPI_BAUDRATEPRESCALER_\d+;',
+        rf'.Init.BaudRatePrescaler = spi_prescaler_from_baud({clock_rate}, baudrate_prescaler);'
     )
 
     # replace fdcan_MspInit
@@ -340,7 +409,6 @@ def fix_spi_c(text: str) -> str:
         r'\1pin.block_mask;'
     )
 
-
     # remove HAL_FDCAN_MspDeInit
     text = remove_function_by_name(text, "HAL_SPI_MspDeInit")
 
@@ -357,6 +425,25 @@ def fix_spi_c(text: str) -> str:
         init_call_args="baudrate_prescaler",
     )
 
+    func = """
+static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_baud)
+{
+    uint32_t div = (periph_clk + target_baud - 1) / target_baud;
+
+    if (div <= 2)   return SPI_BAUDRATEPRESCALER_2;
+    if (div <= 4)   return SPI_BAUDRATEPRESCALER_4;
+    if (div <= 8)   return SPI_BAUDRATEPRESCALER_8;
+    if (div <= 16)  return SPI_BAUDRATEPRESCALER_16;
+    if (div <= 32)  return SPI_BAUDRATEPRESCALER_32;
+    if (div <= 64)  return SPI_BAUDRATEPRESCALER_64;
+    if (div <= 128) return SPI_BAUDRATEPRESCALER_128;
+
+    return SPI_BAUDRATEPRESCALER_256;
+}
+    """
+    decl = "static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_baud);\n"
+    text = decl + "\n" + text.rstrip() + "\n\n" + func
+
     return text
 
 def fix_i2c_c(text: str) -> str:
@@ -364,24 +451,24 @@ def fix_i2c_c(text: str) -> str:
     text = regex_replace_all(
         text,
         r'void\s+(MX_.*_Init)\s*\(\s*void\s*\)',
-        r'void \1(uint32_t timing)'
+        r'void \1(uint32_t baudrate)'
     )
 
-    # replace .Init.Timing; (Placeholder for now)
+    # replace timing assignment
     text = regex_replace_all(
         text,
         r'\.Init\.Timing\s*=\s*(?:\d+|0x[0-9A-Fa-f]+);',
-        r'.Init.Timing = timing;'
+        r'.Init.Timing = baudrate_to_hash(baudrate);'
     )
 
     # replace fdcan_MspInit
     text = regex_replace_once(
         text,
         r'void\s+HAL_I2C_MspInit\s*\(\s*I2C_HandleTypeDef\s*\*\s*i2cHandle\s*\)',
-        'void HAL_SPI_MspInit_custom(I2C_TypeDef* i2cHandle, Pin pin, uint8_t af)'
+        'void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin pin, uint8_t af)'
     )
 
-    # replace spi->Instance -> spi
+    # replace i2cHandle->Instance
     text = regex_replace_all(
         text,
         r'i2cHandle\s*->\s*Instance\s*==\s*([A-Za-z_]\w*\d+)',
@@ -407,9 +494,12 @@ def fix_i2c_c(text: str) -> str:
         instance_type="I2C_TypeDef",
         instance_prefixes=("I2C",),
         handle_prefix="h",
-        init_params="uint32_t timing",
-        init_call_args="timing",
-    ) 
+        init_params="uint32_t baudrate",
+        init_call_args="baudrate",
+    )
+
+    # add helper at top of i2c.c
+    text = I2C_HELPER_TEXT + "\n" + text
 
     return text
 
@@ -460,9 +550,10 @@ def process_file(src: Path, dst: Path):
     fixer = FIXERS.get(src.name)
     if fixer:
         text = fixer(text)
-
-    dst.write_text(text, encoding="utf-8")
-
+        dst.write_text(text, encoding="utf-8")
+        return 0
+    
+    return 1
 
 def main():
     parser = argparse.ArgumentParser()
@@ -478,12 +569,24 @@ def main():
 
     dst.mkdir(parents=True, exist_ok=True)
 
+    print(
+        "For i2c, make sure you have 3 variants of i2c, with baudrates set to "
+        "100000, 400000, and 1000000.\n"
+        "Name them i2c1.c, i2c2.c, and i2c.c respectively.\n"
+        "Only i2c.c will be imported.\n"
+        "Note that only the first i2c peripheral in each file need to be set to the baudrate!\n"
+    )
+
+    collect_i2c_hashes(src)
+
+    global I2C_HELPER_TEXT
+    I2C_HELPER_TEXT = generate_i2c_helper()
+
     for file in src.iterdir():
         if file.is_file():
             out = dst / file.name
-            process_file(file, out)
-            print(f"Imported {file.name} -> {out}")
-
+            if (not process_file(file, out)):
+                print(f"Imported {file.name} -> {out}")
 
 if __name__ == "__main__":
     main()
