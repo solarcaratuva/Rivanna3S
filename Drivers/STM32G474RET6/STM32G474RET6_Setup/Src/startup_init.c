@@ -1,4 +1,14 @@
 #include "stm32_hal.h"
+#include "fdcan.h"
+#include "gpio.h"
+#include "i2c.h"
+#include "spi.h"
+#include "usart.h"
+
+#define STARTUP_SPI_BAUD_MHZ 1U
+#define STARTUP_I2C_BAUD_HZ 100000U
+#define STARTUP_FDCAN_BAUD_HZ 500000U
+#define STARTUP_UART_BAUD_HZ 115200U
 
 void SystemClock_Config(void);
 void Error_Handler(void);
@@ -7,6 +17,23 @@ void startup_init(void)
 {
   HAL_Init();
   SystemClock_Config();
+  MX_GPIO_Init();
+  MX_SPI1_Init(STARTUP_SPI_BAUD_MHZ);
+  MX_SPI2_Init(STARTUP_SPI_BAUD_MHZ);
+  MX_SPI3_Init(STARTUP_SPI_BAUD_MHZ);
+  MX_FDCAN1_Init(STARTUP_FDCAN_BAUD_HZ);
+  MX_FDCAN2_Init(STARTUP_FDCAN_BAUD_HZ);
+  MX_FDCAN3_Init(STARTUP_FDCAN_BAUD_HZ);
+  MX_I2C1_Init(STARTUP_I2C_BAUD_HZ);
+  MX_I2C2_Init(STARTUP_I2C_BAUD_HZ);
+  MX_I2C3_Init(STARTUP_I2C_BAUD_HZ);
+  MX_I2C4_Init(STARTUP_I2C_BAUD_HZ);
+  MX_LPUART1_UART_Init(STARTUP_UART_BAUD_HZ);
+  MX_UART4_Init(STARTUP_UART_BAUD_HZ);
+  MX_UART5_Init(STARTUP_UART_BAUD_HZ);
+  MX_USART1_UART_Init(STARTUP_UART_BAUD_HZ);
+  MX_USART2_UART_Init(STARTUP_UART_BAUD_HZ);
+  MX_USART3_UART_Init(STARTUP_UART_BAUD_HZ);
 }
 
 void SystemClock_Config(void)
