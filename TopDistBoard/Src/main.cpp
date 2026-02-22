@@ -38,6 +38,8 @@
 #include "lock.h"
 #include "log.h"
 
+extern void uartcobs_emit_py_tests();
+
 void app_main()
 {
 
@@ -49,11 +51,14 @@ void app_main()
 #endif
   /* USER CODE END Init */
 
+  log_debug("About to call emit py tests");
+  // uartcobs_emit_py_tests(); FROM JUST TESTING the encode/decode functions
+
   DigitalOut LED1(PB_0);
 
   while (1)
   {
-    log_debug("%s","HERE");
+    log_debug("%s","HERE2");
     HAL_Delay(1000);
     LED1.write(!LED1.read());
   }
