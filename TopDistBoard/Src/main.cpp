@@ -34,8 +34,7 @@
 
 DigitalOut left_turn_signal(LEFT_TURN_EN);
 DigitalOut right_turn_signal(RIGHT_TURN_EN);
-DigitalOut hazard_signal(HAZARD_EN);
-DigitalOut bps_strobe(STROBE_EN);
+DigitalOut bps_strobe(BMS_STROBE_EN);
 DigitalOut brake_light(BRAKE_EN);
 
 bool flashLeftTurnSignal = false;
@@ -44,6 +43,7 @@ bool flashHazards = false;
 bool has_faulted = false; // true if there is any fault that locks the car until reset
 bool brake_from_pedal = false;
 bool brake_from_motor = false;
+bool bms_strobe_on = false;
 
 const bool PIN_ON = true;
 const bool PIN_OFF = false;
@@ -97,7 +97,7 @@ void handle_motor_commands(SerializedCanMessage &msg)
         has_faulted = true;
         log_fault("BPS fault detected!");
     }
-    bps_strobe.write(status.has_active_fault() ? PIN_ON : PIN_OFF);
+    bms_strobe_on = (status.has_active_fault() ? PIN_ON : PIN_OFF);
 }
 
 // listen for all faults to set hazards
@@ -131,32 +131,29 @@ void signal_flash_handler()
 {
     Clock signal_flash_clock;
     
-    while (1) {
+     while (true) {
+        if (bms_strobe_on) {
+            bps_strobe.write(!bps_strobe.read());
+        } else {
+            bps_strobe.write(PIN_OFF);
+        }
         if (flashHazards || has_faulted) {
             left_turn_signal.write(!left_turn_signal.read());
             right_turn_signal.write(left_turn_signal.read());
-            hazard_signal.write(left_turn_signal.read());
         } else if (flashLeftTurnSignal) {
             left_turn_signal.write(!left_turn_signal.read());
             right_turn_signal.write(PIN_OFF);
-            hazard_signal.write(PIN_OFF);
         } else if (flashRightTurnSignal) {
             right_turn_signal.write(!right_turn_signal.read());
             left_turn_signal.write(PIN_OFF);
-            hazard_signal.write(PIN_OFF);
         } else {
             left_turn_signal.write(PIN_OFF);
             right_turn_signal.write(PIN_OFF);
-            hazard_signal.write(PIN_OFF);
         }
 
         signal_flash_clock.sleep_since(SIGNAL_FLASH_PERIOD);
     }
 }
-
-
-
-
 
 void app_main()
 {

@@ -18,9 +18,9 @@
 #define MAIN_CAN_STBY   PA_10
 #define MAIN_CAN_RX     PA_11
 #define MAIN_CAN_TX     PA_12
-#define SWDIO           PA_13
-#define SWCLK           PA_14
-#define JTDI            PA_15
+// #define SWDIO           PA_13
+// #define SWCLK           PA_14
+// #define JTDI            PA_15
 #define USB_TX          PC_10
 #define USB_RX          PC_11
 #define GPS_TX          PC_12
@@ -32,15 +32,15 @@
 #define DEBUG_LED_2     PB_9
 #define BRAKE_PRESSURE  PC_4
 
-// caused by having to include features/components in custom targets
-#undef MBED_CONF_SD_SPI_MOSI
-#undef MBED_CONF_SD_SPI_MISO
-#undef MBED_CONF_SD_SPI_CLK
-#undef MBED_CONF_SD_SPI_CS
+// // caused by having to include features/components in custom targets
+// #undef MBED_CONF_SD_SPI_MOSI
+// #undef MBED_CONF_SD_SPI_MISO
+// #undef MBED_CONF_SD_SPI_CLK
+// #undef MBED_CONF_SD_SPI_CS
 
-#define MBED_CONF_SD_SPI_MOSI SPI2_MOSI
-#define MBED_CONF_SD_SPI_MISO SPI2_MISO
-#define MBED_CONF_SD_SPI_CLK  SPI2_SCK
-#define MBED_CONF_SD_SPI_CS   SD_SELECT
+// #define MBED_CONF_SD_SPI_MOSI SPI2_MOSI
+// #define MBED_CONF_SD_SPI_MISO SPI2_MISO
+// #define MBED_CONF_SD_SPI_CLK  SPI2_SCK
+// #define MBED_CONF_SD_SPI_CS   SD_SELECT
 
 #endif

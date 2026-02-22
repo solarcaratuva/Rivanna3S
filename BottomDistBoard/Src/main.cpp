@@ -37,7 +37,6 @@
 DigitalOut left_turn_signal(LEFT_TURN_EN);
 DigitalOut right_turn_signal(RIGHT_TURN_EN);
 DigitalOut drl(DRL_EN);
-DigitalOut hazard_signal(HAZARD_EN);
 AnalogIn throttle_pedal(THROTTLE_WIPER);
 DigitalIn brake_pedal(BRAKE_WIPER);
 
@@ -52,6 +51,9 @@ const bool PIN_OFF = false;
 #define LOG_LEVEL LOG_DEBUG
 #define SIGNAL_FLASH_PERIOD 500
 #define PEDAL_STATUS 100
+#define THROTTLE_VOLTAGE_LOW                 0.82 // voltage at 0% throttle
+#define THROTTLE_VOLTAGE_HIGH                3.3 // voltage at 100% throttle
+#define THROTTLR_VOLTAGE_DIFFERENCE          (THROTTLE_VOLTAGE_HIGH - THROTTLE_VOLTAGE_LOW) // voltage range
 
 CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
 
@@ -105,12 +107,26 @@ Thread pedal_thread;
     }
 }
 
+
+// Reads the throttle pedal value and returns a uint16_t
+uint16_t read_throttle() {
+    float adjusted_throttle_input = (throttle_pedal.read_voltage() - THROTTLE_VOLTAGE_LOW) / THROTTLR_VOLTAGE_DIFFERENCE;
+    if (adjusted_throttle_input <= 0.0f) {
+        return 0;
+    } else if (adjusted_throttle_input >= 1.0f) {
+        return 256;
+    } else {
+        return (uint16_t)(adjusted_throttle_input * 256.0);
+    }
+}
+
+
 void send_pedal_status()
 {
     Clock pedal_status_clock;
     
     while (1) {
-        const uint16_t throttle = throttle_pedal.read_u12();
+        const uint16_t throttle = read_throttle();
 
         PedalStatus msg{};
  
