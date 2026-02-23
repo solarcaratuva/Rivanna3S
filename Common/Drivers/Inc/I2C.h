@@ -79,16 +79,18 @@ public:
      * @param address 7-bit peripheral address (0x00 – 0x7F).
      * @param buffer Pointer to data to transmit.
      * @param length Number of bytes to send.
+     * @return 0 on success, non-zero on error.
      */
-    void write(uint16_t address, uint8_t *buffer, uint16_t length);
+        int write(uint16_t address, uint8_t *buffer, uint16_t length);
 
     /**
      * @brief Reads data from an I2C device (blocking).
      * @param address 7-bit peripheral address.
      * @param buffer Buffer where received data is stored.
      * @param length Number of bytes to read.
+     * @return 0 on success, non-zero on error.
      */
-    void read(uint16_t address, uint8_t *buffer, uint16_t length);
+        int read(uint16_t address, uint8_t *buffer, uint16_t length);
 
 
 

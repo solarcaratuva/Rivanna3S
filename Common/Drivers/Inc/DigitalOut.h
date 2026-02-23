@@ -50,6 +50,7 @@ public:
 private:
     Pin pin_;
     bool active_high_;
+    bool initialized_;
 
     void configure_pin(); // internal helper to configure GPIO
 };
