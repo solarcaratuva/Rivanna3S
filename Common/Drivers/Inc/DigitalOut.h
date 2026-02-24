@@ -11,6 +11,9 @@
 #include "pinmap.h"
 #include "stm32h7xx_hal.h"
 
+const bool PIN_ON = true;
+const bool PIN_OFF = false;
+
 /**
  * @brief Digital output pin interface with configurable polarity
  * 
