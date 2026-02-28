@@ -112,8 +112,8 @@ typedef struct Heartbeat : CanMessage, rivanna3_s_heartbeat_t {
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "Heartbeat: from_wheel_board %u, from_telemetry_board %u, from_top_dist_board %u, from_bottom_dist_board %u, from_motor_board %u, from_relay_board %u",
-            from_wheel_board, from_telemetry_board, from_top_dist_board, from_bottom_dist_board, from_motor_board, from_relay_board);
+            "Heartbeat: source %u",
+            source);
     }
 
     bool has_active_fault() {
