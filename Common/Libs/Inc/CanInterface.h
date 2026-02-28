@@ -89,6 +89,23 @@ public:
      * This function forwards the provided CAN message to the underlying CAN driver
      * for transmission. The message is serialized and sent asynchronously.
      * 
+     * @param[in] msg Pointer to a valid SerializedCanMessage structure to be sent. Must not be nullptr.
+     * @return int Status code:
+     *         - 0: Success
+     *         - 1: CAN peripheral not initialized
+     *         - 2: HAL transmission error
+     *         - -1: Invalid argument (msg is nullptr)
+     * 
+     * @note This method is thread-safe
+     */
+    int write(SerializedCanMessage *msg);
+
+    /**
+     * @brief Transmit a CAN message on the bus
+     * 
+     * This function forwards the provided CAN message to the underlying CAN driver
+     * for transmission. The message is serialized and sent asynchronously.
+     * 
      * @param[in] msg Pointer to a valid CanMessage structure to be sent. Must not be nullptr.
      * @return int Status code:
      *         - 0: Success

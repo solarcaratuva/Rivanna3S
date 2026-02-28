@@ -7,7 +7,7 @@
 #include "log.h"
 
 typedef struct MotorControllerFrameRequest : CanMessage, motor_controller_motor_controller_frame_request_t {
-    void serialize(const SerializedCanMessage *message) {
+    void serialize(SerializedCanMessage *message) {
         motor_controller_motor_controller_frame_request_pack(message->data, this,
             MOTOR_CONTROLLER_MOTOR_CONTROLLER_FRAME_REQUEST_LENGTH);
         message->len = MOTOR_CONTROLLER_MOTOR_CONTROLLER_FRAME_REQUEST_LENGTH;
@@ -20,6 +20,8 @@ typedef struct MotorControllerFrameRequest : CanMessage, motor_controller_motor_
     }
 
     static uint16_t get_message_ID() { return MOTOR_CONTROLLER_MOTOR_CONTROLLER_FRAME_REQUEST_FRAME_ID; }
+
+    uint16_t ID() const { return MOTOR_CONTROLLER_MOTOR_CONTROLLER_FRAME_REQUEST_FRAME_ID; }
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
@@ -34,7 +36,7 @@ typedef struct MotorControllerFrameRequest : CanMessage, motor_controller_motor_
 
 
 typedef struct MotorControllerPowerStatus : CanMessage, motor_controller_motor_controller_power_status_t {
-    void serialize(const SerializedCanMessage *message) {
+    void serialize(SerializedCanMessage *message) {
         motor_controller_motor_controller_power_status_pack(message->data, this,
             MOTOR_CONTROLLER_MOTOR_CONTROLLER_POWER_STATUS_LENGTH);
         message->len = MOTOR_CONTROLLER_MOTOR_CONTROLLER_POWER_STATUS_LENGTH;
@@ -47,6 +49,8 @@ typedef struct MotorControllerPowerStatus : CanMessage, motor_controller_motor_c
     }
 
     static uint16_t get_message_ID() { return MOTOR_CONTROLLER_MOTOR_CONTROLLER_POWER_STATUS_FRAME_ID; }
+
+    uint16_t ID() const { return MOTOR_CONTROLLER_MOTOR_CONTROLLER_POWER_STATUS_FRAME_ID; }
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
@@ -61,7 +65,7 @@ typedef struct MotorControllerPowerStatus : CanMessage, motor_controller_motor_c
 
 
 typedef struct MotorControllerDriveStatus : CanMessage, motor_controller_motor_controller_drive_status_t {
-    void serialize(const SerializedCanMessage *message) {
+    void serialize(SerializedCanMessage *message) {
         motor_controller_motor_controller_drive_status_pack(message->data, this,
             MOTOR_CONTROLLER_MOTOR_CONTROLLER_DRIVE_STATUS_LENGTH);
         message->len = MOTOR_CONTROLLER_MOTOR_CONTROLLER_DRIVE_STATUS_LENGTH;
@@ -74,6 +78,8 @@ typedef struct MotorControllerDriveStatus : CanMessage, motor_controller_motor_c
     }
 
     static uint16_t get_message_ID() { return MOTOR_CONTROLLER_MOTOR_CONTROLLER_DRIVE_STATUS_FRAME_ID; }
+
+    uint16_t ID() const { return MOTOR_CONTROLLER_MOTOR_CONTROLLER_DRIVE_STATUS_FRAME_ID; }
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
@@ -88,7 +94,7 @@ typedef struct MotorControllerDriveStatus : CanMessage, motor_controller_motor_c
 
 
 typedef struct MotorControllerError : CanMessage, motor_controller_motor_controller_error_t {
-    void serialize(const SerializedCanMessage *message) {
+    void serialize(SerializedCanMessage *message) {
         motor_controller_motor_controller_error_pack(message->data, this,
             MOTOR_CONTROLLER_MOTOR_CONTROLLER_ERROR_LENGTH);
         message->len = MOTOR_CONTROLLER_MOTOR_CONTROLLER_ERROR_LENGTH;
@@ -101,6 +107,8 @@ typedef struct MotorControllerError : CanMessage, motor_controller_motor_control
     }
 
     static uint16_t get_message_ID() { return MOTOR_CONTROLLER_MOTOR_CONTROLLER_ERROR_FRAME_ID; }
+
+    uint16_t ID() const { return MOTOR_CONTROLLER_MOTOR_CONTROLLER_ERROR_FRAME_ID; }
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,

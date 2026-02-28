@@ -21,6 +21,8 @@ typedef struct AuxBatteryStatus : CanMessage, rivanna3_s_aux_battery_status_t {
 
     static uint16_t get_message_ID() { return RIVANNA3_S_AUX_BATTERY_STATUS_FRAME_ID; }
 
+    uint16_t ID() const { return RIVANNA3_S_AUX_BATTERY_STATUS_FRAME_ID; }
+
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
             "AuxBatteryStatus: aux_voltage %u, percent_full %u",
@@ -47,6 +49,8 @@ typedef struct MotorCommands : CanMessage, rivanna3_s_motor_commands_t {
     }
 
     static uint16_t get_message_ID() { return RIVANNA3_S_MOTOR_COMMANDS_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_MOTOR_COMMANDS_FRAME_ID; }
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
@@ -75,6 +79,8 @@ typedef struct DashboardCommands : CanMessage, rivanna3_s_dashboard_commands_t {
 
     static uint16_t get_message_ID() { return RIVANNA3_S_DASHBOARD_COMMANDS_FRAME_ID; }
 
+    uint16_t ID() const { return RIVANNA3_S_DASHBOARD_COMMANDS_FRAME_ID; }
+
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
             "DashboardCommands: hazards %u, left_turn_signal %u, right_turn_signal %u, regen_en %u, cruise_inc %u, cruise_en %u, cruise_dec %u, charging_mode_en %u",
@@ -101,6 +107,8 @@ typedef struct Heartbeat : CanMessage, rivanna3_s_heartbeat_t {
     }
 
     static uint16_t get_message_ID() { return RIVANNA3_S_HEARTBEAT_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_HEARTBEAT_FRAME_ID; }
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
@@ -129,6 +137,8 @@ typedef struct PedalStatus : CanMessage, rivanna3_s_pedal_status_t {
 
     static uint16_t get_message_ID() { return RIVANNA3_S_PEDAL_STATUS_FRAME_ID; }
 
+    uint16_t ID() const { return RIVANNA3_S_PEDAL_STATUS_FRAME_ID; }
+
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
             "PedalStatus: throttle_pedal %u, brake_pedal %u",
@@ -155,6 +165,8 @@ typedef struct PrechargeStatus : CanMessage, rivanna3_s_precharge_status_t {
     }
 
     static uint16_t get_message_ID() { return RIVANNA3_S_PRECHARGE_STATUS_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_PRECHARGE_STATUS_FRAME_ID; }
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
@@ -183,6 +195,8 @@ typedef struct Contactor12Error : CanMessage, rivanna3_s_contactor12_error_t {
 
     static uint16_t get_message_ID() { return RIVANNA3_S_CONTACTOR12_ERROR_FRAME_ID; }
 
+    uint16_t ID() const { return RIVANNA3_S_CONTACTOR12_ERROR_FRAME_ID; }
+
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
             "Contactor12Error: cont12_went_low %u",
@@ -210,6 +224,8 @@ typedef struct UpdateControl : CanMessage, rivanna3_s_update_control_t {
 
     static uint16_t get_message_ID() { return RIVANNA3_S_UPDATE_CONTROL_FRAME_ID; }
 
+    uint16_t ID() const { return RIVANNA3_S_UPDATE_CONTROL_FRAME_ID; }
+
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
             "UpdateControl: target_board %u, setup %u, complete %u, failed %u",
@@ -236,6 +252,8 @@ typedef struct UpdateData : CanMessage, rivanna3_s_update_data_t {
     }
 
     static uint16_t get_message_ID() { return RIVANNA3_S_UPDATE_DATA_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_UPDATE_DATA_FRAME_ID; }
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
