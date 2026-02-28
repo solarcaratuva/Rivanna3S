@@ -37,20 +37,162 @@
 #include "Timeout.h"
 #include "lock.h"
 #include "log.h"
+#include "CanInterface.h"
+#include "pindef.h"
+/* USER CODE END Includes */
+
+#define LOG_LEVEL LOG_DEBUG
+
+struct TelemetryCanFrame
+{
+    uint16_t id;
+    uint8_t  len; // data length code
+    uint8_t  data[8]; // Raw payload bytes (pad unused bytes with 0)
+    uint32_t timestamp_ms;  // when this frame was received (ms since boot)
+};
+
+// Queue of TelemetryCanFrame items waiting to be sent out over LTE.
+static QueueHandle_t telemetrySendQueue = nullptr;
+
+static DigitalOut lteDtrPin(LTE_DTR);
+
+static UART lteUart(LTE_TX, LTE_RX, 115200);
+static CanInterface mainCan(MAIN_CAN_TX, MAIN_CAN_RX, 250000, CanNetwork::Main);
+
+static Thread lte_thread;
+
+// Optional stats for debugging
+static volatile uint32_t framesQueued = 0;
+static volatile uint32_t framesDropped = 0;
+
+
+static inline uint32_t nowMs() { return HAL_GetTick(); }
+
+static void enqueueCanMsg(const SerializedCanMessage &msg)
+{
+  TelemetryCanFrame frame{};
+  frame.id = msg.id;
+  frame.len = msg.len;
+  frame.timestamp_ms = nowMs();
+  
+  // Copy data; pad remainder with 0 for cleanliness
+  for (int i = 0; i < 8; i++) {
+    frame.data[i] = (i < frame.len) ? msg.data[i] : 0;
+  }
+
+  // Non-blocking push. If full, drop.
+  if (xQueueSendToBack(telemetrySendQueue, &frame, 0) == pdTRUE) {
+    framesQueued++;
+  } else {
+    framesDropped++;
+  }
+
+}
+
+/*
+  --------------------------------------------
+  LTE SENDER THREAD (SLOW PATH)
+  --------------------------------------------
+  This thread is allowed to:
+    - block waiting for queue items
+    - block on UART writes
+
+  Packet format (fixed length, easy to parse):
+    START  : 0xA5
+    ID     : uint16 (little-endian)
+    LEN    : uint8  (0..8)
+    DATA   : 8 bytes (always 8 sent)
+    TIME   : uint32 ms (little-endian)
+    END    : 0x5A
+
+  Total = 1 + 2 + 1 + 8 + 4 + 1 = 17 bytes.
+*/
+
+// NOTE: Need to talk with Embedded about if there's an easier an easier way to do this.
+static void handle_lte_transmission()
+{
+  const uint8_t START = 0xA5;
+  const uint8_t END = 0x5A;
+
+  TelemetryCanFrame frame{};
+
+  while (true) {
+      // Wait until a frame is available
+      if (xQueueReceive(telemetrySendQueue, &frame, portMAX_DELAY) != pdTRUE) {
+          continue;
+      }
+
+      uint8_t pkt[17];
+      int idx = 0;
+
+      pkt[idx++] = START;
+
+      // ID (little endian)
+      pkt[idx++] = (uint8_t)(frame.id & 0xFF);
+      pkt[idx++] = (uint8_t)((frame.id >> 8) & 0xFF);
+
+      // LEN (DLC bytes)
+      pkt[idx++] = frame.len;
+
+      // DATA (always 8 bytes in packet)
+      for (int i = 0; i < 8; i++) {
+          pkt[idx++] = frame.data[i];
+      }
+
+      // timestamp_ms (little endian)
+      pkt[idx++] = (uint8_t)(frame.timestamp_ms & 0xFF);
+      pkt[idx++] = (uint8_t)((frame.timestamp_ms >> 8) & 0xFF);
+      pkt[idx++] = (uint8_t)((frame.timestamp_ms >> 16) & 0xFF);
+      pkt[idx++] = (uint8_t)((frame.timestamp_ms >> 24) & 0xFF);
+
+      pkt[idx++] = END;
+
+      // Send to LTE module
+      // note: write() means the LTE module is going to need to be configured to transparent mode (?), not the AT mode we've been using
+      lteUart.write(pkt, idx);
+  }
+}
+
 
 void app_main()
 {
+  // NOTE: pindef does not have Log TX/RX?
+  log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
+  log_info("Telemetry Board starting up...");
 
-  /* USER CODE BEGIN Init */
-  log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
-  /* USER CODE END Init */
+  // Might need to do something with DRL?
+  // like lteDtrPin.write(true);
 
-  DigitalOut LED1(PB_0);
+  // Create queue (tune depth later)
+  telemetrySendQueue = xQueueCreate(256, sizeof(TelemetryCanFrame));
+  if (telemetrySendQueue == nullptr) {
+      log_fault("Failed to create telemetrySendQueue (out of memory?)");
+      return;
+  }
+
+  // Register callback for ALL CAN frames
+  int rc = mainCan.register_always_callback(enqueueCanMsg);
+  if (rc != 0) {
+      log_fault("Failed to register CAN always callback: %d", rc);
+      return;
+  }
+
+  // Start thread(s)
+  lte_thread.start(handle_lte_transmission);
+  // prob going to need an XBEE RF thread as well
+
+  lteDtrPin.write(true);
+  
+  Clock clk;
+  uint32_t lastLog = nowMs();
 
   while (1)
   {
-    log_debug("%s","HERE");
-    HAL_Delay(1000);
-    LED1.write(!LED1.read());
+    clk.sleep_since(500);
+    uint32_t t = nowMs();
+    if (t - lastLog >= 2000) {
+      lastLog = t;
+      log_info("Telemetry stats: queued=%lu dropped=%lu", (unsigned long)framesQueued, (unsigned long)framesDropped);
+    }
   }
 }
