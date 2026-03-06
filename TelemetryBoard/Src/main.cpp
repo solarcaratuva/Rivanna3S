@@ -46,8 +46,8 @@
 struct TelemetryCanFrame
 {
     uint16_t id;
-    uint8_t  len; // data length code
-    uint8_t  data[8]; // Raw payload bytes (pad unused bytes with 0)
+    uint8_t len; // data length code
+    uint8_t data[8]; // Raw payload bytes (pad unused bytes with 0)
     uint32_t timestamp_ms;  // when this frame was received (ms since boot)
 };
 
@@ -55,7 +55,6 @@ struct TelemetryCanFrame
 static QueueHandle_t telemetrySendQueue = nullptr;
 
 static DigitalOut lteDtrPin(LTE_DTR);
-
 static UART lteUart(LTE_TX, LTE_RX, 115200);
 static CanInterface mainCan(MAIN_CAN_TX, MAIN_CAN_RX, 250000, CanNetwork::Main);
 
@@ -148,7 +147,8 @@ static void handle_lte_transmission()
       pkt[idx++] = END;
 
       // Send to LTE module
-      // note: write() means the LTE module is going to need to be configured to transparent mode (?), not the AT mode we've been using
+      // note: need to look into which mode for LTE to use. 
+      // note: lteUart.write(pkt, idx) sends raw telemetry packets to the XBee over UART. A MicroPython script on the XBee is expected to read these bytes and publish them to AWS IoT over MQTT/TLS.
       lteUart.write(pkt, idx);
   }
 }
