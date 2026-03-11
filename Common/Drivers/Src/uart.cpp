@@ -139,76 +139,69 @@ UART* UART::find_from_handle(UART_HandleTypeDef* huart){
 
 
 // Call Back functions
-extern "C"{
+extern "C" void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+    UART* uart = UART::find_from_handle(huart);
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    xTaskNotifyFromISR(
+        uart->txTask,
+        0,
+        eNoAction,
+        &xHigherPriorityTaskWoken
+    );
 
-    void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
-        UART* uart = UART::find_from_handle(huart);
-        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-        xTaskNotifyFromISR(
-            uart->txTask,
-            0,
-            eNoAction,
-            &xHigherPriorityTaskWoken
-        );
-
-        uart->txTask = nullptr;
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-        return;
-    }
+    uart->txTask = nullptr;
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    return;
 }
 
-extern "C"{
-    void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-        UART* uart = UART::find_from_handle(huart);
-        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+    UART* uart = UART::find_from_handle(huart);
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    xTaskNotifyFromISR(
+        uart->rxTask,
+        0,
+        eNoAction,
+        &xHigherPriorityTaskWoken
+    );
+
+    uart->rxTask = nullptr;
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+    return;
+}
+
+extern "C" void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
+    UART* uart = UART::find_from_handle(huart);
+    if (!uart) return;
+
+    // Capture HAL error flags
+    uart->last_error = HAL_UART_GetError(huart);
+
+    BaseType_t woken = pdFALSE;
+
+    // Wake RX task if waiting
+    if (uart->rxTask) {
         xTaskNotifyFromISR(
             uart->rxTask,
             0,
             eNoAction,
-            &xHigherPriorityTaskWoken
+            &woken
         );
-
         uart->rxTask = nullptr;
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-
-        return;
     }
-}
 
-extern "C"{
-    void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
-        UART* uart = UART::find_from_handle(huart);
-        if (!uart) return;
-
-        // Capture HAL error flags
-        uart->last_error = HAL_UART_GetError(huart);
-
-        BaseType_t woken = pdFALSE;
-
-        // Wake RX task if waiting
-        if (uart->rxTask) {
-            xTaskNotifyFromISR(
-                uart->rxTask,
-                0,
-                eNoAction,
-                &woken
-            );
-            uart->rxTask = nullptr;
-        }
-
-        // Wake TX task if waiting
-        if (uart->txTask) {
-            xTaskNotifyFromISR(
-                uart->txTask,
-                0,
-                eNoAction,
-                &woken
-            );
-            uart->txTask = nullptr;
-        }
-
-        portYIELD_FROM_ISR(woken);
+    // Wake TX task if waiting
+    if (uart->txTask) {
+        xTaskNotifyFromISR(
+            uart->txTask,
+            0,
+            eNoAction,
+            &woken
+        );
+        uart->txTask = nullptr;
     }
+
+    portYIELD_FROM_ISR(woken);
 }
 
 
