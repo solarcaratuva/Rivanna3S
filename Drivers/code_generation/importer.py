@@ -61,6 +61,7 @@ def generate_i2c_helper() -> str:
 
     return "\n".join(lines)
 
+
 # helpers
 
 def regex_replace_once(text: str, pattern: str, replacement: str) -> str:
@@ -498,9 +499,6 @@ def fix_i2c_c(text: str) -> str:
         init_call_args="baudrate",
     )
 
-    # add helper at top of i2c.c
-    text = I2C_HELPER_TEXT + "\n" + text
-
     return text
 
 FIXERS = {
@@ -518,11 +516,15 @@ def process_file(src: Path, dst: Path):
 
     # fix includes
     include_pattern = r'^\s*#include\s+"[^"]+\.h"\s*$'
+
     include_replacement = (
         '#include "pinmap.h"\n'
         '#include "peripheralmap.h"\n'
         '#include "stm32h7xx_hal.h"\n'
     )
+
+    if (src.name == "i2c3.c"):
+        include_replacement = include_replacement + I2C_HELPER_TEXT
 
     text = regex_replace_all(text,include_pattern,include_replacement)
 
