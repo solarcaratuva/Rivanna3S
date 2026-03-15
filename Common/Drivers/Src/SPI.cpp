@@ -67,6 +67,13 @@ int SPI::read(uint8_t *rx_buffer, uint16_t length) {
     return 0;
 }
 
+/* 
+THIS FUNCTION IS NOT PROPERLY TESTED
+
+WARNING: DO NOT USE UNTIL PROPERLY TESTED
+
+It is recommended to use write() and read() separately instead of this function until it is tested
+*/
 int SPI::transfer(uint8_t *tx_buffer, uint8_t *rx_buffer, uint16_t length) {
     if(!initialized) {
         log_warn("SPI transfer failed: SPI not initialized");
