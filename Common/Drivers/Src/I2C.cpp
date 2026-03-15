@@ -5,7 +5,7 @@
 // function declarations for init functions in a hardware-specific i2c.c file
 extern "C" I2C_HandleTypeDef* I2C_init(I2C_TypeDef* i2cHandle, uint32_t timing_reg);
 extern "C" void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin pin, uint8_t af);
-extern "C" uint32_t compute_timing(uint32_t freq_hz);
+extern "C" uint32_t baudrate_to_hash(uint32_t freq_hz);
 
 //Constructor
 I2C::I2C(Pin sda, Pin scl, I2C_BaudRate baudrate)
@@ -27,7 +27,7 @@ I2C::I2C(Pin sda, Pin scl, I2C_BaudRate baudrate)
 	HAL_I2C_MspInit_custom(i2c_periph->handle, sda, sda_af);
 	HAL_I2C_MspInit_custom(i2c_periph->handle, scl, scl_af);
 	
-	uint32_t timing_reg = compute_timing(baudrate);
+	uint32_t timing_reg = baudrate_to_hash(baudrate);
 	hi2c = I2C_init(i2c_periph->handle, timing_reg);
     
 	initialized = true;
