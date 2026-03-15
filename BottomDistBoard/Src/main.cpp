@@ -17,6 +17,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+//#include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -37,20 +38,25 @@
 #include "Timeout.h"
 #include "lock.h"
 #include "log.h"
+#include "SPI.h"
+#include <stddef.h>  // for size_t
+
 
 void app_main()
 {
-
   /* USER CODE BEGIN Init */
   log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
   /* USER CODE END Init */
+  log_debug("%s", "BEGIN TEST");
 
-  DigitalOut LED1(PB_0);
+  
+  // DigitalOut LED1(PB_0);
 
-  while (1)
-  {
-    log_debug("%s","HERE");
-    HAL_Delay(1000);
-    LED1.write(!LED1.read());
-  }
+  // while (1)
+  // {
+  //   log_debug("%s","HERE");
+  //   HAL_Delay(1000);
+  //   LED1.write(!LED1.read());
+  // }
+  
 }
