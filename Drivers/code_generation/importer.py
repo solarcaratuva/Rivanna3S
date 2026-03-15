@@ -19,7 +19,7 @@ def collect_i2c_hashes(src_dir: Path):
     mapping = {
         "i2c1.c": 100000,
         "i2c2.c": 400000,
-        "i2c.c": 1000000,
+        "i2c3.c": 1000000,
     }
 
     for name, baud in mapping.items():
@@ -508,7 +508,7 @@ FIXERS = {
     "usart.c": fix_usart_c,
     "fdcan.c": fix_fdcan_c,
     "spi.c": fix_spi_c,
-    "i2c.c": fix_i2c_c
+    "i2c3.c": fix_i2c_c
 }
 
 # ---- main logic --------------------------------------------
@@ -572,8 +572,8 @@ def main():
     print(
         "For i2c, make sure you have 3 variants of i2c, with baudrates set to "
         "100000, 400000, and 1000000.\n"
-        "Name them i2c1.c, i2c2.c, and i2c.c respectively.\n"
-        "Only i2c.c will be imported.\n"
+        "Name them i2c1.c, i2c2.c, and i2c3.c respectively.\n"
+        "Only peripherals from i2c3.c will be imported into i2c.c\n"
         "Note that only the first i2c peripheral in each file need to be set to the baudrate!\n"
     )
 
@@ -584,7 +584,21 @@ def main():
 
     for file in src.iterdir():
         if file.is_file():
-            out = dst / file.name
+            if (file.name == "i2c3.c"):
+                out = dst / "i2c.c"
+
+            elif (file.name.endswith("_FLASH.ld")):
+                out = dst / file.name
+                text = file.read_text()
+
+                text = re.sub(r"_Min_Heap_Size\s*=\s*0x[0-9A-Fa-f]+;", "_Min_Heap_Size = 0x1FFF; // <- this line changed", text)
+                text = re.sub(r"_Min_Stack_Size\s*=\s*0x[0-9A-Fa-f]+;", "_Min_Stack_Size = 0x1FFF; // <- this line changed", text)
+
+                out.write_text(text)
+                continue
+            else:
+                out = dst / file.name
+
             if (not process_file(file, out)):
                 print(f"Imported {file.name} -> {out}")
 
