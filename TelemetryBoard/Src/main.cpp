@@ -157,7 +157,7 @@ static void handle_lte_transmission()
 void app_main()
 {
   // NOTE: pindef does not have Log TX/RX?
-  log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
+  log_configure(LOG_LEVEL, USB_TX, USB_RX, 921600);
   log_info("Telemetry Board starting up...");
 
   // Might need to do something with DRL?
