@@ -41,6 +41,9 @@
 #include "SPI.h"
 #include <stddef.h>  // for size_t
 
+#include "SPI.h"
+#include <stddef.h>  // for size_t
+
 #define M95040		0
 #define M95256		1
 #define M95M04		2
@@ -238,6 +241,10 @@ void app_main()
 
   
   // DigitalOut LED1(PB_0);
+  log_debug("%s", "BEGIN TEST");
+
+  
+  // DigitalOut LED1(PB_0);
 
   // while (1)
   // {
@@ -246,71 +253,4 @@ void app_main()
   //   LED1.write(!LED1.read());
   // }
   
-
-  //SPI spi4(PE_6, PE_5, PE_2, 100000);
-
-  // uint8_t rx;
-  // uint8_t tx;
-
-  // while (1) {
-  //   // Read 1 byte
-  //   spi4.read(&rx, 1);
-
-  //   // Write it back
-  //   tx = rx;
-  //   spi4.write(&tx, 1);
-  // }
-
-  uint8_t StatusRegisterValue = 0;
-  uint8_t ReadValue[3];
-  uint8_t M95Type;
-  uint8_t TxData1[3] = {'A', 'B', 'C'};
-  uint8_t TxData2 = 'E';
-  uint8_t TxData3 = 'F';
-
-  log_debug("%s", "ONE");
-
-  M95Type = M95040; DisableChipSelectM95(M95Type);
-
-  //Disable write-protect and hold
-  DisableWriteProtectM95();
-  DisableHoldM95();
-
-  log_debug("%s", "TWO");
-
-  //Turn off block protection
-  M95Type = M95040;
-  StatusRegisterValue = ReadStatusRegisterM95(M95Type);
-  StatusRegisterValue = StatusRegisterValue & ~(0x0C);
-  log_debug("First STATUS REGISTER VALUE: %x", StatusRegisterValue);
-  WriteStatusRegisterM95(M95Type, StatusRegisterValue);
-  StatusRegisterValue = ReadStatusRegisterM95(M95Type);
-  log_debug("Second STATUS REGISTER VALUE: %x", StatusRegisterValue);
-
-  log_debug("%s", "THREE");
-
-  while(1) {
-    log_debug("%s", "HERE");
-    HAL_Delay(1000);
-    M95Type = M95040;
-	log_debug("%s", "FOUR");
-	WriteBytesM95(M95Type, 0x00000001, TxData1, 3);
-	StatusRegisterValue = 0;
-	log_debug("%s", "FIVE");
-	StatusRegisterValue = ReadStatusRegisterM95(M95Type);
-	log_debug("%s", "SIX");
-	while (StatusRegisterValue & 0x01) {
-		StatusRegisterValue = ReadStatusRegisterM95(M95Type);
-	}
-	log_debug("%s", "SEVEN");
-	ReadBytesM95(M95Type, 0x00000001, ReadValue, 3);
-	log_debug("%s", "EIGHT");
-	log_debug("READING VALUE 1: %c", ReadValue[0]);
-	log_debug("READING VALUE 2: %c", ReadValue[1]);
-	log_debug("READING VALUE 3: %c", ReadValue[2]);
-
-	if (TxData1[0] == ReadValue[0] && TxData1[1] == ReadValue[1] && TxData1[2] == ReadValue[2]) {
-		HAL_Delay(1);
-	}
-  }
 }
