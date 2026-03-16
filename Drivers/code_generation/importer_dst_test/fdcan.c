@@ -48,7 +48,7 @@ void MX_FDCAN1_Init(uint32_t baudrate) // <-- This line changed when importing
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
-  hfdcan1.Init.NominalPrescaler = calculate_prescaler(hfdcan1, 10000000, baudrate); // <-- This line changed when importing
+  hfdcan1.Init.NominalPrescaler = calculate_prescaler(hfdcan1, 1000000, baudrate); // <-- This line changed when importing
   hfdcan1.Init.NominalSyncJumpWidth = 1;
   hfdcan1.Init.NominalTimeSeg1 = 1;
   hfdcan1.Init.NominalTimeSeg2 = 1;

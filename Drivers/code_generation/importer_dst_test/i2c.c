@@ -21,7 +21,7 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "stm32h7xx_hal.h"
-static uint32_t baudrate_to_hash(uint32_t baudrate)
+uint32_t compute_timing(uint32_t baudrate)
 {
     switch (baudrate)
     {

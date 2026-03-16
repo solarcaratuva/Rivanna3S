@@ -43,7 +43,7 @@ def generate_i2c_helper() -> str:
         return ""
 
     lines = [
-        "static uint32_t baudrate_to_hash(uint32_t baudrate)",
+        "uint32_t compute_timing(uint32_t baudrate)",
         "{",
         "    switch (baudrate)",
         "    {",
