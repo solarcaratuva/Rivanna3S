@@ -3,13 +3,13 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "stm32_hal.h"
-
+#include "DigitalOut.h"
 
 
 int main(void)
 {
   startup_init();
-  DigitalOut LED1(PB_0);
+  DigitalOut LED1(PC_1);
   LED1.write(1);
 
   Thread main;
