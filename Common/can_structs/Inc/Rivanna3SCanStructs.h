@@ -228,8 +228,8 @@ typedef struct UpdateControl : CanMessage, rivanna3_s_update_control_t {
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "UpdateControl: target_board %u, setup %u, complete %u, failed %u",
-            target_board, setup, complete, failed);
+            "UpdateControl: target_board %u, setup %u, setup_ack %u, ready_for_data %u, done %u, final_crc %u",
+            target_board, setup, setup_ack, ready_for_data, done, final_crc);
     }
 
     bool has_active_fault() {
