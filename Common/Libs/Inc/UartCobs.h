@@ -33,7 +33,7 @@
  *
  * // Receive a message
  * uint8_t buf[UartCobs::MAX_PACKET_SIZE];
- * size_t len = cobs_serial.read(buf, sizeof(buf));
+ * uint16_t len = cobs_serial.read(buf, sizeof(buf));
  * @endcode
  */
 class UartCobs {
@@ -42,9 +42,9 @@ public:
      * @brief Maximum raw (unencoded) payload size in bytes.
      *
      * Both the transmit and receive internal buffers are sized to accommodate
-     * a COBS-encoded frame of this length. Adjust as needed for your application.
+     * a COBS-encoded frame of this length. Adjust as needed if we change the payload size
      */
-    static constexpr size_t MAX_PACKET_SIZE = 256;
+    static constexpr uint16_t MAX_PACKET_SIZE = 256;
 
     /**
      * @brief Construct a UartCobs instance wrapping an existing UART object.
@@ -81,7 +81,7 @@ public:
      *
      * @return Number of decoded bytes written to @p buffer, or 0 on error.
      */
-    size_t read(uint8_t *buffer, uint16_t length);
+    uint16_t read(uint8_t *buffer, uint16_t length);
 
 
 private:

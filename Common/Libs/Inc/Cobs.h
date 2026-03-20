@@ -27,7 +27,7 @@
  * @return Number of bytes written to @p output, not including any trailing
  *         0x00 delimiter.
  */
-size_t cobs_encode(const uint8_t *input, size_t length, uint8_t *output);
+uint16_t cobs_encode(const uint8_t *input, uint16_t length, uint8_t *output);
 
 /**
  * @brief Decode a COBS-encoded byte buffer (no delimiter), safely.
@@ -44,9 +44,9 @@ size_t cobs_encode(const uint8_t *input, size_t length, uint8_t *output);
  * @return true on success, false on malformed input or insufficient output space.
  */
 bool cobs_decode(const uint8_t *input,
-                 size_t length,
+                 uint16_t length,
                  uint8_t *output,
-                 size_t output_capacity,
-                 size_t *out_length);
+                 uint16_t output_capacity,
+                 uint16_t *out_length);
 
 #endif // COBS_H
