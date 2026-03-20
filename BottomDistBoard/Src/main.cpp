@@ -54,7 +54,7 @@ log_configure(DEBUG_LVL, PC_12, PD_2, 921600);
   while (1)
   {
     log_debug("%s","HERE");
-    // HAL_Delay(1000);
-    // LED1.write(!LED1.read());
+    HAL_Delay(1000);
+    LED1.write(!LED1.read());
   }
 }
