@@ -38,8 +38,6 @@
 #include "lock.h"
 #include "log.h"
 
-extern void uartcobs_emit_py_tests();
-
 void app_main()
 {
 

@@ -63,16 +63,18 @@ void app_main()
 {
   log_configure(LOG_LEVEL, LOG_TX, LOG_RX, 250000);
   log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
+  /* USER CODE END Init */
 
   log_info("Telemetry Board starting up...");
 
   main_can.register_always_callback(handle_all_messages);
 
   log_info("Telemetry Board initialized");
+  DigitalOut LED1(PB_0);
 
   while (1)
   {
-    log_debug("%s", "HERE");
+    log_debug("%s","HERE");
     HAL_Delay(1000);
     LED1.write(!LED1.read());
   }
