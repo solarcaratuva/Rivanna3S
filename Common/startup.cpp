@@ -9,6 +9,8 @@
 int main(void)
 {
   startup_init();
+  DigitalOut LED1(PB_0);
+  LED1.write(1);
 
   Thread main;
   main.start(app_main);
