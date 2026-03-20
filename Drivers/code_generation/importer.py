@@ -4,7 +4,10 @@ from pathlib import Path
 
 CHANGE_COMMENT = " // <-- This line changed when importing"
 
-I2C_HASHES: dict[int, str] = {}
+MIN_HEAP_SIZE = "0x1FFF"
+MIN_STACK_SIZE = "0x1FFF"
+
+I2C_REGS: dict[int, str] = {}
 I2C_HELPER_TEXT: str = ""
 
 # i2c helpers
@@ -15,7 +18,7 @@ def extract_i2c_timing(text: str) -> str | None:
     )
     return m.group(1) if m else None
 
-def collect_i2c_hashes(src_dir: Path):
+def collect_i2c_REGS(src_dir: Path):
     mapping = {
         "i2c1.c": 100000,
         "i2c2.c": 400000,
@@ -25,21 +28,21 @@ def collect_i2c_hashes(src_dir: Path):
     for name, baud in mapping.items():
         path = src_dir / name
         if not path.exists():
-            print(f'ERROR: {name} file not found, set timing register hash for the baudrate associated with this file to 0')
-            I2C_HASHES[baud] = 0
+            print(f'ERROR: {name} file not found, set timing register for the baudrate associated with this file to 0')
+            I2C_REGS[baud] = 0
             continue
 
         text = path.read_text(encoding="utf-8")
         timing = extract_i2c_timing(text)
 
         if timing:
-            I2C_HASHES[baud] = timing
+            I2C_REGS[baud] = timing
         else:
-            print(f'ERROR: timing in {name} file not found, set timing register hash for the baudrate associated with this file to 0')
-            I2C_HASHES[baud] = 0
+            print(f'ERROR: timing in {name} file not found, set timing register for the baudrate associated with this file to 0')
+            I2C_REGS[baud] = 0
 
 def generate_i2c_helper() -> str:
-    if not I2C_HASHES:
+    if not I2C_REGS:
         return ""
 
     lines = [
@@ -49,8 +52,8 @@ def generate_i2c_helper() -> str:
         "    {",
     ]
 
-    for baud in sorted(I2C_HASHES):
-        lines.append(f"    case {baud}: return {I2C_HASHES[baud]};")
+    for baud in sorted(I2C_REGS):
+        lines.append(f"    case {baud}: return {I2C_REGS[baud]};")
 
     lines += [
         "    default: return 0;",
@@ -459,7 +462,7 @@ def fix_i2c_c(text: str) -> str:
     text = regex_replace_all(
         text,
         r'\.Init\.Timing\s*=\s*(?:\d+|0x[0-9A-Fa-f]+);',
-        r'.Init.Timing = baudrate_to_hash(baudrate);'
+        r'.Init.Timing = compute_timing(baudrate);'
     )
 
     # replace fdcan_MspInit
@@ -571,15 +574,15 @@ def main():
 
     dst.mkdir(parents=True, exist_ok=True)
 
-    print(
-        "For i2c, make sure you have 3 variants of i2c, with baudrates set to "
-        "100000, 400000, and 1000000.\n"
-        "Name them i2c1.c, i2c2.c, and i2c3.c respectively.\n"
-        "Only peripherals from i2c3.c will be imported into i2c.c\n"
-        "Note that only the first i2c peripheral in each file need to be set to the baudrate!\n"
-    )
+    # print(
+    #     "For i2c, make sure you have 3 variants of i2c, with baudrates set to "
+    #     "100000, 400000, and 1000000.\n"
+    #     "Name them i2c1.c, i2c2.c, and i2c3.c respectively.\n"
+    #     "Only peripherals from i2c3.c will be imported into i2c.c\n"
+    #     "Note that only the first i2c peripheral in each file need to be set to the baudrate!\n"
+    # )
 
-    collect_i2c_hashes(src)
+    collect_i2c_REGS(src)
 
     global I2C_HELPER_TEXT
     I2C_HELPER_TEXT = generate_i2c_helper()
@@ -593,8 +596,8 @@ def main():
                 out = dst / file.name
                 text = file.read_text()
 
-                text = re.sub(r"_Min_Heap_Size\s*=\s*0x[0-9A-Fa-f]+;", "_Min_Heap_Size = 0x1FFF; // <- this line changed", text)
-                text = re.sub(r"_Min_Stack_Size\s*=\s*0x[0-9A-Fa-f]+;", "_Min_Stack_Size = 0x1FFF; // <- this line changed", text)
+                text = re.sub(r"_Min_Heap_Size\s*=\s*0x[0-9A-Fa-f]+;", "_Min_Heap_Size = {MIN_HEAP_SIZE}}; // <- this line changed", text)
+                text = re.sub(r"_Min_Stack_Size\s*=\s*0x[0-9A-Fa-f]+;", "_Min_Stack_Size = {MIN_STACK_SIZE}; // <- this line changed", text)
 
                 out.write_text(text)
                 continue
