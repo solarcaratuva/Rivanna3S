@@ -72,6 +72,7 @@ uint8_t adc_channels_claimed[] = {0, 0, 0};
 
 SPI_Peripheral SPI_Peripherals[] = {
     {SPI1, (PA_7.universal_mask), (PA_6.universal_mask), (PA_5.universal_mask), NC, NC, NC, false},
+    {SPI2, (PB_15.universal_mask), (PB_14.universal_mask), (PB_13.universal_mask), NC, NC, NC, false},
     {SPI4, (PE_6.universal_mask), (PE_5.universal_mask), (PE_2.universal_mask), NC, NC, NC, false},
     {SPI5, (PF_9.universal_mask | PF_11.universal_mask), (PF_8.universal_mask), (PF_7.universal_mask), NC, NC, NC, false},
     {SPI6, (PA_7.universal_mask), (PA_6.universal_mask), (PA_5.universal_mask), NC, NC, NC, false},
@@ -300,8 +301,18 @@ uint8_t get_SPI_AF(const SPI_TypeDef* handle, const Pin* pin, uint8_t mode) {
     };
     static uint8_t SPI1_MOSI_len = 1;
 
+    static AF_Info SPI2_SCK[] = {
+        {PB_13, GPIO_AF5_SPI2},
+    };
+    static uint8_t SPI2_SCK_len = 1;
+
+    static AF_Info SPI2_MISO[] = {
+        {PB_14, GPIO_AF5_SPI2},
+    };
+    static uint8_t SPI2_MISO_len = 1;
+
     static AF_Info SPI2_MOSI[] = {
-        {PC_1, GPIO_AF5_SPI2},
+        {PB_15, GPIO_AF5_SPI2},
     };
     static uint8_t SPI2_MOSI_len = 1;
 
@@ -376,6 +387,14 @@ uint8_t get_SPI_AF(const SPI_TypeDef* handle, const Pin* pin, uint8_t mode) {
     }
 
     if(handle == SPI2) {
+		if(mode == SCK) {
+            array = SPI2_SCK;
+            array_len = SPI2_SCK_len;
+        }
+		if(mode == MISO) {
+            array = SPI2_MISO;
+            array_len = SPI2_MISO_len;
+        }
 		if(mode == MOSI) {
             array = SPI2_MOSI;
             array_len = SPI2_MOSI_len;

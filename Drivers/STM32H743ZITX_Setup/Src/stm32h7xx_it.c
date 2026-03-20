@@ -22,6 +22,7 @@
 #include "stm32h7xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "fatfs_sd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -188,5 +189,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
      depending on the TIMx macro being visible here. */
   if (htim != NULL && htim == &htim1) {
     HAL_IncTick();
+    SD_TimerProc();
   }
 }

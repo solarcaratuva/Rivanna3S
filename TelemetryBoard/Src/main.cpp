@@ -1,6 +1,8 @@
 #include "log.h"
 #include "CanInterface.h"
 #include "pindef.h"
+#include "SPI.h"
+#include "fatfs.h"
 
 
 #define LOG_LEVEL DEBUG_LVL

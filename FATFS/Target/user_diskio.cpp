@@ -35,29 +35,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "ff_gen_drv.h"
-#include "SPI.h"
 #include "user_diskio.h"
-#include "pinmap.h"
-#include "peripheralmap.h"
-
-/* Private typedef -----------------------------------------------------------*/
-extern "C" Diskio_drvTypeDef USER_Driver = {
-  USER_initialize,
-  USER_status,
-  USER_read,
-  #if _USE_WRITE == 1
-  USER_write,
-  #endif /* _USE_WRITE == 1 */
-  #if _USE_IOCTL == 1
-  USER_ioctl,
-  #endif /* _USE_IOCTL == 1 */
-};
-/* Private define ------------------------------------------------------------*/
-static SPI sd_spi(PE_6, PE_5, PE_2, 100000); 
-
-/* Private variables ---------------------------------------------------------*/
-/* Disk status */
-static volatile DSTATUS Stat = STA_NOINIT;
+#include "fatfs_sd.h"
 
 /* USER CODE END DECL */
 
@@ -95,7 +74,7 @@ Diskio_drvTypeDef  USER_Driver =
 DSTATUS USER_initialize (BYTE pdrv)
 {
   /* USER CODE BEGIN INIT */
-  return USER_SPI_INIT(pdrv);
+  return SD_disk_initialize(pdrv);
   /* USER CODE END INIT */
 }
 
@@ -109,7 +88,7 @@ DSTATUS USER_status (
 )
 {
   /* USER CODE BEGIN STATUS */
-  return USER_SPI_STATUS(pdrv);
+  return SD_disk_status(pdrv);
   /* USER CODE END STATUS */
 }
 
@@ -129,7 +108,7 @@ DRESULT USER_read (
 )
 {
   /* USER CODE BEGIN READ */
-  return USER_SPI_READ(pdrv, buff, sector, count);
+  return SD_disk_read(pdrv, buff, sector, count);
   /* USER CODE END READ */
 }
 
@@ -150,7 +129,7 @@ DRESULT USER_write (
 )
 {
   /* USER CODE BEGIN WRITE */
-  return USER_SPI_WRITE(pdrv, buff, sector, count);
+  return SD_disk_write(pdrv, buff, sector, count);
   /* USER CODE END WRITE */
 }
 #endif /* _USE_WRITE == 1 */
@@ -170,7 +149,7 @@ DRESULT USER_ioctl (
 )
 {
   /* USER CODE BEGIN IOCTL */
-    return USER_SPI_IOCTL(pdrv, cmd, buff);
+    return SD_disk_ioctl(pdrv, cmd, buff);
   /* USER CODE END IOCTL */
 }
 #endif /* _USE_IOCTL == 1 */
