@@ -12,13 +12,13 @@ int main(void)
   DigitalOut LED1(PC_1);
   LED1.write(1);
 
-  // Thread main;
-  // main.start(app_main);
-  // vTaskStartScheduler();
+  Thread main;
+  main.start(app_main);
+  vTaskStartScheduler();
 
   while (1)
   {
-      HAL_Delay(1000);
-      LED1.write(!LED1.read());
+      // HAL_Delay(1000);
+      // LED1.write(!LED1.read());
   }
 }
