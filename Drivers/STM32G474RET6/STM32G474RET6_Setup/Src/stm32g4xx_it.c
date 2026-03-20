@@ -20,6 +20,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32_hal.h"
 #include "stm32g4xx_it.h"
+#include "FreeRTOS.h"
+#include "task.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
@@ -156,6 +158,16 @@ void DebugMon_Handler(void)
 /* FreeRTOS provides PendSV_Handler from the selected port layer. */
 
 /* CMSIS-RTOS layer provides SysTick_Handler. */
+void xPortSysTickHandler(void);
+
+void SysTick_Handler(void)
+{
+  HAL_IncTick();
+  if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+  {
+    xPortSysTickHandler();
+  }
+}
 
 /******************************************************************************/
 /* STM32G4xx Peripheral Interrupt Handlers                                    */

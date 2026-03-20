@@ -49,7 +49,7 @@ void app_main()
 #endif
   /* USER CODE END Init */
 
-  DigitalOut LED1(PB_0);
+  DigitalOut LED1(PC_1);
 
   while (1)
   {
