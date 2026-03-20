@@ -56,7 +56,7 @@ void app_main()
 
   while (1)
   {
-    log_debug("%s","HERE2");
+    log_debug("%s","HERE");
     HAL_Delay(1000);
     LED1.write(!LED1.read());
   }
