@@ -72,7 +72,6 @@ uint8_t adc_channels_claimed[] = {0, 0, 0};
 
 SPI_Peripheral SPI_Peripherals[] = {
     {SPI1, (PA_7.universal_mask), (PA_6.universal_mask), (PA_5.universal_mask), NC, NC, NC, false},
-    {SPI2, (PB_15.universal_mask), (PB_14.universal_mask), (PB_13.universal_mask), NC, NC, NC, false},
     {SPI4, (PE_6.universal_mask), (PE_5.universal_mask), (PE_2.universal_mask), NC, NC, NC, false},
     {SPI5, (PF_9.universal_mask | PF_11.universal_mask), (PF_8.universal_mask), (PF_7.universal_mask), NC, NC, NC, false},
     {SPI6, (PA_7.universal_mask), (PA_6.universal_mask), (PA_5.universal_mask), NC, NC, NC, false},

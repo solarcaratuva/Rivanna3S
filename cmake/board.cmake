@@ -34,14 +34,23 @@ set(BOARD_INCLUDE_DIRS
 set(STARTUP_S ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/startup_stm32h743zitx.s)
 file(GLOB APP_C_SOURCES
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/*.c
+  ${CMAKE_SOURCE_DIR}/FATFS/App/*.c
+  ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FatFs/src/*.c
 )
 file(GLOB APP_CPP_SOURCES
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H743ZITX_Setup/Src/*.cpp
+  ${CMAKE_SOURCE_DIR}/FATFS/Target/*.cpp
+)
+
+list(REMOVE_ITEM APP_C_SOURCES
+  ${CMAKE_SOURCE_DIR}/FATFS/Target/user_diskio.c
+  ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FatFs/src/option/syscall.c
 )
 file(GLOB HAL_SRCS
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal*.c
   ${CMAKE_SOURCE_DIR}/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_*.c
 )
+
 set_source_files_properties(${APP_CPP_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu++14 -fno-exceptions -fno-rtti -fno-use-cxa-atexit")
 set_source_files_properties(${APP_C_SOURCES} PROPERTIES COMPILE_FLAGS "-std=gnu11")
 

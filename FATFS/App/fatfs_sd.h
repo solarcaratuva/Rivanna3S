@@ -1,6 +1,8 @@
 #ifndef __FATFS_SD_H
 #define __FATFS_SD_H
 
+#include "diskio.h"
+#include "stm32h7xx_hal.h"
 
 #define M95040		0
 #define M95256		1

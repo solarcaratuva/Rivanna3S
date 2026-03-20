@@ -9,10 +9,9 @@
 #include "fatfs_sd.h"
 #include "DigitalOut.h"
 
-static SPI sd_spi(PB_15, PB_14, PB_13, 400000);
-static DigitalOut sd_cs(PB_12);
 
-
+static SPI sd_spi(PE_6, PE_5, PE_2, 400000); // TODO: Swap out with the real SD card hardware pins but for now 
+static DigitalOut sd_cs(PF_7);
 
 // FIX 1: Add volatile keyword
 // Variables modified by interrupts should be declared as volatile to prevent bugs caused by compiler optimizations.
