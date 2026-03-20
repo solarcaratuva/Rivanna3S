@@ -73,8 +73,8 @@ void app_main()
   const uint8_t t3_enc[] = {0x05, 0x01, 0x02, 0x03, 0x04};
 
   const struct {
-    const uint8_t* input;   size_t in_len;
-    const uint8_t* encoded; size_t enc_len;
+    const uint8_t* input;   uint16_t in_len;
+    const uint8_t* encoded; uint16_t enc_len;
   } cases[] = {
     {t0_in, 0,             t0_enc, sizeof(t0_enc)},
     {t1_in, sizeof(t1_in), t1_enc, sizeof(t1_enc)},
@@ -89,12 +89,12 @@ void app_main()
   while (1) {
     for (size_t i = 0; i < sizeof(cases)/sizeof(cases[0]); i++) {
       // Encode and check against hardcoded expected
-      size_t enc_len = cobs_encode(cases[i].input, cases[i].in_len, enc_buf);
+      uint16_t enc_len = cobs_encode(cases[i].input, cases[i].in_len, enc_buf);
       bool enc_ok = (enc_len == cases[i].enc_len) &&
                     same(enc_buf, cases[i].encoded, enc_len);
 
       // Decode the hardcoded encoded bytes and check we get original back
-      size_t dec_len = 0;
+      uint16_t dec_len = 0;
       bool dec_ok = cobs_decode(cases[i].encoded, cases[i].enc_len,
                                 dec_buf, sizeof(dec_buf), &dec_len);
       dec_ok = dec_ok && (dec_len == cases[i].in_len) &&
