@@ -250,4 +250,11 @@ void UART5_IRQHandler(void)
 
 /* USER CODE BEGIN 1 */
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim == &htim1) {
+    HAL_IncTick();
+  }
+}
+
 /* USER CODE END 1 */
