@@ -54,6 +54,9 @@ file(GLOB HAL_SRCS
   "${BOARD_HAL_DIR}/Src/stm32*_hal*.c"
   "${BOARD_HAL_DIR}/Src/stm32*_ll_*.c"
 )
+# Exclude template files that are meant to be customized, not compiled directly
+list(FILTER HAL_SRCS EXCLUDE REGEX "template")
+
 
 set(BOARD_CMSIS_DIR "${BOARD_ROOT}/CMSIS")
 set(BOARD_CMSIS_INC "${BOARD_CMSIS_DIR}/Include")

@@ -1,15 +1,3 @@
-#include <stdint.h>
-static uint32_t baudrate_to_hash(uint32_t baudrate)
-{
-    switch (baudrate)
-    {
-    case 100000: return 0x00503D58;
-    case 400000: return 0x00300617;
-    case 1000000: return 0x00200105;
-    default: return 0;
-    }
-}
-
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
@@ -33,6 +21,17 @@ static uint32_t baudrate_to_hash(uint32_t baudrate)
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "stm32_hal.h"
+#include <stdint.h>
+uint32_t compute_timing(uint32_t baudrate)
+{
+    switch (baudrate)
+    {
+    case 100000: return 0x00503D58;
+    case 400000: return 0x00300617;
+    case 1000000: return 0x00200105;
+    default: return 0;
+    }
+}
  // <-- This line changed when importing
 /* USER CODE BEGIN 0 */
 
@@ -55,7 +54,7 @@ void MX_I2C1_Init(uint32_t baudrate) // <-- This line changed when importing
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = baudrate_to_hash(baudrate); // <-- This line changed when importing
+  hi2c1.Init.Timing = compute_timing(baudrate); // <-- This line changed when importing
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -102,7 +101,7 @@ void MX_I2C2_Init(uint32_t baudrate) // <-- This line changed when importing
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = baudrate_to_hash(baudrate); // <-- This line changed when importing
+  hi2c2.Init.Timing = compute_timing(baudrate); // <-- This line changed when importing
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -149,7 +148,7 @@ void MX_I2C3_Init(uint32_t baudrate) // <-- This line changed when importing
 
   /* USER CODE END I2C3_Init 1 */
   hi2c3.Instance = I2C3;
-  hi2c3.Init.Timing = baudrate_to_hash(baudrate); // <-- This line changed when importing
+  hi2c3.Init.Timing = compute_timing(baudrate); // <-- This line changed when importing
   hi2c3.Init.OwnAddress1 = 0;
   hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -196,7 +195,7 @@ void MX_I2C4_Init(uint32_t baudrate) // <-- This line changed when importing
 
   /* USER CODE END I2C4_Init 1 */
   hi2c4.Instance = I2C4;
-  hi2c4.Init.Timing = baudrate_to_hash(baudrate); // <-- This line changed when importing
+  hi2c4.Init.Timing = compute_timing(baudrate); // <-- This line changed when importing
   hi2c4.Init.OwnAddress1 = 0;
   hi2c4.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c4.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;

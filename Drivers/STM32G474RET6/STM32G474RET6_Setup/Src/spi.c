@@ -1,5 +1,3 @@
-#include <stdint.h>
-static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_baud);
 
 /* USER CODE BEGIN Header */
 /**
@@ -24,6 +22,7 @@ static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_bau
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "stm32_hal.h"
+#include <stdint.h>
  // <-- This line changed when importing
 /* USER CODE BEGIN 0 */
 
@@ -32,6 +31,8 @@ static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_bau
 SPI_HandleTypeDef hspi1;
 SPI_HandleTypeDef hspi2;
 SPI_HandleTypeDef hspi3;
+
+static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_baud);
 
 /* SPI1 init function */
 void MX_SPI1_Init(uint32_t baudrate_prescaler) // <-- This line changed when importing
@@ -51,7 +52,7 @@ void MX_SPI1_Init(uint32_t baudrate_prescaler) // <-- This line changed when imp
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = spi_prescaler_from_baud(16, baudrate_prescaler); // <-- This line changed when importing
+  hspi1.Init.BaudRatePrescaler = spi_prescaler_from_baud(16000000, baudrate_prescaler); // <-- This line changed when importing
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -85,7 +86,7 @@ void MX_SPI2_Init(uint32_t baudrate_prescaler) // <-- This line changed when imp
   hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi2.Init.NSS = SPI_NSS_SOFT;
-  hspi2.Init.BaudRatePrescaler = spi_prescaler_from_baud(16, baudrate_prescaler); // <-- This line changed when importing
+  hspi2.Init.BaudRatePrescaler = spi_prescaler_from_baud(16000000, baudrate_prescaler); // <-- This line changed when importing
   hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -119,7 +120,7 @@ void MX_SPI3_Init(uint32_t baudrate_prescaler) // <-- This line changed when imp
   hspi3.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi3.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi3.Init.NSS = SPI_NSS_SOFT;
-  hspi3.Init.BaudRatePrescaler = spi_prescaler_from_baud(16, baudrate_prescaler); // <-- This line changed when importing
+  hspi3.Init.BaudRatePrescaler = spi_prescaler_from_baud(16000000, baudrate_prescaler); // <-- This line changed when importing
   hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;

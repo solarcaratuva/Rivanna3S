@@ -1,6 +1,3 @@
-#include <stdint.h>
-#include "stm32_hal.h"
-uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate);
 
 /* USER CODE BEGIN Header */
 /**
@@ -25,14 +22,16 @@ uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_cl
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "stm32_hal.h"
+#include <stdint.h>
  // <-- This line changed when importing
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 FDCAN_HandleTypeDef hfdcan1;
 FDCAN_HandleTypeDef hfdcan2;
 FDCAN_HandleTypeDef hfdcan3;
+
+uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate);
 
 /* FDCAN1 init function */
 void MX_FDCAN1_Init(uint32_t baudrate) // <-- This line changed when importing
@@ -52,9 +51,9 @@ void MX_FDCAN1_Init(uint32_t baudrate) // <-- This line changed when importing
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
-  hfdcan1.Init.NominalPrescaler = calculate_prescaler(&hfdcan1, 16000000, baudrate); // <-- This line changed when importing
+  hfdcan1.Init.NominalPrescaler = calculate_prescaler(&hfdcan1, 4000000, baudrate); // <-- This line changed when importing
   hfdcan1.Init.NominalSyncJumpWidth = 1;
-  hfdcan1.Init.NominalTimeSeg1 = 1;
+  hfdcan1.Init.NominalTimeSeg1 = 2;
   hfdcan1.Init.NominalTimeSeg2 = 1;
   hfdcan1.Init.DataPrescaler = 1;
   hfdcan1.Init.DataSyncJumpWidth = 1;
@@ -90,9 +89,9 @@ void MX_FDCAN2_Init(uint32_t baudrate) // <-- This line changed when importing
   hfdcan2.Init.AutoRetransmission = DISABLE;
   hfdcan2.Init.TransmitPause = DISABLE;
   hfdcan2.Init.ProtocolException = DISABLE;
-  hfdcan2.Init.NominalPrescaler = calculate_prescaler(&hfdcan2, 16000000, baudrate); // <-- This line changed when importing
+  hfdcan2.Init.NominalPrescaler = calculate_prescaler(&hfdcan2, 4000000, baudrate); // <-- This line changed when importing
   hfdcan2.Init.NominalSyncJumpWidth = 1;
-  hfdcan2.Init.NominalTimeSeg1 = 1;
+  hfdcan2.Init.NominalTimeSeg1 = 2;
   hfdcan2.Init.NominalTimeSeg2 = 1;
   hfdcan2.Init.DataPrescaler = 1;
   hfdcan2.Init.DataSyncJumpWidth = 1;
@@ -128,9 +127,9 @@ void MX_FDCAN3_Init(uint32_t baudrate) // <-- This line changed when importing
   hfdcan3.Init.AutoRetransmission = DISABLE;
   hfdcan3.Init.TransmitPause = DISABLE;
   hfdcan3.Init.ProtocolException = DISABLE;
-  hfdcan3.Init.NominalPrescaler = calculate_prescaler(&hfdcan3, 16000000, baudrate); // <-- This line changed when importing
+  hfdcan3.Init.NominalPrescaler = calculate_prescaler(&hfdcan3, 4000000, baudrate); // <-- This line changed when importing
   hfdcan3.Init.NominalSyncJumpWidth = 1;
-  hfdcan3.Init.NominalTimeSeg1 = 1;
+  hfdcan3.Init.NominalTimeSeg1 = 2;
   hfdcan3.Init.NominalTimeSeg2 = 1;
   hfdcan3.Init.DataPrescaler = 1;
   hfdcan3.Init.DataSyncJumpWidth = 1;
