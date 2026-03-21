@@ -53,7 +53,11 @@ int UART::read(uint8_t *buffer, uint16_t length){
 
         rxTask = Thread::get_task_handle();
 
-        UART_Start_Receive_IT(huart, buffer, length);
+    HAL_StatusTypeDef st = HAL_UART_Receive_IT(huart, buffer, length);
+    if (st != HAL_OK) {
+        rxTask = nullptr;
+        return -3;
+    }
 
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
@@ -69,7 +73,11 @@ int UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
 
         rxTask = Thread::get_task_handle();
 
-        HAL_UART_Receive_IT(huart, buffer, length);
+    HAL_StatusTypeDef st = HAL_UART_Receive_IT(huart, buffer, length);
+    if (st != HAL_OK) {
+        rxTask = nullptr;
+        return -3;
+    }
 
         TickType_t timeoutTicks =
         (timeout_ms == portMAX_DELAY)
@@ -97,7 +105,11 @@ int UART::write(uint8_t* buffer, uint16_t length) {
         last_error = HAL_UART_ERROR_NONE;
         txTask = Thread::get_task_handle();
 
-		HAL_UART_Transmit_IT(huart, buffer, length);
+		HAL_StatusTypeDef st = HAL_UART_Transmit_IT(huart, buffer, length);
+        if (st != HAL_OK) {
+            txTask = nullptr;
+            return -3;
+        }
 
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
@@ -138,6 +150,9 @@ extern "C"{
 
     void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
         UART* uart = UART::find_from_handle(huart);
+        if (!uart || !uart->txTask) {
+            return;
+        }
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         xTaskNotifyFromISR(
             uart->txTask,
@@ -155,6 +170,9 @@ extern "C"{
 extern "C"{
     void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
         UART* uart = UART::find_from_handle(huart);
+        if (!uart || !uart->rxTask) {
+            return;
+        }
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
         xTaskNotifyFromISR(
             uart->rxTask,
