@@ -38,6 +38,7 @@
 #include "peripheralmap.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 
 /**
  * @class UART
@@ -114,6 +115,7 @@ public:
 
 private:
     UART_HandleTypeDef* huart;   /**< HAL UART handle used for configuration and I/O. */
+    SemaphoreHandle_t mutex;     /**< Mutex for thread-safe access. */
 
     void init_gpio(UART_Peripheral* uart_periph);
 
