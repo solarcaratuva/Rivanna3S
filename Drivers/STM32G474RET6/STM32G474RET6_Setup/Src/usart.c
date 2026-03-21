@@ -366,7 +366,7 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
     /* UART4 interrupt Init */
-    HAL_NVIC_SetPriority(UART4_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(UART4_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(UART4_IRQn);
   /* USER CODE BEGIN UART4_MspInit 1 */
 
@@ -411,7 +411,7 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
     /* UART5 interrupt Init */
-    HAL_NVIC_SetPriority(UART5_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(UART5_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(UART5_IRQn);
   /* USER CODE BEGIN UART5_MspInit 1 */
 
@@ -448,7 +448,7 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
     /* USART1 interrupt Init */
-    HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USART1_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspInit 1 */
 
@@ -485,7 +485,7 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
     /* USART2 interrupt Init */
-    HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USART2_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspInit 1 */
 
@@ -522,7 +522,7 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
     /* USART3 interrupt Init */
-    HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(USART3_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(USART3_IRQn);
   /* USER CODE BEGIN USART3_MspInit 1 */
 
