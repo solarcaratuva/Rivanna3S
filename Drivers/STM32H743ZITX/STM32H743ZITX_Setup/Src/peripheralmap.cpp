@@ -70,6 +70,15 @@ const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Periph
 
 uint8_t adc_channels_claimed[] = {0, 0, 0};
 
+SPI_Peripheral SPI_Peripherals[] = {
+    {SPI1, (PA_7.universal_mask), (PA_6.universal_mask), (PA_5.universal_mask), NC, NC, NC, false},
+    {SPI4, (PE_6.universal_mask), (PE_5.universal_mask), (PE_2.universal_mask), NC, NC, NC, false},
+    {SPI5, (PF_9.universal_mask | PF_11.universal_mask), (PF_8.universal_mask), (PF_7.universal_mask), NC, NC, NC, false},
+    {SPI6, (PA_7.universal_mask), (PA_6.universal_mask), (PA_5.universal_mask), NC, NC, NC, false},
+};
+
+const uint8_t SPI_PERIPHERAL_COUNT = sizeof(SPI_Peripherals) / sizeof(SPI_Peripherals[0]);
+
 void gpio_clock_enable(const GPIO_TypeDef* handle){
     if(handle == GPIOC){
         __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -266,6 +275,165 @@ uint8_t get_FDCAN_AF(const FDCAN_GlobalTypeDef* handle, const Pin* pin, uint8_t 
             array_len = FDCAN1_TX_len;
         }
     }
+
+    for (uint8_t i = 0; i < array_len; i++) {
+        if(array[i].pin == *pin) {
+            return array[i].AF;
+        }
+    }
+    return 0; // should never happen
+}
+
+uint8_t get_SPI_AF(const SPI_TypeDef* handle, const Pin* pin, uint8_t mode) {
+    static AF_Info SPI1_SCK[] = {
+        {PA_5, GPIO_AF5_SPI1},
+    };
+    static uint8_t SPI1_SCK_len = 1;
+
+    static AF_Info SPI1_MISO[] = {
+        {PA_6, GPIO_AF5_SPI1},
+    };
+    static uint8_t SPI1_MISO_len = 1;
+
+    static AF_Info SPI1_MOSI[] = {
+        {PA_7, GPIO_AF5_SPI1},
+    };
+    static uint8_t SPI1_MOSI_len = 1;
+
+    static AF_Info SPI2_MOSI[] = {
+        {PC_1, GPIO_AF5_SPI2},
+    };
+    static uint8_t SPI2_MOSI_len = 1;
+
+    static AF_Info SPI3_MOSI[] = {
+        {PB_2, GPIO_AF7_SPI3},
+    };
+    static uint8_t SPI3_MOSI_len = 1;
+
+    static AF_Info SPI4_SCK[] = {
+        {PE_2, GPIO_AF5_SPI4},
+    };
+    static uint8_t SPI4_SCK_len = 1;
+
+    static AF_Info SPI4_MISO[] = {
+        {PE_5, GPIO_AF5_SPI4},
+    };
+    static uint8_t SPI4_MISO_len = 1;
+
+    static AF_Info SPI4_MOSI[] = {
+        {PE_6, GPIO_AF5_SPI4},
+    };
+    static uint8_t SPI4_MOSI_len = 1;
+
+    static AF_Info SPI5_SCK[] = {
+        {PF_7, GPIO_AF5_SPI5},
+    };
+    static uint8_t SPI5_SCK_len = 1;
+
+    static AF_Info SPI5_MISO[] = {
+        {PF_8, GPIO_AF5_SPI5},
+    };
+    static uint8_t SPI5_MISO_len = 1;
+
+    static AF_Info SPI5_MOSI[] = {
+        {PF_9, GPIO_AF5_SPI5},
+        {PF_11, GPIO_AF5_SPI5},
+    };
+    static uint8_t SPI5_MOSI_len = 2;
+
+    static AF_Info SPI6_SCK[] = {
+        {PA_5, GPIO_AF8_SPI6},
+    };
+    static uint8_t SPI6_SCK_len = 1;
+
+    static AF_Info SPI6_MISO[] = {
+        {PA_6, GPIO_AF8_SPI6},
+    };
+    static uint8_t SPI6_MISO_len = 1;
+
+    static AF_Info SPI6_MOSI[] = {
+        {PA_7, GPIO_AF8_SPI6},
+    };
+    static uint8_t SPI6_MOSI_len = 1;
+
+    AF_Info* array = NULL;
+    uint8_t array_len = 0;
+
+
+    if(handle == SPI1) {
+		if(mode == SCK) {
+            array = SPI1_SCK;
+            array_len = SPI1_SCK_len;
+        }
+		if(mode == MISO) {
+            array = SPI1_MISO;
+            array_len = SPI1_MISO_len;
+        }
+		if(mode == MOSI) {
+            array = SPI1_MOSI;
+            array_len = SPI1_MOSI_len;
+        }
+    }
+
+    if(handle == SPI2) {
+		if(mode == MOSI) {
+            array = SPI2_MOSI;
+            array_len = SPI2_MOSI_len;
+        }
+    }
+
+    if(handle == SPI3) {
+		if(mode == MOSI) {
+            array = SPI3_MOSI;
+            array_len = SPI3_MOSI_len;
+        }
+    }
+
+    if(handle == SPI4) {
+		if(mode == SCK) {
+            array = SPI4_SCK;
+            array_len = SPI4_SCK_len;
+        }
+		if(mode == MISO) {
+            array = SPI4_MISO;
+            array_len = SPI4_MISO_len;
+        }
+		if(mode == MOSI) {
+            array = SPI4_MOSI;
+            array_len = SPI4_MOSI_len;
+        }
+    }
+
+    if(handle == SPI5) {
+		if(mode == SCK) {
+            array = SPI5_SCK;
+            array_len = SPI5_SCK_len;
+        }
+		if(mode == MISO) {
+            array = SPI5_MISO;
+            array_len = SPI5_MISO_len;
+        }
+		if(mode == MOSI) {
+            array = SPI5_MOSI;
+            array_len = SPI5_MOSI_len;
+        }
+    }
+
+    if(handle == SPI6) {
+		if(mode == SCK) {
+            array = SPI6_SCK;
+            array_len = SPI6_SCK_len;
+        }
+		if(mode == MISO) {
+            array = SPI6_MISO;
+            array_len = SPI6_MISO_len;
+        }
+		if(mode == MOSI) {
+            array = SPI6_MOSI;
+            array_len = SPI6_MOSI_len;
+        }
+    }
+
 
     for (uint8_t i = 0; i < array_len; i++) {
         if(array[i].pin == *pin) {

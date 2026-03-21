@@ -17,6 +17,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+//#include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -37,10 +38,12 @@
 #include "Timeout.h"
 #include "lock.h"
 #include "log.h"
+#include "SPI.h"
+#include <stddef.h>  // for size_t
+
 
 void app_main()
 {
-
   /* USER CODE BEGIN Init */
 // #if defined(STM32G474xx)
 log_configure(DEBUG_LVL, PC_12, PD_2, 921600);
@@ -48,6 +51,7 @@ log_configure(DEBUG_LVL, PC_12, PD_2, 921600);
 //   log_configure(DEBUG_LVL, PD_8, PD_9, 921600);
 // #endif
   /* USER CODE END Init */
+  log_debug("%s", "BEGIN TEST");
 
   DigitalOut LED1(PC_1);
 
