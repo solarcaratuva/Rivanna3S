@@ -21,6 +21,8 @@ typedef struct BpsStatus : CanMessage, bps_bps_status_t {
 
     static uint16_t get_message_ID() { return BPS_BPS_STATUS_FRAME_ID; }
 
+    uint16_t ID() const { return BPS_BPS_STATUS_FRAME_ID; }
+
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
             "BpsStatus: pack_voltage %u, pack_current %u, pack_soc %u, discharge_relay_status %u, charge_relay_status %u, charger_safety %u, charge_power_signal %u, balancing_active %u",
@@ -47,6 +49,8 @@ typedef struct BpsError : CanMessage, bps_bps_error_t {
     }
 
     static uint16_t get_message_ID() { return BPS_BPS_ERROR_FRAME_ID; }
+
+    uint16_t ID() const { return BPS_BPS_ERROR_FRAME_ID; }
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,

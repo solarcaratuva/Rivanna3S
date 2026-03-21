@@ -5,6 +5,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "thread.h"
+#include "log.h"
 #include "semphr.h"
 
 
@@ -19,6 +20,7 @@ UART::UART(Pin tx, Pin rx, uint32_t baud)
 	uart_periph = find_uart_pins(tx, rx);
     if(uart_periph == nullptr) {
         initialized = false;
+        log_warn("UART init failed: no matching peripheral for TX/RX pins");
         return;
     }
     uart_periph->rxd_used = rx;

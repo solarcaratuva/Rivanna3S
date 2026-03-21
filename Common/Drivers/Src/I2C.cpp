@@ -1,6 +1,7 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "I2C.h"
+#include "log.h"
 
 // function declarations for init functions in a hardware-specific i2c.c file
 extern "C" I2C_HandleTypeDef* I2C_init(I2C_TypeDef* i2cHandle, uint32_t timing_reg);
@@ -13,6 +14,7 @@ I2C::I2C(Pin sda, Pin scl, I2C_BaudRate baudrate)
 	i2c_periph = find_i2c_pins(sda, scl);
 	if(i2c_periph == nullptr) {
 		initialized = false;
+		log_warn("I2C init failed: no matching peripheral for SDA/SCL pins");
 		return;
 	}
 
@@ -34,17 +36,35 @@ I2C::I2C(Pin sda, Pin scl, I2C_BaudRate baudrate)
 }
 
 
-void I2C::write(uint16_t address, uint8_t *buffer, uint16_t length){
-	if(initialized) {
-	    HAL_I2C_Master_Transmit(hi2c, address, buffer, length, HAL_MAX_DELAY);
+int I2C::write(uint16_t address, uint8_t *buffer, uint16_t length){
+	if(!initialized) {
+	    log_warn("I2C write failed: I2C not initialized");
+	    return 1;
 	}
+
+	HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(hi2c, address, buffer, length, HAL_MAX_DELAY);
+	if (status != HAL_OK) {
+		log_warn("I2C write failed: status %d, error code %lx", status, hi2c->ErrorCode);
+		return 2;
+	}
+
+	return 0;
 }
 
 
-void I2C::read(uint16_t address, uint8_t *buffer, uint16_t length){
-	if(initialized) {
-		HAL_I2C_Master_Receive(hi2c, address, buffer, length, HAL_MAX_DELAY);
+int I2C::read(uint16_t address, uint8_t *buffer, uint16_t length){
+	if(!initialized) {
+		log_warn("I2C read failed: I2C not initialized");
+		return 1;
 	}
+
+	HAL_StatusTypeDef status = HAL_I2C_Master_Receive(hi2c, address, buffer, length, HAL_MAX_DELAY);
+	if (status != HAL_OK) {
+		log_warn("I2C read failed: status %d, error code %lx", status, hi2c->ErrorCode);
+		return 2;
+	}
+
+	return 0;
 }
 
 

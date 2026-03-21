@@ -8,28 +8,46 @@
 #include "DigitalIn.h"
 #include "stm32_hal.h"
 #include "peripheralmap.h"
+#include "log.h"
 
 // -------- Constructors --------
 
 // Default: active-high, no pull
 DigitalIn::DigitalIn(Pin pin)
-    : pin_(pin), active_high_(true), pull_(Pull::None)
+    : pin_(pin), active_high_(true), pull_(Pull::None), initialized_(false)
 {
+    if (pin_.block == NULL) {
+        log_warn("DigitalIn init failed: pin is NC");
+        return;
+    }
+
     gpio_clock_enable(pin_.block);
     configure_pin();
+    initialized_ = true;
 }
 
 // Full constructor
 DigitalIn::DigitalIn(Pin pin, bool active_high, Pull pull)
-    : pin_(pin), active_high_(active_high), pull_(pull)
+    : pin_(pin), active_high_(active_high), pull_(pull), initialized_(false)
 {
+    if (pin_.block == NULL) {
+        log_warn("DigitalIn init failed: pin is NC");
+        return;
+    }
+
     gpio_clock_enable(pin_.block);
     configure_pin();
+    initialized_ = true;
 }
 
 // -------- Public Methods --------
 
 bool DigitalIn::read() {
+    if (!initialized_) {
+        log_warn("DigitalIn read failed: DigitalIn not initialized");
+        return false;
+    }
+
     GPIO_PinState state = HAL_GPIO_ReadPin(pin_.block, pin_.block_mask);
 
     // If active_high_ is true → logic 1 = pin high
