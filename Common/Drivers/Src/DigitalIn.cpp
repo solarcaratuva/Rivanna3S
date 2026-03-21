@@ -6,7 +6,7 @@
  */
 
 #include "DigitalIn.h"
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include "peripheralmap.h"
 #include "log.h"
 
@@ -79,6 +79,5 @@ void DigitalIn::configure_pin() {
 
     HAL_GPIO_Init(pin_.block, &GPIO_InitStruct);
 }
-
 
 

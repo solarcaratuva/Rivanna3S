@@ -9,7 +9,7 @@ import sys
 
 OS = platform.system()
 
-if OS != "Linux":
+if OS != "Linux" or True:
     try:
         from serial import Serial
         import serial.tools.list_ports

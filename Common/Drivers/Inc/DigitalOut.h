@@ -9,7 +9,7 @@
 #define INC_DIGITALOUT_H_
 
 #include "pinmap.h"
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 
 const bool PIN_ON = true;
 const bool PIN_OFF = false;

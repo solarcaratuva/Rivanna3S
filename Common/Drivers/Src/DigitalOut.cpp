@@ -6,8 +6,8 @@
  */
 #include "DigitalOut.h"
 #include "peripheralmap.h"
-#include "stm32h7xx_hal.h"
 #include "log.h"
+#include "stm32_hal.h"
 
 // -------- Constructors --------
 
@@ -90,7 +90,6 @@ void DigitalOut::configure_pin() {
 
     HAL_GPIO_Init(pin_.block, &GPIO_InitStruct);
 }
-
 
 
 

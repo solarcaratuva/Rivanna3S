@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
+#include "DigitalOut.h"
 
 volatile LogLevel global_log_level;
 
@@ -23,6 +24,9 @@ void log_configure(LogLevel level, Pin tx, Pin rx, uint32_t baudrate) {
     global_log_level = level;
     static UART instance(tx, rx, baudrate); // static so that it is NOT on the stack, so its not overwritten, etc.
     log_uart = &instance;
+
+    DigitalOut LED1(PC_1);
+    LED1.write(log_uart->initialized); // if log_uart is null, then turn on LED1 to indicate error, otherwise keep it off
 }
 
 void log(LogLevel level, const char* file, int line, const char* fmt, ...) {

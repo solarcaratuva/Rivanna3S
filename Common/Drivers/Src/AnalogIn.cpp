@@ -1,5 +1,5 @@
 #include "AnalogIn.h"
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "log.h"
@@ -106,4 +106,3 @@ uint32_t AnalogIn::adc_get_rank(const ADC_Peripheral* peripheral) {
 	adc_channels_claimed[index] += 1;
 	return rank;
 }
-

@@ -2,7 +2,7 @@
 #define AnalogIn_h
 
 #include <stdint.h>
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
 
