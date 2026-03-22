@@ -9,8 +9,9 @@ static CanInterface* main_can_interface_instance = nullptr;
 static CanInterface* motor_can_interface_instance = nullptr;
 
 
-CanInterface::CanInterface(Pin tx, Pin rx, uint32_t baudrate, CanNetwork network)
+CanInterface::CanInterface(Pin tx, Pin rx, Pin standby, uint32_t baudrate, CanNetwork network)
     : my_can(tx, rx, baudrate),
+      standby_pin(standby),
       receiverRunning(true),
       interface_thread(),
       alwayscallback(nullptr),
@@ -31,10 +32,11 @@ CanInterface::CanInterface(Pin tx, Pin rx, uint32_t baudrate, CanNetwork network
         log_warn("CanInterface: Unknown network type, receiver thread not started");
     }
 
+    standby_pin.write(false); // ensure standby is low (transceiver enabled)
+
 }
 
-int CanInterface::write(CanMessage *msg)
-{
+int CanInterface::write(SerializedCanMessage *msg) {
     if (!msg) {
         return -1; // invalid argument
     }
@@ -42,10 +44,20 @@ int CanInterface::write(CanMessage *msg)
     int status = my_can.write(msg);
     if (status == 0) {
         uint8_t data_hex[17]; // 16 bytes + null terminator
-        // bytes_to_hex(msg->data, msg->len, reinterpret_cast<char*>(data_hex), sizeof(data_hex));
-        // log_debug("CanInterface: Sent CAN message with ID %d Length %d Data 0x%s", msg->id, msg->len, data_hex);
+        bytes_to_hex(msg->data, msg->len, reinterpret_cast<char*>(data_hex), sizeof(data_hex));
+        log_debug("CanInterface: Sent CAN message with ID %d Length %d Data 0x%s", msg->id, msg->len, data_hex);
     }
     return status;
+}
+
+int CanInterface::write(CanMessage *msg) {
+    if (!msg) {
+        return -1; // invalid argument
+    }
+
+    SerializedCanMessage scm{};
+    msg->serialize(&scm);
+    return write(&scm);
 }
 
 int CanInterface::register_callback(uint16_t msg_id, CanCallback callback)

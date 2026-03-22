@@ -1,11 +1,18 @@
-
 #include "UART.h"
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "thread.h"
+#include "log.h"
+#include "semphr.h"
+
 
 extern "C" void HAL_UART_MspInit_custom(USART_TypeDef* uartHandle, Pin pin, uint8_t af);
 extern "C" UART_HandleTypeDef* UART_init(USART_TypeDef* uart, uint32_t baudrate);
+
+UART* uart_instance_map[12] = { nullptr };
 
 // Constructor
 UART::UART(Pin tx, Pin rx, uint32_t baud)
@@ -13,6 +20,7 @@ UART::UART(Pin tx, Pin rx, uint32_t baud)
 	uart_periph = find_uart_pins(tx, rx);
     if(uart_periph == nullptr) {
         initialized = false;
+        log_warn("UART init failed: no matching peripheral for TX/RX pins");
         return;
     }
     uart_periph->rxd_used = rx;
@@ -28,27 +36,98 @@ UART::UART(Pin tx, Pin rx, uint32_t baud)
     
     huart = UART_init(uart_periph->handle, baud);
 
+    // Register this UART instance
+    for (size_t i = 0; i < UART_PERIPHERAL_COUNT; ++i) {
+        if (UART_Peripherals[i].handle == huart->Instance) {
+            uart_instance_map[i] = this;
+            break;
+        }
+    }
+
+    mutex = xSemaphoreCreateMutex();
+
     initialized = true; 
 }
 
 
 
-void UART::read(uint8_t *buffer, uint16_t length){
+int UART::read(uint8_t *buffer, uint16_t length){
 	if(initialized) {
-		HAL_UART_Receive(huart, buffer, length, HAL_MAX_DELAY);
+        if (xSemaphoreTake(mutex, portMAX_DELAY) != pdTRUE) return -3;
+        last_error = HAL_UART_ERROR_NONE;
+
+        rxTask = Thread::get_task_handle();
+
+        if (HAL_UART_Receive_IT(huart, buffer, length) != HAL_OK) {
+            rxTask = nullptr;
+            xSemaphoreGive(mutex);
+            return -1;
+        }
+
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        xSemaphoreGive(mutex);
+
+        return last_error;
 	}
+
+    return -1; //unitialized
 }
 
-void UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
+int UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
 	if(initialized) {
-		HAL_UART_Receive(huart, buffer, length, timeout_ms);
+        if (xSemaphoreTake(mutex, portMAX_DELAY) != pdTRUE) return -3;
+        last_error = HAL_UART_ERROR_NONE;
+
+        rxTask = Thread::get_task_handle();
+
+        if (HAL_UART_Receive_IT(huart, buffer, length) != HAL_OK) {
+            rxTask = nullptr;
+            xSemaphoreGive(mutex);
+            return -1;
+        }
+
+        TickType_t timeoutTicks =
+        (timeout_ms == portMAX_DELAY)
+            ? portMAX_DELAY
+            : pdMS_TO_TICKS(timeout_ms);
+
+        uint32_t notified = ulTaskNotifyTake(pdTRUE, timeoutTicks);
+
+        // -------- CASE 1: TIMEOUT --------
+        if (notified == 0) {
+            // Abort transfer safely
+            HAL_UART_Abort_IT(huart);
+            rxTask = nullptr;
+            xSemaphoreGive(mutex);
+            return -2;  // timeout error
+        }
+
+        xSemaphoreGive(mutex);
+        return last_error; 
 	}
+
+    return -1; //unitialized
 }
 
-void UART::write(uint8_t* buffer, uint16_t length) {
+int UART::write(uint8_t* buffer, uint16_t length) {
 	if(initialized) {
-		HAL_UART_Transmit(huart, buffer, length, HAL_MAX_DELAY);
+        if (xSemaphoreTake(mutex, portMAX_DELAY) != pdTRUE) return -3;
+        last_error = HAL_UART_ERROR_NONE;
+        txTask = Thread::get_task_handle();
+
+		if (HAL_UART_Transmit_IT(huart, buffer, length) != HAL_OK) {
+            txTask = nullptr;
+            xSemaphoreGive(mutex);
+            return -1;
+        }
+
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        xSemaphoreGive(mutex);
+
+        return last_error;
 	}
+
+    return -1; //unitialized
 }
         
 UART_Peripheral* UART::find_uart_pins(Pin tx, Pin rx) {
@@ -65,5 +144,93 @@ UART_Peripheral* UART::find_uart_pins(Pin tx, Pin rx) {
     return nullptr; // No matching peripheral found
 }
 
+UART* UART::find_from_handle(UART_HandleTypeDef* huart){
+    if (!huart) return nullptr;
+
+    for (size_t i = 0; i < UART_PERIPHERAL_COUNT; ++i) {
+        if (UART_Peripherals[i].handle == huart->Instance) {
+            return uart_instance_map[i];
+        }
+    }
+    return nullptr;
+}
 
 
+// Call Back functions
+extern "C"{
+
+    void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+        UART* uart = UART::find_from_handle(huart);
+        if (!uart) return;
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        if (uart->txTask) {
+            xTaskNotifyFromISR(
+                uart->txTask,
+                0,
+                eIncrement,
+                &xHigherPriorityTaskWoken
+            );
+            uart->txTask = nullptr;
+        }
+
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        return;
+    }
+}
+
+extern "C"{
+    void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+        UART* uart = UART::find_from_handle(huart);
+        if (!uart) return;
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        if (uart->rxTask) {
+            xTaskNotifyFromISR(
+                uart->rxTask,
+                0,
+                eIncrement,
+                &xHigherPriorityTaskWoken
+            );
+            uart->rxTask = nullptr;
+        }
+
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+        return;
+    }
+}
+
+extern "C"{
+    void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
+        UART* uart = UART::find_from_handle(huart);
+        if (!uart) return;
+
+        // Capture HAL error flags
+        uart->last_error = HAL_UART_GetError(huart);
+
+        BaseType_t woken = pdFALSE;
+
+        // Wake RX task if waiting
+        if (uart->rxTask) {
+            xTaskNotifyFromISR(
+                uart->rxTask,
+                0,
+                eIncrement,
+                &woken
+            );
+            uart->rxTask = nullptr;
+        }
+
+        // Wake TX task if waiting
+        if (uart->txTask) {
+            xTaskNotifyFromISR(
+                uart->txTask,
+                0,
+                eIncrement,
+                &woken
+            );
+            uart->txTask = nullptr;
+        }
+
+        portYIELD_FROM_ISR(woken);
+    }
+}

@@ -6,30 +6,48 @@
  */
 #include "DigitalOut.h"
 #include "peripheralmap.h"
-#include "stm32h7xx_hal.h"
+#include "log.h"
+#include "stm32_hal.h"
 
 // -------- Constructors --------
 
 // Default: active-high, no pull
 DigitalOut::DigitalOut(Pin pin)
-    : pin_(pin), active_high_(true)
+    : pin_(pin), active_high_(true), initialized_(false)
 {
+    if (pin_.block == NULL) {
+        log_warn("DigitalOut init failed: pin is NC");
+        return;
+    }
+
     gpio_clock_enable(pin_.block);
     configure_pin();
+    initialized_ = true;
 }
 
 // Full constructor
 DigitalOut::DigitalOut(Pin pin, bool active_high)
-    : pin_(pin), active_high_(active_high)
+    : pin_(pin), active_high_(active_high), initialized_(false)
 {
+    if (pin_.block == NULL) {
+        log_warn("DigitalOut init failed: pin is NC");
+        return;
+    }
+
     gpio_clock_enable(pin_.block);
     configure_pin();
+    initialized_ = true;
 }
 
 // -------- Public Methods --------
 
 // Write logical value to the pin
 void DigitalOut::write(bool val) {
+    if (!initialized_) {
+        log_warn("DigitalOut write failed: DigitalOut not initialized");
+        return;
+    }
+
     GPIO_PinState state;
 
     // If active-high, val=true → SET, false → RESET
@@ -45,6 +63,11 @@ void DigitalOut::write(bool val) {
 
 // Read logical value from the pin
 bool DigitalOut::read() {
+    if (!initialized_) {
+        log_warn("DigitalOut read failed: DigitalOut not initialized");
+        return false;
+    }
+
     GPIO_PinState state = HAL_GPIO_ReadPin(pin_.block, pin_.block_mask);
 
     // Return logical interpretation based on active_high_
@@ -67,7 +90,6 @@ void DigitalOut::configure_pin() {
 
     HAL_GPIO_Init(pin_.block, &GPIO_InitStruct);
 }
-
 
 
 
