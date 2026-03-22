@@ -111,7 +111,13 @@ static void handle_lte_transmission()
       // Send to LTE module
       // note: need to look into which mode for LTE to use. 
       // note: lteUart.write(pkt, idx) sends raw telemetry packets to the XBee over UART. A MicroPython script on the XBee is expected to read these bytes and publish them to AWS IoT over MQTT/TLS.
-      lteUart.write(pkt, idx);
+      // lteUart.write(pkt, idx); NOTE: UNCOMMENT WHEN NOT TESTING
+      log_info("Sending pkt: id=0x%03X len=%u time=%lu data=%02X %02X %02X %02X %02X %02X %02X %02X",
+         frame.id,
+         frame.len,
+         (unsigned long)frame.timestamp_ms,
+         frame.data[0], frame.data[1], frame.data[2], frame.data[3],
+         frame.data[4], frame.data[5], frame.data[6], frame.data[7]);
   }
 }
 
