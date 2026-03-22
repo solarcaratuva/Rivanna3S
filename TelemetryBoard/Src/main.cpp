@@ -3,7 +3,7 @@
 #include "pindef.h"
 /* USER CODE END Includes */
 
-#define LOG_LEVEL LOG_DEBUG
+#define LOG_LEVEL DEBUG_LVL
 
 struct TelemetryCanFrame
 {
@@ -18,7 +18,7 @@ static QueueHandle_t telemetrySendQueue = nullptr;
 
 static DigitalOut lteDtrPin(LTE_DTR);
 static UART lteUart(LTE_TX, LTE_RX, 115200);
-static CanInterface mainCan(MAIN_CAN_TX, MAIN_CAN_RX, 250000, CanNetwork::Main);
+static CanInterface mainCan(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
 
 static Thread lte_thread;
 
@@ -125,7 +125,7 @@ static void handle_lte_transmission()
 void app_main()
 {
   // NOTE: pindef does not have Log TX/RX?
-  log_configure(LOG_LEVEL, USB_TX, USB_RX, 921600);
+  log_configure(LOG_LEVEL, LOG_TX, LOG_RX, 921600);
   log_info("Telemetry Board starting up...");
 
   // Might need to do something with DRL?
