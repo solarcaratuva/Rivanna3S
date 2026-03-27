@@ -1,6 +1,5 @@
 #define TRUE  1
 #define FALSE 0
-#define bool BYTE
 
 #include "stm32h7xx_hal.h"
 #include "SPI.h" // SPI wrapper functions
@@ -470,7 +469,7 @@ DRESULT SD_disk_write(BYTE pdrv, const BYTE* buff, DWORD sector, UINT count)
 DRESULT SD_disk_ioctl(BYTE drv, BYTE ctrl, void *buff)
 {
     DRESULT res;
-    uint8_t n, csd[16], *ptr = buff;
+    uint8_t n, csd[16], *ptr = static_cast<uint8_t*>(buff);
 
     /* pdrv should be 0 */
     if (drv) return RES_PARERR;

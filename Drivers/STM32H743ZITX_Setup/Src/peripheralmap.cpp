@@ -301,19 +301,19 @@ uint8_t get_SPI_AF(const SPI_TypeDef* handle, const Pin* pin, uint8_t mode) {
     static uint8_t SPI1_MOSI_len = 1;
 
     static AF_Info SPI2_SCK[] = {
-        {PB_13, GPIO_AF5_SPI2},
+        // TODO: PB_13 
     };
-    static uint8_t SPI2_SCK_len = 1;
+    static uint8_t SPI2_SCK_len = 0;
 
     static AF_Info SPI2_MISO[] = {
-        {PB_14, GPIO_AF5_SPI2},
+        // TODO: PB_14 
     };
-    static uint8_t SPI2_MISO_len = 1;
+    static uint8_t SPI2_MISO_len = 0;
 
     static AF_Info SPI2_MOSI[] = {
-        {PB_15, GPIO_AF5_SPI2},
+        // TODO: PB_15 
     };
-    static uint8_t SPI2_MOSI_len = 1;
+    static uint8_t SPI2_MOSI_len = 0;
 
     static AF_Info SPI3_MOSI[] = {
         {PB_2, GPIO_AF7_SPI3},

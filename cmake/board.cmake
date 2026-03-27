@@ -44,6 +44,8 @@ file(GLOB APP_CPP_SOURCES
 
 list(REMOVE_ITEM APP_C_SOURCES
   ${CMAKE_SOURCE_DIR}/FATFS/Target/user_diskio.c
+)
+list(APPEND APP_C_SOURCES
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FatFs/src/option/syscall.c
 )
 file(GLOB HAL_SRCS

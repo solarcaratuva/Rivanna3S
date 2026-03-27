@@ -45,12 +45,18 @@
 #define CT_BLOCK	0x08		/* Block addressing */
 
 /* Functions */
+#ifdef __cplusplus
+extern "C" {
+#endif
 DSTATUS SD_disk_initialize (BYTE pdrv);
 DSTATUS SD_disk_status (BYTE pdrv);
 DRESULT SD_disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count);
 DRESULT SD_disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count);
 DRESULT SD_disk_ioctl (BYTE pdrv, BYTE cmd, void* buff);
 void SD_TimerProc(void);
+#ifdef __cplusplus
+}
+#endif
 
 #define SPI_TIMEOUT 100
 
