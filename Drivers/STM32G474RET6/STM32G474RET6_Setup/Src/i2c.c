@@ -21,14 +21,13 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "stm32_hal.h"
-#include <stdint.h>
 uint32_t compute_timing(uint32_t baudrate)
 {
     switch (baudrate)
     {
     case 100000: return 0x00503D58;
-    case 400000: return 0x00300617;
-    case 1000000: return 0x00200105;
+    case 400000: return 0x00403E5A;
+    case 1000000: return 0x00403D5B;
     default: return 0;
     }
 }
@@ -80,10 +79,6 @@ void MX_I2C1_Init(uint32_t baudrate) // <-- This line changed when importing
   {
     //Error_Handler(); // <-- This line changed when importing
   }
-
-  /** I2C Fast mode Plus enable
-  */
-  HAL_I2CEx_EnableFastModePlus(I2C_FASTMODEPLUS_I2C1);
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
@@ -127,10 +122,6 @@ void MX_I2C2_Init(uint32_t baudrate) // <-- This line changed when importing
   {
     //Error_Handler(); // <-- This line changed when importing
   }
-
-  /** I2C Fast mode Plus enable
-  */
-  HAL_I2CEx_EnableFastModePlus(I2C_FASTMODEPLUS_I2C2);
   /* USER CODE BEGIN I2C2_Init 2 */
 
   /* USER CODE END I2C2_Init 2 */
@@ -174,10 +165,6 @@ void MX_I2C3_Init(uint32_t baudrate) // <-- This line changed when importing
   {
     //Error_Handler(); // <-- This line changed when importing
   }
-
-  /** I2C Fast mode Plus enable
-  */
-  HAL_I2CEx_EnableFastModePlus(I2C_FASTMODEPLUS_I2C3);
   /* USER CODE BEGIN I2C3_Init 2 */
 
   /* USER CODE END I2C3_Init 2 */
@@ -221,10 +208,6 @@ void MX_I2C4_Init(uint32_t baudrate) // <-- This line changed when importing
   {
     //Error_Handler(); // <-- This line changed when importing
   }
-
-  /** I2C Fast mode Plus enable
-  */
-  HAL_I2CEx_EnableFastModePlus(I2C_FASTMODEPLUS_I2C4);
   /* USER CODE BEGIN I2C4_Init 2 */
 
   /* USER CODE END I2C4_Init 2 */
@@ -285,10 +268,10 @@ void HAL_I2C_MspInit_custom(I2C_TypeDef* i2cHandle, Pin pin, uint8_t af) // <-- 
     }
 
     __HAL_RCC_GPIOF_CLK_ENABLE();
-    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
     /**I2C2 GPIO Configuration
     PF0-OSC_IN     ------> I2C2_SDA
-    PA9     ------> I2C2_SCL
+    PC4     ------> I2C2_SCL
     */
     GPIO_InitStruct.Pin = pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;

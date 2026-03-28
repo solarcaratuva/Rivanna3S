@@ -4,10 +4,10 @@
 #include "log.h"
 #include "peripheralmap.h"
 #include "lock.h"
-#include "fdcan.h"
+// #include "fdcan.h"
 
-// extern "C" void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef* fdcanHandle, Pin pin, uint8_t af);
-// extern "C" FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* fdcan, uint32_t baudrate);
+extern "C" void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef* fdcanHandle, Pin pin, uint8_t af);
+extern "C" FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* fdcan, uint32_t baudrate);
 
 
 CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)

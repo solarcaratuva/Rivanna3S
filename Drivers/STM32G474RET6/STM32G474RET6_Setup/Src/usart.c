@@ -21,7 +21,6 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "stm32_hal.h"
-#include <stdint.h>
  // <-- This line changed when importing
 /* USER CODE BEGIN 0 */
 
@@ -331,10 +330,6 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
-    /* LPUART1 interrupt Init */
-    HAL_NVIC_SetPriority(LPUART1_IRQn, 5, 0);
-    HAL_NVIC_EnableIRQ(LPUART1_IRQn);
-
   /* USER CODE BEGIN LPUART1_MspInit 1 */
 
   /* USER CODE END LPUART1_MspInit 1 */
@@ -369,9 +364,6 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
-    /* UART4 interrupt Init */
-    HAL_NVIC_SetPriority(UART4_IRQn, 5, 0);
-    HAL_NVIC_EnableIRQ(UART4_IRQn);
   /* USER CODE BEGIN UART4_MspInit 1 */
 
   /* USER CODE END UART4_MspInit 1 */
@@ -414,9 +406,6 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
-    /* UART5 interrupt Init */
-    HAL_NVIC_SetPriority(UART5_IRQn, 5, 0);
-    HAL_NVIC_EnableIRQ(UART5_IRQn);
   /* USER CODE BEGIN UART5_MspInit 1 */
 
   /* USER CODE END UART5_MspInit 1 */
@@ -440,9 +429,10 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     __HAL_RCC_USART1_CLK_ENABLE();
 
     __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
     /**USART1 GPIO Configuration
-    PC4     ------> USART1_TX
     PC5     ------> USART1_RX
+    PA9     ------> USART1_TX
     */
     GPIO_InitStruct.Pin = pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -451,9 +441,13 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
-    /* USART1 interrupt Init */
-    HAL_NVIC_SetPriority(USART1_IRQn, 5, 0);
-    HAL_NVIC_EnableIRQ(USART1_IRQn);
+    GPIO_InitStruct.Pin = pin.block_mask; // <-- This line changed when importing
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
+
   /* USER CODE BEGIN USART1_MspInit 1 */
 
   /* USER CODE END USART1_MspInit 1 */
@@ -488,9 +482,6 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
-    /* USART2 interrupt Init */
-    HAL_NVIC_SetPriority(USART2_IRQn, 5, 0);
-    HAL_NVIC_EnableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspInit 1 */
 
   /* USER CODE END USART2_MspInit 1 */
@@ -525,9 +516,6 @@ void HAL_UART_MspInit_custom(const USART_TypeDef* uartHandle, Pin pin, uint8_t a
     GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
-    /* USART3 interrupt Init */
-    HAL_NVIC_SetPriority(USART3_IRQn, 5, 0);
-    HAL_NVIC_EnableIRQ(USART3_IRQn);
   /* USER CODE BEGIN USART3_MspInit 1 */
 
   /* USER CODE END USART3_MspInit 1 */

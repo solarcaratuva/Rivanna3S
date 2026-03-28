@@ -1,4 +1,3 @@
-
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
@@ -22,16 +21,15 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "stm32_hal.h"
-#include <stdint.h>
+uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate);
  // <-- This line changed when importing
 /* USER CODE BEGIN 0 */
+
 /* USER CODE END 0 */
 
 FDCAN_HandleTypeDef hfdcan1;
 FDCAN_HandleTypeDef hfdcan2;
 FDCAN_HandleTypeDef hfdcan3;
-
-uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate);
 
 /* FDCAN1 init function */
 void MX_FDCAN1_Init(uint32_t baudrate) // <-- This line changed when importing
@@ -51,9 +49,9 @@ void MX_FDCAN1_Init(uint32_t baudrate) // <-- This line changed when importing
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
-  hfdcan1.Init.NominalPrescaler = calculate_prescaler(&hfdcan1, 4000000, baudrate); // <-- This line changed when importing
+  hfdcan1.Init.NominalPrescaler = calculate_prescaler(&hfdcan1, 200000000, baudrate); // <-- This line changed when importing
   hfdcan1.Init.NominalSyncJumpWidth = 1;
-  hfdcan1.Init.NominalTimeSeg1 = 2;
+  hfdcan1.Init.NominalTimeSeg1 = 1;
   hfdcan1.Init.NominalTimeSeg2 = 1;
   hfdcan1.Init.DataPrescaler = 1;
   hfdcan1.Init.DataSyncJumpWidth = 1;
@@ -89,9 +87,9 @@ void MX_FDCAN2_Init(uint32_t baudrate) // <-- This line changed when importing
   hfdcan2.Init.AutoRetransmission = DISABLE;
   hfdcan2.Init.TransmitPause = DISABLE;
   hfdcan2.Init.ProtocolException = DISABLE;
-  hfdcan2.Init.NominalPrescaler = calculate_prescaler(&hfdcan2, 4000000, baudrate); // <-- This line changed when importing
+  hfdcan2.Init.NominalPrescaler = calculate_prescaler(&hfdcan2, 200000000, baudrate); // <-- This line changed when importing
   hfdcan2.Init.NominalSyncJumpWidth = 1;
-  hfdcan2.Init.NominalTimeSeg1 = 2;
+  hfdcan2.Init.NominalTimeSeg1 = 1;
   hfdcan2.Init.NominalTimeSeg2 = 1;
   hfdcan2.Init.DataPrescaler = 1;
   hfdcan2.Init.DataSyncJumpWidth = 1;
@@ -127,9 +125,9 @@ void MX_FDCAN3_Init(uint32_t baudrate) // <-- This line changed when importing
   hfdcan3.Init.AutoRetransmission = DISABLE;
   hfdcan3.Init.TransmitPause = DISABLE;
   hfdcan3.Init.ProtocolException = DISABLE;
-  hfdcan3.Init.NominalPrescaler = calculate_prescaler(&hfdcan3, 4000000, baudrate); // <-- This line changed when importing
+  hfdcan3.Init.NominalPrescaler = calculate_prescaler(&hfdcan3, 200000000, baudrate); // <-- This line changed when importing
   hfdcan3.Init.NominalSyncJumpWidth = 1;
-  hfdcan3.Init.NominalTimeSeg1 = 2;
+  hfdcan3.Init.NominalTimeSeg1 = 1;
   hfdcan3.Init.NominalTimeSeg2 = 1;
   hfdcan3.Init.DataPrescaler = 1;
   hfdcan3.Init.DataSyncJumpWidth = 1;
@@ -215,8 +213,8 @@ void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t
 
     __HAL_RCC_GPIOB_CLK_ENABLE();
     /**FDCAN2 GPIO Configuration
-    PB12     ------> FDCAN2_RX
-    PB13     ------> FDCAN2_TX
+    PB5     ------> FDCAN2_RX
+    PB6     ------> FDCAN2_TX
     */
     GPIO_InitStruct.Pin = pin.block_mask | pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -251,10 +249,18 @@ void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t
     }
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
     /**FDCAN3 GPIO Configuration
-    PA8     ------> FDCAN3_RX
     PA15     ------> FDCAN3_TX
+    PB3     ------> FDCAN3_RX
     */
+    GPIO_InitStruct.Pin = pin.block_mask | pin.block_mask; // <-- This line changed when importing
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
+    HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
+
     GPIO_InitStruct.Pin = pin.block_mask | pin.block_mask; // <-- This line changed when importing
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
