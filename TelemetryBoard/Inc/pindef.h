@@ -3,8 +3,8 @@
 
 #define DEBUG_LED_1     PC_13
 #define RADIO_DTR       PA_1
-#define RADIO_TX        PA_3
-#define RADIO_RX        PA_2
+#define RADIO_TX        PA_2
+#define RADIO_RX        PA_3
 #define DEBUG_BTN       PA_4
 #define SD_SELECT       PB_12
 #define SPI2_SCK        PB_13 
