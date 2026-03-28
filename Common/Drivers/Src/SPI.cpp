@@ -1,5 +1,5 @@
 #include "SPI.h"
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "log.h"

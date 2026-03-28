@@ -1,7 +1,8 @@
 #include "AnalogIn.h"
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
+#include "log.h"
 
 // function declarations for init functions in a hardware-specific adc.c file
 extern "C" ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, uint32_t rank);
@@ -12,6 +13,7 @@ AnalogIn::AnalogIn(Pin pin) {
     adc_periph_ = findADCPin(pin);
     if(adc_periph_ == nullptr) {
         initialized = false;
+        log_warn("AnalogIn init failed: no matching ADC peripheral for pin");
         return;
     }
     adc_periph_->used_pin = pin;
@@ -28,23 +30,33 @@ AnalogIn::AnalogIn(Pin pin) {
 
 uint16_t AnalogIn::read_u12() {
     if (!initialized) {
+        log_warn("AnalogIn read failed: AnalogIn not initialized");
         return 10.0f;
     }
 
     // Start ADC conversion
     HAL_StatusTypeDef check = HAL_ADC_Start(hadc_);
-    if (check != HAL_OK) return 11.0f;
+    if (check != HAL_OK) {
+        log_warn("AnalogIn read failed: HAL_ADC_Start status %d", check);
+        return 11.0f;
+    }
 
     // Poll for conversion completion
     check = HAL_ADC_PollForConversion(hadc_, HAL_MAX_DELAY);
-    if (check != HAL_OK) return 12.0f;
+    if (check != HAL_OK) {
+        log_warn("AnalogIn read failed: HAL_ADC_PollForConversion status %d", check);
+        return 12.0f;
+    }
 
     // Get the converted value
     uint16_t value = (HAL_ADC_GetValue(hadc_));
 
     // Stop ADC
     check = HAL_ADC_Stop(hadc_);
-    if (check != HAL_OK) return 13.0f;
+    if (check != HAL_OK) {
+        log_warn("AnalogIn read failed: HAL_ADC_Stop status %d", check);
+        return 13.0f;
+    }
 
     return value;
 }
@@ -94,4 +106,3 @@ uint32_t AnalogIn::adc_get_rank(const ADC_Peripheral* peripheral) {
 	adc_channels_claimed[index] += 1;
 	return rank;
 }
-

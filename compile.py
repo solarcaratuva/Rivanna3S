@@ -2,11 +2,14 @@
 
 import subprocess
 import argparse
+import sys
 
 CONTAINER = "Rivanna3S_compile"
 HOST_DIR = "$(pwd)"
 CONTAINER_DIR = "/root/code"
-
+DEFAULT_MCU = "STM32G474RET6"
+TESTING_MCU = "STM32H743ZITX"
+HIL_MCU = "STM32U5A9NJH6Q" # drivers not done for this yet
 
 def container_exists(name):
     result = subprocess.run(f"docker ps -a --format '{{{{.Names}}}}'", shell=True, capture_output=True, text=True)
@@ -32,6 +35,11 @@ arg_parser.add_argument("-s", "--silent", action="store_true", help="Suppress ou
 arg_parser.add_argument("--install", action="store_true", help="Create the Docker container for the first time.")
 args = arg_parser.parse_args()
 
+testing_mode = "testing" in args.args
+args.args = [arg for arg in args.args if arg != "testing"]
+mcu = TESTING_MCU if testing_mode else DEFAULT_MCU
+build_dir = "build"
+
 if args.install:
     create_container()
 
@@ -46,18 +54,21 @@ if process.returncode != 0:
     exit(1)
 
 if args.clean:
-    command = f"rm -rf {CONTAINER_DIR}/build/"
+    command = f"rm -rf {CONTAINER_DIR}/{build_dir}/"
     process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=True, text=True)
     if process.returncode != 0:
         print("Failed to clean the build.")
         exit(1)
 
-command = f"cd {CONTAINER_DIR} && cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-gcc.cmake -DCMAKE_BUILD_TYPE=Debug"
+command = (
+    f"cd {CONTAINER_DIR} && cmake -S . -B {build_dir} -G Ninja "
+    f"-DCMAKE_TOOLCHAIN_FILE=cmake/arm-gcc.cmake -DCMAKE_BUILD_TYPE=Debug -DBOARD={mcu}"
+)
 process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=args.silent, text=True)
 if args.silent and process.returncode != 0:
     print("CMake configuration failed.")
 
-command = f"cd {CONTAINER_DIR} && cmake --build build {' '.join(args.args)}"
+command = f"cd {CONTAINER_DIR} && cmake --build {build_dir} {' '.join(args.args)}"
 compile_process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=args.silent, text=True)
 if args.silent and compile_process.returncode != 0:
     print("Compilation failed.")

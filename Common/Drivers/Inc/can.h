@@ -1,7 +1,7 @@
 #ifndef CAN_H
 #define CAN_H
 
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "lock.h"
@@ -26,7 +26,7 @@ struct SerializedCanMessage {
  * that can be serialized to and deserialized from raw CAN frames. Derive
  * from this interface to create message-specific structures.
  * 
- * @note Derived classes must implement a static uint16_t get_ID() method
+ * @note Derived classes must implement a static uint16_t get_message_ID() method
  *       to provide the CAN ID for the message type.
  */
 struct CanMessage {
@@ -49,6 +49,12 @@ struct CanMessage {
      * @param level Logging level (e.g., LOG_INFO, LOG_WARN, LOG_ERROR)
      */
     virtual void log_msg(LogLevel level) const = 0;
+
+    /**
+     * @brief Get the message type ID of the instance. 
+     * Using the static `MessageType::get_message_ID()` is preferred when the message type is know at compile time.
+     */
+    virtual uint16_t ID() const = 0;
 };
 
 /**
@@ -127,7 +133,7 @@ public:
      * Transmits a raw SerializedCanMessage directly to the CAN bus without
      * additional processing. The message is added to the transmit FIFO/queue.
      * 
-     * @param[in] msg Reference to the SerializedCanMessage to transmit
+     * @param[in] msg Pointer to the SerializedCanMessage to transmit
      * @return int Status code:
      *         - 0: Success
      *         - 1: CAN peripheral not initialized
@@ -135,7 +141,7 @@ public:
      * 
      * @note This method is thread-safe
      */
-    int write(const SerializedCanMessage& msg);
+    int write(const SerializedCanMessage *msg);
 
     /**
      * @brief Read a raw CAN message from the receive FIFO
@@ -150,8 +156,7 @@ public:
      *         - 2: HAL reception error
      * 
      * @note This method is thread-safe but BLOCKING. It will wait indefinitely
-     *       until a message arrives. Consider using non-blocking alternatives
-     *       for production code.
+     *       until a message arrives.
      */
     int read(SerializedCanMessage* msg);
 

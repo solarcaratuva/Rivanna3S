@@ -2,7 +2,7 @@
 #define PERIPHERALMAP_H
 
 #include "pinmap.h"
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include <stdbool.h>
 
 #define SDA     1

@@ -9,7 +9,10 @@
 #define INC_DIGITALOUT_H_
 
 #include "pinmap.h"
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
+
+const bool PIN_ON = true;
+const bool PIN_OFF = false;
 
 /**
  * @brief Digital output pin interface with configurable polarity
@@ -50,6 +53,7 @@ public:
 private:
     Pin pin_;
     bool active_high_;
+    bool initialized_;
 
     void configure_pin(); // internal helper to configure GPIO
 };
