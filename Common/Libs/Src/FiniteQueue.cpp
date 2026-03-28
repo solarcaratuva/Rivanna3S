@@ -1,13 +1,13 @@
-#include "Queue.h"
+#include "FiniteQueue.h"
 
-Queue::Queue(uint16_t length, uint16_t datatype_size){
+FiniteQueue::FiniteQueue(uint16_t length, uint16_t datatype_size){
     this->length = length;
     this->datatype_size = datatype_size;
 
     queue_handle = xQueueCreate(length, datatype_size);
 }
 
-int Queue::append_to_back(void* item, uint32_t wait_time){
+int FiniteQueue::append_to_back(void* item, uint32_t wait_time){
     if (queue_handle == nullptr) {
         return -1; // Queue not initialized
     }
@@ -19,7 +19,7 @@ int Queue::append_to_back(void* item, uint32_t wait_time){
     return 0; // Success
 }
 
-int Queue::append_to_front(void* item, uint32_t wait_time){
+int FiniteQueue::append_to_front(void* item, uint32_t wait_time){
     if (queue_handle == nullptr) {
         return -1; // Queue not initialized
     }
@@ -31,7 +31,7 @@ int Queue::append_to_front(void* item, uint32_t wait_time){
     return 0; // Success
 }
 
-int Queue::overwrite(void* item){
+int FiniteQueue::overwrite(void* item){
     if (queue_handle == nullptr) {
         return -1; // Queue not initialized
     }
@@ -43,7 +43,7 @@ int Queue::overwrite(void* item){
     return 0; // Success
 }
 
-int Queue::get(void* item, uint32_t wait_time){
+int FiniteQueue::get(void* item, uint32_t wait_time){
     if (queue_handle == nullptr) {
         return -1; // Queue not initialized
     }
@@ -55,7 +55,7 @@ int Queue::get(void* item, uint32_t wait_time){
     return 0; // Success
 }
 
-int Queue::peek(void* item, uint32_t wait_time){
+int FiniteQueue::peek(void* item, uint32_t wait_time){
     if (queue_handle == nullptr) {
         return -1; // Queue not initialized
     }

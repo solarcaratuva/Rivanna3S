@@ -1,5 +1,5 @@
-#ifndef CUSTOMQUEUE_H
-#define CUSTOMQUEUE_H
+#ifndef FINITEQUEUE_H
+#define FINITEQUEUE_H
 
 #include "FreeRTOS.h"
 #include "queue.h"
@@ -9,19 +9,19 @@
  * 
  * This class provides a simple C++ interface for creating and managing FreeRTOS queues.
  */
-class Queue {
+class FiniteQueue {
 public:
     /**
-     * @brief Construct a new Queue object
+     * @brief Construct a new FiniteQueue object
      * 
      * Creates a queue with the specified length and item size.
      * 
      * @param length The maximum number of items the queue can hold
      * @param datatype_size The size of each item in bytes
      * 
-     * @return A new Queue object with an initialized FreeRTOS queue handle
+     * @return A new FiniteQueue object with an initialized FreeRTOS queue handle
      */
-    Queue(uint16_t length, uint16_t datatype_size);
+    FiniteQueue(uint16_t length, uint16_t datatype_size);
 
 
     /**
