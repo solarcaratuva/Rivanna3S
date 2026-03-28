@@ -61,8 +61,6 @@ int UART::read(uint8_t *buffer, uint16_t length){
 
         rxTask = Thread::get_task_handle();
 
-        // __HAL_UART_CLEAR_IT(huart, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF);
-
         if (HAL_UART_Receive_IT(huart, buffer, length) != HAL_OK) {
             rxTask = nullptr;
             xSemaphoreGive(mutex);
@@ -84,8 +82,6 @@ int UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
         last_error = HAL_UART_ERROR_NONE;
 
         rxTask = Thread::get_task_handle();
-
-        // __HAL_UART_CLEAR_IT(huart, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF);
 
         if (HAL_UART_Receive_IT(huart, buffer, length) != HAL_OK) {
             rxTask = nullptr;

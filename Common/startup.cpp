@@ -5,20 +5,6 @@
 #include "stm32_hal.h"
 #include "DigitalOut.h"
 
-extern "C" void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName)
-{
-  (void)xTask;
-  (void)pcTaskName;
-  
-  // --- STACK OVERFLOW: SOLID ON ---
-  DigitalOut LED(PC_1);
-  LED.write(1);
-
-  vTaskSuspendAll();
-  taskDISABLE_INTERRUPTS();
-  while (1);
-}
-
 int main(void)
 {
   startup_init();
