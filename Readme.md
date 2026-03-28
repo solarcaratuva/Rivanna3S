@@ -34,13 +34,13 @@ Go to Code Generator
 Enable Generate peripheral initialization as a pair of '.c/.h' files per peripheral
 
 The peripheral files that the importer expects:
-adc.c
+adc.c (all .c files will be in Core/Src directory of the STMCubeIDE project)
 fdcan.c
 i2c1.c
 i2c2.c
 i2c3.c
 spi.c
-STM32..._FLASH.ID
+STM32..._FLASH.ID (this will be in the root of the STMCubeIDE project)
 
 i2c1.c, i2c2.c, and i2c3.c are i2c.c files that were generated with the i2c peripheral set to different baudrates. 
 More specifically, you will need to set/change the baudrates of the i2c peripheral in the .ioc file and regenerate them 3 times, then rename each file accordingly.
@@ -49,18 +49,11 @@ The baudrate to i2c#.c file name is as follows:
 400000 Hz -> i2c2.c
 1000000 Hz -> i2c3.c
 
-Place all generated STM files in a directory, this will be the source (src) directory. Create a destination (dst) directory for the imported files to go to.
+Place all generated STM files in a directory, this will be the source directory. Create a destination directory for the imported files to go to.
 
-Then run importer.py, the script will prompt you for the clock rate for fdcan (in MHz), as well as the abud rate for spi when prescaler is set to 2.
+Then run importer.py, the script will prompt you for the clock rate for fdcan (in MHz), as well as the baud rate for spi when prescaler is set to 2.
 
 Example run:
-python .path\to\importer.py src_dir dst_dir
-Imported adc.c -> importer_dst_test\adc.c
-Enter the clock rate for fdcan (in MHz): 400
-Imported fdcan.c -> importer_dst_test\fdcan.c
-Imported i2c3.c -> importer_dst_test\i2c.c
-Enter the baud rate for spi when prescaler is 2: 16
-Imported spi.c -> importer_dst_test\spi.c
-Imported usart.c -> importer_dst_test\usart.c
+python .\Drivers\code_generation\importer.py .\Drivers\code_generation\test_src .\Drivers\code_generation\test_dst\
 
 The generated code files will then appear in the destination directory.

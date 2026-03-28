@@ -362,8 +362,8 @@ uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_cl
     return peripheral_clock / (baudrate * time_quanta);
 }
     """
-    decl = "uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate);\n"
-    text = decl + "\n" + text.rstrip() + "\n\n" + func
+    # decl = "uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate);\n"
+    text = text.rstrip() + "\n\n" + func
 
     return text
 
@@ -445,8 +445,8 @@ static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_bau
     return SPI_BAUDRATEPRESCALER_256;
 }
     """
-    decl = "static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_baud);\n"
-    text = decl + "\n" + text.rstrip() + "\n\n" + func
+    # decl = "static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_baud);\n"
+    text = text.rstrip() + "\n\n" + func
 
     return text
 
@@ -523,12 +523,16 @@ def process_file(src: Path, dst: Path):
     include_replacement = (
         '#include "pinmap.h"\n'
         '#include "peripheralmap.h"\n'
-        '#include "stm32h7xx_hal.h"\n'
+        '#include "stm32_hal.h"\n'
     )
 
     if (src.name == "i2c3.c"):
         include_replacement = include_replacement + I2C_HELPER_TEXT
-
+    elif (src.name == "fdcan.c"):
+        include_replacement = include_replacement + "uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate);\n"
+    elif (src.name == "spi.c") :
+        include_replacement = include_replacement + "static uint32_t spi_prescaler_from_baud(uint32_t periph_clk, uint32_t target_baud);\n"
+    
     text = regex_replace_all(text,include_pattern,include_replacement)
 
     # fix alternate function
@@ -596,8 +600,8 @@ def main():
                 out = dst / file.name
                 text = file.read_text()
 
-                text = re.sub(r"_Min_Heap_Size\s*=\s*0x[0-9A-Fa-f]+;", "_Min_Heap_Size = {MIN_HEAP_SIZE}}; // <- this line changed", text)
-                text = re.sub(r"_Min_Stack_Size\s*=\s*0x[0-9A-Fa-f]+;", "_Min_Stack_Size = {MIN_STACK_SIZE}; // <- this line changed", text)
+                text = re.sub(r"_Min_Heap_Size\s*=\s*0x[0-9A-Fa-f]+;", f"_Min_Heap_Size = {MIN_HEAP_SIZE}; // <- this line changed", text)
+                text = re.sub(r"_Min_Stack_Size\s*=\s*0x[0-9A-Fa-f]+;", f"_Min_Stack_Size = {MIN_STACK_SIZE}; // <- this line changed", text)
 
                 out.write_text(text)
                 continue
