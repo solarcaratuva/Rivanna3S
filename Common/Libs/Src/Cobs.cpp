@@ -8,11 +8,11 @@
 
 uint16_t cobs_encode(const uint8_t *input, uint16_t length, uint8_t *output) {
     if (!input && length != 0) {
-        log_debug("[cobs_encode] invalid input pointer");
+        log_warn("[cobs_encode] invalid input pointer");
         return 0;
     }
     if (!output) {
-        log_debug("[cobs_encode] invalid output pointer");
+        log_warn("[cobs_encode] invalid output pointer");
         return 0;
     }
 
@@ -61,19 +61,19 @@ bool cobs_decode(const uint8_t *input,
         uint8_t code = *input++;
 
         if (code == 0) {
-            log_debug("[cobs_decode] invalid code byte 0");
+            log_warn("[cobs_decode] invalid code byte 0");
             return false;
         }
 
         uint16_t copy_len = static_cast<uint16_t>(code) - 1;
 
         if (static_cast<uint16_t>(end - input) < copy_len) {
-            log_debug("[cobs_decode] not enough input bytes remaining");
+            log_warn("[cobs_decode] not enough input bytes remaining");
             return false;
         }
 
         if (out + copy_len > output_capacity) {
-            log_debug("[cobs_decode] output buffer too small for copied bytes");
+            log_warn("[cobs_decode] output buffer too small for copied bytes");
             return false;
         }
 
@@ -83,7 +83,7 @@ bool cobs_decode(const uint8_t *input,
 
         if (code < 0xFF && input < end) {
             if (out + 1 > output_capacity) {
-                log_debug("[cobs_decode] output buffer too small for inserted zero");
+                log_warn("[cobs_decode] output buffer too small for inserted zero");
                 return false;
             }
             output[out++] = 0x00;
