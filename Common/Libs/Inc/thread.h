@@ -28,7 +28,8 @@ public:
      * 
      * @note Default task priority and stack size are used (defined in implementation)
      */
-    BaseType_t start(void(*fn)());
+    BaseType_t start(void (*fn)());
+
 
     /**
      * @brief Get the handle of the currently executing FreeRTOS task
