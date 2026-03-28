@@ -68,7 +68,8 @@ void MX_LPUART1_UART_Init(uint32_t baudrate) // <-- This line changed when impor
   {
     //Error_Handler(); // <-- This line changed when importing
   }
-  if (HAL_UARTEx_DisableFifoMode(&hlpuart1) != HAL_OK)
+  if (HAL_UARTEx_EnableFifoMode(
+&hlpuart1) != HAL_OK)
   {
     //Error_Handler(); // <-- This line changed when importing
   }
@@ -111,7 +112,8 @@ void MX_UART4_Init(uint32_t baudrate) // <-- This line changed when importing
   {
     //Error_Handler(); // <-- This line changed when importing
   }
-  if (HAL_UARTEx_DisableFifoMode(&huart4) != HAL_OK)
+  if (HAL_UARTEx_EnableFifoMode(
+&huart4) != HAL_OK)
   {
     //Error_Handler(); // <-- This line changed when importing
   }
@@ -154,7 +156,8 @@ void MX_UART5_Init(uint32_t baudrate) // <-- This line changed when importing
   {
     //Error_Handler(); // <-- This line changed when importing
   }
-  if (HAL_UARTEx_DisableFifoMode(&huart5) != HAL_OK)
+  if (HAL_UARTEx_EnableFifoMode(
+&huart5) != HAL_OK)
   {
     //Error_Handler(); // <-- This line changed when importing
   }
@@ -198,7 +201,8 @@ void MX_USART1_UART_Init(uint32_t baudrate) // <-- This line changed when import
   {
     //Error_Handler(); // <-- This line changed when importing
   }
-  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
+  if (HAL_UARTEx_EnableFifoMode(
+&huart1) != HAL_OK)
   {
     //Error_Handler(); // <-- This line changed when importing
   }
@@ -242,7 +246,8 @@ void MX_USART2_UART_Init(uint32_t baudrate) // <-- This line changed when import
   {
     //Error_Handler(); // <-- This line changed when importing
   }
-  if (HAL_UARTEx_DisableFifoMode(&huart2) != HAL_OK)
+  if (HAL_UARTEx_EnableFifoMode(
+&huart2) != HAL_OK)
   {
     //Error_Handler(); // <-- This line changed when importing
   }
@@ -286,7 +291,8 @@ void MX_USART3_UART_Init(uint32_t baudrate) // <-- This line changed when import
   {
     //Error_Handler(); // <-- This line changed when importing
   }
-  if (HAL_UARTEx_DisableFifoMode(&huart3) != HAL_OK)
+  if (HAL_UARTEx_EnableFifoMode(
+&huart3) != HAL_OK)
   {
     //Error_Handler(); // <-- This line changed when importing
   }
