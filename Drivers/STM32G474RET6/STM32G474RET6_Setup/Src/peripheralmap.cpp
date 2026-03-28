@@ -35,6 +35,12 @@ const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Periph
 
 uint8_t adc_channels_claimed[] = {0, 0, 0, 0, 0};
 
+SPI_Peripheral SPI_Peripherals[] = {
+    {SPI2, (PB_15.universal_mask), (PB_14.universal_mask), (PB_13.universal_mask), NC, NC, NC, false},
+};
+
+const uint8_t SPI_PERIPHERAL_COUNT = sizeof(SPI_Peripherals) / sizeof(SPI_Peripherals[0]);
+
 void gpio_clock_enable(const GPIO_TypeDef* handle){
     if(handle == GPIOB){
         __HAL_RCC_GPIOB_CLK_ENABLE();
@@ -275,6 +281,46 @@ uint8_t get_I2C_AF(const I2C_TypeDef* handle, const Pin* pin, uint8_t mode) {
         }
     }
     return 0; // should never happen
+}
+
+uint8_t get_SPI_AF(const SPI_TypeDef* handle, const Pin* pin, uint8_t mode) {
+    static AF_Info SPI2_SCK_pins[] = {
+        {PB_13, GPIO_AF5_SPI2},
+    };
+    static uint8_t SPI2_SCK_len = 1;
+
+    static AF_Info SPI2_MISO_pins[] = {
+        {PB_14, GPIO_AF5_SPI2},
+    };
+    static uint8_t SPI2_MISO_len = 1;
+
+    static AF_Info SPI2_MOSI_pins[] = {
+        {PB_15, GPIO_AF5_SPI2},
+    };
+    static uint8_t SPI2_MOSI_len = 1;
+
+    AF_Info* array = NULL;
+    uint8_t array_len = 0;
+
+    if (handle == SPI2) {
+        if (mode == SCK) {
+            array = SPI2_SCK_pins;
+            array_len = SPI2_SCK_len;
+        } else if (mode == MISO) {
+            array = SPI2_MISO_pins;
+            array_len = SPI2_MISO_len;
+        } else if (mode == MOSI) {
+            array = SPI2_MOSI_pins;
+            array_len = SPI2_MOSI_len;
+        }
+    }
+
+    for (uint8_t i = 0; i < array_len; i++) {
+        if (array[i].pin == *pin) {
+            return array[i].AF;
+        }
+    }
+    return 0;
 }
 
 uint8_t get_FDCAN_AF(const FDCAN_GlobalTypeDef* handle, const Pin* pin, uint8_t mode) {

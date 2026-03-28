@@ -22,6 +22,8 @@
 #include "stm32g4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+/* Weak stub: overridden by fatfs_sd.cpp when FATFS is linked (TelemetryBoard only) */
+__attribute__((weak)) void SD_TimerProc(void) {}
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -269,6 +271,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if (htim == &htim1) {
     HAL_IncTick();
+    SD_TimerProc();
   }
 }
 

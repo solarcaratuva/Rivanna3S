@@ -8,6 +8,11 @@
 volatile LogLevel global_log_level;
 
 static UART* log_uart = nullptr;
+static LogOutputCallback log_sd_callback = nullptr;
+
+void log_set_output_callback(LogOutputCallback cb) {
+    log_sd_callback = cb;
+}
 
 #define LOG_BUF_SIZE 256
 
@@ -86,5 +91,6 @@ void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
     }
 
     log_uart->write(reinterpret_cast<uint8_t*>(buf), strlen(buf));
+    if (log_sd_callback) log_sd_callback(reinterpret_cast<uint8_t*>(buf), strlen(buf));
     return;
 }

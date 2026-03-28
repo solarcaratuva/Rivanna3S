@@ -41,6 +41,9 @@ extern volatile LogLevel g_log_level;
  */
 void log_configure(LogLevel level, Pin tx, Pin rx, uint32_t baudrate);
 
+typedef void (*LogOutputCallback)(const uint8_t* data, uint16_t len);
+void log_set_output_callback(LogOutputCallback cb);
+
 /**
  * @brief Core logging function with level, file, and line information
  * @param level Severity level of this message
