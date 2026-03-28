@@ -35,13 +35,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "ff_gen_drv.h"
-
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-
-/* Private variables ---------------------------------------------------------*/
-/* Disk status */
-static volatile DSTATUS Stat = STA_NOINIT;
+#include "user_diskio.h"
+#include "fatfs_sd.h"
 
 /* USER CODE END DECL */
 
@@ -76,13 +71,10 @@ Diskio_drvTypeDef  USER_Driver =
   * @param  pdrv: Physical drive number (0..)
   * @retval DSTATUS: Operation status
   */
-DSTATUS USER_initialize (
-	BYTE pdrv           /* Physical drive nmuber to identify the drive */
-)
+DSTATUS USER_initialize (BYTE pdrv)
 {
   /* USER CODE BEGIN INIT */
-    Stat = STA_NOINIT;
-    return Stat;
+  return SD_disk_initialize(pdrv);
   /* USER CODE END INIT */
 }
 
@@ -96,8 +88,7 @@ DSTATUS USER_status (
 )
 {
   /* USER CODE BEGIN STATUS */
-    Stat = STA_NOINIT;
-    return Stat;
+  return SD_disk_status(pdrv);
   /* USER CODE END STATUS */
 }
 
@@ -117,7 +108,7 @@ DRESULT USER_read (
 )
 {
   /* USER CODE BEGIN READ */
-    return RES_OK;
+  return SD_disk_read(pdrv, buff, sector, count);
   /* USER CODE END READ */
 }
 
@@ -138,8 +129,7 @@ DRESULT USER_write (
 )
 {
   /* USER CODE BEGIN WRITE */
-  /* USER CODE HERE */
-    return RES_OK;
+  return SD_disk_write(pdrv, buff, sector, count);
   /* USER CODE END WRITE */
 }
 #endif /* _USE_WRITE == 1 */
@@ -159,8 +149,7 @@ DRESULT USER_ioctl (
 )
 {
   /* USER CODE BEGIN IOCTL */
-    DRESULT res = RES_ERROR;
-    return res;
+    return SD_disk_ioctl(pdrv, cmd, buff);
   /* USER CODE END IOCTL */
 }
 #endif /* _USE_IOCTL == 1 */

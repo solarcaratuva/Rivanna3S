@@ -50,5 +50,30 @@ DWORD get_fattime(void)
 }
 
 /* USER CODE BEGIN Application */
+#include <string.h>
 
+uint8_t FATFS_SD_TestWrite(void) {
+    FRESULT res;
+    UINT byteswritten;
+    char* write_text = "SD card write test via SPI";
+
+    res = f_mount(&USERFatFS, (TCHAR const*)USERPath, 1);
+    if (res != FR_OK) return 1;
+
+    res = f_open(&USERFile, "test.txt", FA_CREATE_ALWAYS | FA_WRITE);
+    if (res != FR_OK) { 
+      f_mount(0, (TCHAR const*)USERPath, 0); // Unmount drive
+      return 2; 
+    }
+
+    res = f_write(&USERFile, write_text, strlen(write_text), &byteswritten);
+    f_close(&USERFile);
+    f_mount(0, (TCHAR const*)USERPath, 0);
+
+    if (res == FR_OK && byteswritten > 0){
+      return 0;
+    } else{
+      return 3;
+    }
+}
 /* USER CODE END Application */
