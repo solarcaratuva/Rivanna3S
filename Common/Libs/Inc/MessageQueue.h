@@ -55,22 +55,21 @@ public:
      * @brief Sends a message to the buffer (non-blocking)
      * @param tx_buffer Pointer to the data to send
      * @param len Length of the data to send
+     * @param wait_time Maximum time to wait for space to become available (in ticks) (Default is portMAX_DELAY (wait indefinitely))
      * @return 0 on success, -1 if buffer is full or not initialized
      *
-     * If the buffer is full, the message will be skipped and the function
-     * returns immediately with -1.
      */
-    int send(uint8_t *tx_buffer, uint16_t len);
+    int send(uint8_t *tx_buffer, uint16_t len, uint32_t wait_time = portMAX_DELAY);
 
     /**
      * @brief Receives a message from the buffer (blocking)
      * @param rx_buffer Pointer to buffer where received data will be stored
      * @param len Maximum length of data to receive
+     * @param wait_time Maximum time to wait for a message to become available (in ticks) (Default is portMAX_DELAY (wait indefinitely))
      * @return Number of bytes received, or -1 if not initialized
      *
-     * This function blocks until a message is available in the buffer.
      */
-    int receive(uint8_t *rx_buffer, uint16_t len);
+    int receive(uint8_t *rx_buffer, uint16_t len, uint32_t wait_time = portMAX_DELAY);
 
     /**
      * @brief Destructor - deletes the FreeRTOS message buffer

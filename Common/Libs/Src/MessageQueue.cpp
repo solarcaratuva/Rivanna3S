@@ -24,14 +24,18 @@ MessageQueue::~MessageQueue() {
     }
 }
 
-int MessageQueue::send(uint8_t *tx_buffer, uint16_t len) {
+int MessageQueue::send(uint8_t *tx_buffer, uint16_t len, uint32_t wait_time) {
     if (!initialized || tx_buffer == nullptr) {
         return -1;
     }
 
+    if (wait_time != portMAX_DELAY) {
+        wait_time = pdMS_TO_TICKS(wait_time);
+    }
+
     // Try to send without blocking (timeout = 0)
     // If buffer is full, this will return 0 bytes sent
-    size_t bytes_sent = xMessageBufferSend(message_buffer_handle, tx_buffer, len, 0);
+    size_t bytes_sent = xMessageBufferSend(message_buffer_handle, tx_buffer, len, wait_time);
 
     if (bytes_sent == len) {
         return 0;  // Success - all bytes sent
@@ -40,13 +44,17 @@ int MessageQueue::send(uint8_t *tx_buffer, uint16_t len) {
     }
 }
 
-int MessageQueue::receive(uint8_t *rx_buffer, uint16_t len) {
+int MessageQueue::receive(uint8_t *rx_buffer, uint16_t len, uint32_t wait_time) {
     if (!initialized || rx_buffer == nullptr) {
         return -1;
     }
 
+    if (wait_time != portMAX_DELAY) {
+        wait_time = pdMS_TO_TICKS(wait_time);
+    }
+
     // Block indefinitely until a message is available
-    size_t bytes_received = xMessageBufferReceive(message_buffer_handle, rx_buffer, len, portMAX_DELAY);
+    size_t bytes_received = xMessageBufferReceive(message_buffer_handle, rx_buffer, len, wait_time);
 
     return static_cast<int>(bytes_received);
 }
