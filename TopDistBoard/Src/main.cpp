@@ -49,9 +49,6 @@ void app_main()
 #endif
   /* USER CODE END Init */
 
-  log_debug("About to call emit py tests");
-  // uartcobs_emit_py_tests(); FROM JUST TESTING the encode/decode functions
-
   DigitalOut LED1(PB_0);
 
   while (1)
