@@ -8,8 +8,6 @@
 int main(void)
 {
   startup_init();
-  DigitalOut LED1(PC_1);
-  LED1.write(0);
 
   Thread main;
   main.start(app_main);
