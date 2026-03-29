@@ -15,8 +15,7 @@ void handle_all_messages(const SerializedCanMessage &msg) {
 }
 
 void app_main() {
-    log_configure(LOG_LEVEL, LOG_TX, LOG_RX, 250000);
-    log_info("Telemetry Board starting up");
+    log_configure(LOG_LEVEL, LOG_TX, LOG_RX, 921600);
     log_info("Telemetry Board starting up...");
     
     static SPI sd_spi(SPI2_MOSI, SPI2_MISO, SPI2_SCK, 400000);
@@ -24,4 +23,6 @@ void app_main() {
     sd_card.attach_to_log();
     
     main_can.register_always_callback(handle_all_messages);
+
+    Clock::sleep_for(0xFFFFFFFF);
 }
