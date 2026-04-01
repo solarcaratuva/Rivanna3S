@@ -41,6 +41,14 @@ public:
     static void sleep_for(uint32_t time_ms);
 
     /**
+    * @brief Sleep indefinitely
+    * 
+    * Static function that blocks the calling task indefinitely. Uses vTaskSuspend()
+    * with a null parameter to suspend the current task until it is explicitly resumed.
+    */
+    static void sleep_forever();
+
+    /**
      * @brief Get the current system time
      * @return uint32_t Current time in milliseconds since system start
      * 

@@ -16,6 +16,10 @@ void Clock::sleep_for(uint32_t time_ms) {
     return;
 }
 
+void Clock::sleep_forever() {
+    vTaskSuspend(nullptr); // Suspend the current task indefinitely
+}
+
 uint32_t Clock::get_current_time() {
     TickType_t tick_count = xTaskGetTickCount();
     return static_cast<uint32_t>(tick_count * portTICK_PERIOD_MS); 
