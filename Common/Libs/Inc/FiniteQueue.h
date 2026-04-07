@@ -76,10 +76,19 @@ public:
      * @return 0 on success, -1 if queue is not initialized, -2 if failed to peek item
      */
     int peek(void* item, uint32_t wait_time = portMAX_DELAY);
+
+
+    /**
+     * @brief Get the number of items currently in the queue
+     *
+     * @return Current queue size
+     */
+    uint16_t size() const;
 private:
     QueueHandle_t queue_handle;
     uint16_t length;
     uint16_t datatype_size;
+    uint16_t item_count;
 };
 
 #endif
