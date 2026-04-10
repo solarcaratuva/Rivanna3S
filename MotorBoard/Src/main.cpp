@@ -167,7 +167,8 @@ void handle_motor_faults(const SerializedCanMessage &msg)
 
 void forward_motor_can_message(const SerializedCanMessage &msg)
 {
-    main_can.write(&msg);
+    SerializedCanMessage forwarded_msg = msg;
+    main_can.write(&forwarded_msg);
 }
 
 void app_main()

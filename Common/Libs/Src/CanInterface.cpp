@@ -9,21 +9,21 @@ static CanInterface* main_can_interface_instance = nullptr;
 static CanInterface* motor_can_interface_instance = nullptr;
 
 
-CanInterface::CanInterface(Pin tx, Pin rx, Pin standby, uint32_t baudrate, CanNetwork network_type)
+CanInterface::CanInterface(Pin tx, Pin rx, Pin standby, uint32_t baudrate, CanNetwork network)
     : my_can(tx, rx, baudrate),
       standby_pin(standby),
       receiverRunning(true),
       interface_thread(),
-      network(network_type),
-      alwayscallback(nullptr)
+      alwayscallback(nullptr),
+      network(network)
 {
     // Remember this instance so the thread can call back into it
-    if (network_type == CanNetwork::Main) {
+    if (network == CanNetwork::Main) {
         main_can_interface_instance = this;
         interface_thread.start(+[]() {
             main_can_interface_instance->receiver_thread();
         });
-    } else if (network_type == CanNetwork::Motor) {
+    } else if (network == CanNetwork::Motor) {
         motor_can_interface_instance = this;
         interface_thread.start(+[]() {
             motor_can_interface_instance->receiver_thread();
@@ -36,15 +36,15 @@ CanInterface::CanInterface(Pin tx, Pin rx, Pin standby, uint32_t baudrate, CanNe
 
 }
 
-int CanInterface::write(const SerializedCanMessage *msg) {
+int CanInterface::write(SerializedCanMessage *msg) {
     if (!msg) {
         return -1; // invalid argument
     }
 
     int status = my_can.write(msg);
     if (status == 0) {
-        char data_hex[17];
-        bytes_to_hex(msg->data, msg->len, data_hex, sizeof(data_hex));
+        uint8_t data_hex[17]; // 16 bytes + null terminator
+        bytes_to_hex(msg->data, msg->len, reinterpret_cast<char*>(data_hex), sizeof(data_hex));
         log_debug("CanInterface: Sent CAN message with ID %d Length %d Data 0x%s", msg->id, msg->len, data_hex);
     }
     return status;
@@ -166,7 +166,7 @@ void CanInterface::bytes_to_hex(const uint8_t* data, uint8_t len, char* out_str,
 {
     const char hex_chars[] = "0123456789ABCDEF";
 
-    if (out_str_size < static_cast<size_t>(len * 2 + 1)) { // Check if there is enough space in output string
+    if (out_str_size < (len * 2 + 1)) { // Check if there is enough space in output string
         if (out_str_size > 0) {
             out_str[0] = '\0';
         }
