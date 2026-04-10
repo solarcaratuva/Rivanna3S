@@ -84,21 +84,18 @@ public:
     CanInterface(Pin tx, Pin rx, Pin standby, uint32_t baudrate, CanNetwork network = CanNetwork::Main);
 
     /**
-     * @brief Transmit a CAN message on the bus
-     * 
-     * This function forwards the provided CAN message to the underlying CAN driver
-     * for transmission. The message is serialized and sent asynchronously.
-     * 
+     * @brief Transmit a raw CAN frame on the bus
+     *
      * @param[in] msg Pointer to a valid SerializedCanMessage structure to be sent. Must not be nullptr.
      * @return int Status code:
      *         - 0: Success
      *         - 1: CAN peripheral not initialized
      *         - 2: HAL transmission error
      *         - -1: Invalid argument (msg is nullptr)
-     * 
+     *
      * @note This method is thread-safe
      */
-    int write(SerializedCanMessage *msg);
+    int write(const SerializedCanMessage *msg);
 
     /**
      * @brief Transmit a CAN message on the bus
