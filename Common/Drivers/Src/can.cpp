@@ -89,13 +89,14 @@ int CAN::read(SerializedCanMessage *msg)
         return 1;
     }
 
-    instance_lock.lock();
-
-    // Check how many frames are pending in FIFO0
+    // Wait for at least one frame without holding the shared CAN lock.
+    // Holding the lock here can block writers indefinitely on a quiet bus.
     uint32_t pending = 0;
     while (pending == 0) {
         pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
     }
+
+    instance_lock.lock();
 
     // Check if the RX queue is full (field name differs across STM32 families).
 #if defined(STM32G474xx)
