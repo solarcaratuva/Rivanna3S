@@ -93,6 +93,7 @@ int CAN::read(SerializedCanMessage *msg)
     // Holding the lock here can block writers indefinitely on a quiet bus.
     uint32_t pending = 0;
     while (pending == 0) {
+        Clock::sleep_for(1);
         pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
     }
 
@@ -100,7 +101,7 @@ int CAN::read(SerializedCanMessage *msg)
 
     // Check if the RX queue is full (field name differs across STM32 families).
 #if defined(STM32G474xx)
-    if (pending > 0) {
+    if (pending > 2) {
         // G4 HAL does not expose FIFO element count in the init struct.
         log_warn("CAN RX pending=%lu; monitor for dropped frames", pending);
     }
