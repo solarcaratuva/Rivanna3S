@@ -13,3 +13,5 @@ Drivers/code_generation/pinmap.h
 Drivers/code_generation/input
 build
 build*
+Drivers/code_generation/test_dst/
+Drivers/code_generation/test_src/
