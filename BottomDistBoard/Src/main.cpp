@@ -153,7 +153,10 @@ void send_pedal_status()
 }
 
 void app_main()
-{
+{   
+    DigitalOut init_indicator(PC_1);
+    init_indicator.write(PIN_ON);
+
     log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Bottom Distance Board starting up...");
 

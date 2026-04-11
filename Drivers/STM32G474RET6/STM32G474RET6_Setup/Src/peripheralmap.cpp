@@ -29,33 +29,49 @@ FDCAN_Peripheral FDCAN_Peripherals[] = {
 const uint8_t FDCAN_PERIPHERAL_COUNT = sizeof(FDCAN_Peripherals) / sizeof(FDCAN_Peripherals[0]);
 
 ADC_Peripheral ADC_Peripherals[] = {
+    {ADC1, ADC_CHANNEL_6, PC_0.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_7, PC_1.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_8, PC_2.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_9, PC_3.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_1, PA_0.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_2, PA_1.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_3, PA_2.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_4, PA_3.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_15, PB_0.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_12, PB_1.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_14, PB_11.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_11, PB_12.universal_mask, NC, false, 0},
+    {ADC1, ADC_CHANNEL_5, PB_14.universal_mask, NC, false, 0},
+    {ADC2, ADC_CHANNEL_6, PC_0.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_7, PC_1.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_8, PC_2.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_9, PC_3.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_1, PA_0.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_2, PA_1.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_17, PA_4.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_13, PA_5.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_3, PA_6.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_4, PA_7.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_5, PC_4.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_11, PC_5.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_12, PB_2.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_14, PB_11.universal_mask, NC, false, 1},
+    {ADC2, ADC_CHANNEL_15, PB_15.universal_mask, NC, false, 1},
+    {ADC3, ADC_CHANNEL_12, PB_0.universal_mask, NC, false, 2},
+    {ADC3, ADC_CHANNEL_1, PB_1.universal_mask, NC, false, 2},
+    {ADC3, ADC_CHANNEL_5, PB_13.universal_mask, NC, false, 2},
+    {ADC4, ADC_CHANNEL_3, PB_12.universal_mask, NC, false, 3},
+    {ADC4, ADC_CHANNEL_4, PB_14.universal_mask, NC, false, 3},
+    {ADC4, ADC_CHANNEL_5, PB_15.universal_mask, NC, false, 3},
+    {ADC5, ADC_CHANNEL_1, PA_8.universal_mask, NC, false, 4},
+    {ADC5, ADC_CHANNEL_2, PA_9.universal_mask, NC, false, 4},
 };
 
 const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Peripherals[0]);
 
 uint8_t adc_channels_claimed[] = {0, 0, 0, 0, 0};
 
-SPI_Peripheral SPI_Peripherals[] = {
-    {SPI2, (PB_15.universal_mask), (PB_14.universal_mask), (PB_13.universal_mask), NC, NC, NC, false},
-};
 
-const uint8_t SPI_PERIPHERAL_COUNT = sizeof(SPI_Peripherals) / sizeof(SPI_Peripherals[0]);
-
-void gpio_clock_enable(const GPIO_TypeDef* handle){
-    if(handle == GPIOB){
-        __HAL_RCC_GPIOB_CLK_ENABLE();
-    }
-    else if(handle == GPIOD){
-        __HAL_RCC_GPIOD_CLK_ENABLE();
-    }
-    else if(handle == GPIOA){
-        __HAL_RCC_GPIOA_CLK_ENABLE();
-    }
-    else if(handle == GPIOC){
-        __HAL_RCC_GPIOC_CLK_ENABLE();
-    }
-    return;
-}
 
 uint8_t get_UART_AF(const USART_TypeDef* handle, const Pin* pin, uint8_t mode) {
     static AF_Info UART4_TX[] = {
@@ -283,46 +299,6 @@ uint8_t get_I2C_AF(const I2C_TypeDef* handle, const Pin* pin, uint8_t mode) {
     return 0; // should never happen
 }
 
-uint8_t get_SPI_AF(const SPI_TypeDef* handle, const Pin* pin, uint8_t mode) {
-    static AF_Info SPI2_SCK_pins[] = {
-        {PB_13, GPIO_AF5_SPI2},
-    };
-    static uint8_t SPI2_SCK_len = 1;
-
-    static AF_Info SPI2_MISO_pins[] = {
-        {PB_14, GPIO_AF5_SPI2},
-    };
-    static uint8_t SPI2_MISO_len = 1;
-
-    static AF_Info SPI2_MOSI_pins[] = {
-        {PB_15, GPIO_AF5_SPI2},
-    };
-    static uint8_t SPI2_MOSI_len = 1;
-
-    AF_Info* array = NULL;
-    uint8_t array_len = 0;
-
-    if (handle == SPI2) {
-        if (mode == SCK) {
-            array = SPI2_SCK_pins;
-            array_len = SPI2_SCK_len;
-        } else if (mode == MISO) {
-            array = SPI2_MISO_pins;
-            array_len = SPI2_MISO_len;
-        } else if (mode == MOSI) {
-            array = SPI2_MOSI_pins;
-            array_len = SPI2_MOSI_len;
-        }
-    }
-
-    for (uint8_t i = 0; i < array_len; i++) {
-        if (array[i].pin == *pin) {
-            return array[i].AF;
-        }
-    }
-    return 0;
-}
-
 uint8_t get_FDCAN_AF(const FDCAN_GlobalTypeDef* handle, const Pin* pin, uint8_t mode) {
     static AF_Info FDCAN1_RX[] = {
         {PA_11, GPIO_AF9_FDCAN1},
@@ -399,4 +375,66 @@ uint8_t get_FDCAN_AF(const FDCAN_GlobalTypeDef* handle, const Pin* pin, uint8_t 
         }
     }
     return 0; // should never happen
+}
+
+SPI_Peripheral SPI_Peripherals[] = {
+    {SPI2, (PB_15.universal_mask), (PB_14.universal_mask), (PB_13.universal_mask), NC, NC, NC, false},
+};
+
+const uint8_t SPI_PERIPHERAL_COUNT = sizeof(SPI_Peripherals) / sizeof(SPI_Peripherals[0]);
+
+void gpio_clock_enable(const GPIO_TypeDef* handle){
+    if(handle == GPIOB){
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+    }
+    else if(handle == GPIOD){
+        __HAL_RCC_GPIOD_CLK_ENABLE();
+    }
+    else if(handle == GPIOA){
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+    }
+    else if(handle == GPIOC){
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+    }
+    return;
+}
+
+uint8_t get_SPI_AF(const SPI_TypeDef* handle, const Pin* pin, uint8_t mode) {
+    static AF_Info SPI2_SCK_pins[] = {
+        {PB_13, GPIO_AF5_SPI2},
+    };
+    static uint8_t SPI2_SCK_len = 1;
+
+    static AF_Info SPI2_MISO_pins[] = {
+        {PB_14, GPIO_AF5_SPI2},
+    };
+    static uint8_t SPI2_MISO_len = 1;
+
+    static AF_Info SPI2_MOSI_pins[] = {
+        {PB_15, GPIO_AF5_SPI2},
+    };
+    static uint8_t SPI2_MOSI_len = 1;
+
+    AF_Info* array = NULL;
+    uint8_t array_len = 0;
+
+    if (handle == SPI2) {
+        if (mode == SCK) {
+            array = SPI2_SCK_pins;
+            array_len = SPI2_SCK_len;
+        } else if (mode == MISO) {
+            array = SPI2_MISO_pins;
+            array_len = SPI2_MISO_len;
+        } else if (mode == MOSI) {
+            array = SPI2_MOSI_pins;
+            array_len = SPI2_MOSI_len;
+        }
+    }
+
+    for (uint8_t i = 0; i < array_len; i++) {
+        if (array[i].pin == *pin) {
+            return array[i].AF;
+        }
+    }
+    return 0;
 }
