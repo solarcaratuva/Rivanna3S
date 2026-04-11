@@ -146,7 +146,7 @@ void signal_flash_handler()
 
 void app_main()
 {
-    log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
+    log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Top Dist Board starting up...");
 
     signal_thread.start(signal_flash_handler);
