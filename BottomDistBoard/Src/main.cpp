@@ -37,7 +37,8 @@ DigitalOut left_turn_signal(LEFT_TURN_EN);
 DigitalOut right_turn_signal(RIGHT_TURN_EN);
 DigitalOut drl(DRL_EN);
 AnalogIn throttle_pedal(THROTTLE_WIPER);
-DigitalIn brake_pedal(BRAKE_WIPER);
+//DigitalIn brake_pedal(BRAKE_WIPER);
+AnalogIn brake_pedal(BRAKE_WIPER);
 
 bool flashLeftTurnSignal = false;
 bool flashRightTurnSignal = false;
@@ -145,7 +146,7 @@ void send_pedal_status()
 
         PedalStatus msg{};
         msg.throttle_pedal = current_throttle;
-        msg.brake_pedal = brake_pedal.read();
+        msg.brake_pedal = brake_pedal.read_voltage() > 1.0f ? 1:0; //brake pedal is analog signal;
 
         main_can.write(&msg);
         pedal_status_clock.sleep_since(PEDAL_STATUS);

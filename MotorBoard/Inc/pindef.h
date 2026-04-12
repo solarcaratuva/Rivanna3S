@@ -27,6 +27,7 @@
 
 #define MOTOR_CAN_RX    MTR_CAN_RX
 #define MOTOR_CAN_TX    MTR_CAN_TX
+#define MOTOR_CAN_STANDBY NC
 
 
 // #define USB_TX          NC
