@@ -41,13 +41,16 @@
 #include "BPSCanStructs.h"
 #include "Rivanna3CanStructs.h"
 #include "FiniteQueue.h"
+#include "CanInterface.h"
 #include "FirmwareUploader.h"
+
 
 
 void app_main()
 {
     UART USB_UART(PC_12, PD_2, 115200);
-    FirmwareUploader uploader(USB_UART);
+    CanInterface main_can = CanInterface(PA_12, PA_11, PA_10, 250000, CanNetwork::Main);
+    FirmwareUploader uploader(USB_UART, main_can);
     uploader.start();
 
     while (1) {
