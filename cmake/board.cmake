@@ -127,6 +127,15 @@ set(BOARD_INCLUDE_DIRS
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
 )
 
+# Resolve objcopy once so firmware targets can generate .bin artifacts from .elf outputs.
+if(NOT CMAKE_OBJCOPY)
+  find_program(CMAKE_OBJCOPY NAMES arm-none-eabi-objcopy llvm-objcopy objcopy)
+endif()
+
+if(NOT CMAKE_OBJCOPY)
+  message(FATAL_ERROR "No objcopy program found. Install arm-none-eabi-objcopy or set CMAKE_OBJCOPY.")
+endif()
+
 function(add_board BOARD_NAME)
   file(GLOB BOARD_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/*.c
@@ -177,5 +186,12 @@ function(add_board BOARD_NAME)
     common
     freertos_kernel
     m c gcc
+  )
+
+  add_custom_command(TARGET ${BOARD_EXE_TARGET} POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O binary
+      $<TARGET_FILE:${BOARD_EXE_TARGET}>
+      $<TARGET_FILE_DIR:${BOARD_EXE_TARGET}>/${BOARD_NAME}.bin
+    COMMENT "Generating ${BOARD_NAME}.bin"
   )
 endfunction()
