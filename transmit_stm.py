@@ -16,11 +16,11 @@ BAUD = 115200
 BOARD_MAP = {
     # "power": "cmake_build/NUCLEO_F413ZH/develop/GCC_ARM/PowerBoard/PowerBoard.bin",
     # "telemetry": "cmake_build/POWER_BOARD/develop/GCC_ARM/TelemetryBoard/TelemetryBoard.bin",
-    "bottomdist": "build/bin/BottomDistBoard.elf",
-    "motor": "build/bin/MotorBoard.elf",
-    "relay": "build/bin/RelayBoard.elf",
-    "telemetry": "build/bin/TelemetryBoard.elf",
-    "topdist": "build/bin/TopDistBoard.elf",
+    "bottomdist": "build/bin/BottomDistBoard.bin",
+    "motor": "build/bin/MotorBoard.bin",
+    "relay": "build/bin/RelayBoard.bin",
+    "telemetry": "build/bin/TelemetryBoard.bin",
+    "topdist": "build/bin/TopDistBoard.bin",
 }
 
 BOARD_ID_MAP = {
@@ -58,7 +58,7 @@ def upload_file(port: str, filepath: str, board_id: int):
 
         # --- Send command to select board ---
         print(f"Selecting board {board_id}...")
-        cmd = f"UPLOAD {board_id}\n".encode()
+        cmd = f"{board_id}\n".encode()
         ser.write(cmd)
         
 
@@ -97,6 +97,7 @@ def upload_file(port: str, filepath: str, board_id: int):
                     raise RuntimeError("Unexpected response")
 
         print("Waiting for DONE...")
+        wait_for(ser, b"REQ") #Board sends REQ before DONE
         wait_for(ser, b"DONE")
 
         print("Upload complete")
