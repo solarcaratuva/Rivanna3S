@@ -2,12 +2,32 @@
 #define HEARTBEAT_H
 
 #include <cstdint>
-#include <functional>
 
 #include "Timeout.h"
 #include "CanInterface.h"
+#include "nodes.h"
 
 using Callback = std::function<void()>;
+
+/**
+ * Always disabled boards — should NOT edit this list.
+ * These boards are never monitored regardless of DISABLED_BOARDS.
+ */
+const Node HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS[] = {
+    Node::MotorController,
+    Node::BMS
+};
+const int HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS_COUNT =
+    sizeof(ALWAYS_DISABLED_BOARDS) / sizeof(ALWAYS_DISABLED_BOARDS[0]);
+
+/**
+ * Edit this list to disable specific boards from heartbeat monitoring.
+ */
+const Node HeartbeatSafetySystem::DISABLED_BOARDS[] = {
+    // e.g. Node::TelemetryBoard
+};
+const int HeartbeatSafetySystem::DISABLED_BOARDS_COUNT =
+    sizeof(DISABLED_BOARDS) / sizeof(DISABLED_BOARDS[0]);
 
 /**
  * Heartbeat safety monitor system.
@@ -18,38 +38,36 @@ public:
     static constexpr uint32_t HEARTBEAT_SEND_INTERVAL_MS = 100;
     static constexpr uint32_t HEARTBEAT_TIMEOUT_MS = 250;
 
-    // Enable / disable boards
-    static constexpr bool BOARD_MOTOR_ENABLE      = true;
-    static constexpr bool BOARD_RELAY_ENABLE      = true;
-    static constexpr bool BOARD_TELEMETRY_ENABLE  = true;
-    static constexpr bool BOARD_TOPDIST_ENABLE    = true;
-    static constexpr bool BOARD_BOTDIST_ENABLE    = true;
+    /**
+     * Boards that are permanently excluded from heartbeat monitoring.
+     * Do NOT edit this list.
+     */
+    static const Node ALWAYS_DISABLED_BOARDS[];
+    static const int  ALWAYS_DISABLED_BOARDS_COUNT;
 
-    enum class Board : uint8_t {
-        MOTOR = 0,
-        RELAY,
-        TELEMETRY,
-        TOPDIST,
-        BOTDIST,
-        COUNT
-    };
+    /**
+     * Boards that are currently disabled from heartbeat monitoring.
+     * Edit this list to enable or disable boards.
+     */
+    static const Node DISABLED_BOARDS[];
+    static const int  DISABLED_BOARDS_COUNT;
 
     static void setup(CanInterface* can_interface,
                       Callback missed_heartbeat_callback,
-                      Board self_board);
+                      Node self_board);
 
 private:
     static void heartbeat_can_callback(const SerializedCanMessage &msg);
     static void sender_task();
-    static void handle_received_heartbeat(uint16_t board_id);
-    static void timeout_triggered(uint16_t board_id);
+    static void timeout_triggered(int board_idx);
+
+    static bool is_board_enabled(Node board);
 
     static CanInterface* can;
     static Callback missed_cb;
-    static Board self;
+    static Node self;
 
-    static Timeout timeouts[static_cast<int>(Board::COUNT)];
-    static bool board_enabled[static_cast<int>(Board::COUNT)];
+    static Timeout timeouts[NUM_NODES];
 };
 
 #endif // HEARTBEAT_H

@@ -1,53 +1,49 @@
 #include "heartbeat.h"
+#include "Rivanna3SCanStructs.h"
 #include "thread.h"
 #include "clock.h"
 #include "log.h"
-#include <cstring>
 
-uint16_t heartbeat_can_m_id = 0x100;
+// --- Static member definitions ---
 
-CanInterface* HeartbeatSafetySystem::can = nullptr;
-Callback HeartbeatSafetySystem::missed_cb = nullptr;
-HeartbeatSafetySystem::Board HeartbeatSafetySystem::self;
+CanInterface*  HeartbeatSafetySystem::can       = nullptr;
+Callback       HeartbeatSafetySystem::missed_cb = nullptr;
+Node           HeartbeatSafetySystem::self;
+Timeout        HeartbeatSafetySystem::timeouts[NUM_NODES];
 
-Timeout HeartbeatSafetySystem::timeouts[static_cast<int>(Board::COUNT)];
-
-bool HeartbeatSafetySystem::board_enabled[static_cast<int>(Board::COUNT)] = {
-    BOARD_MOTOR_ENABLE,
-    BOARD_RELAY_ENABLE,
-    BOARD_TELEMETRY_ENABLE,
-    BOARD_TOPDIST_ENABLE,
-    BOARD_BOTDIST_ENABLE
-};
-
-struct HeartbeatMsg {
-    uint16_t id;
-};
+// --- CAN callback (also handles the received heartbeat) ---
 
 void HeartbeatSafetySystem::heartbeat_can_callback(const SerializedCanMessage &msg)
 {
-    if (msg.len < sizeof(uint16_t)) return;
+    Heartbeat hb{};
+    hb.deserialize(&msg);
 
-    HeartbeatMsg hb{};
-    std::memcpy(&hb, msg.data, sizeof(hb));
+    Node sender = static_cast<Node>(hb.source);
+    int  idx    = static_cast<int>(sender);
 
-    handle_received_heartbeat(hb.id);
+    if (!is_board_enabled(sender))   
+        return;
+
+    timeouts[idx].refresh();
 }
 
+// --- Setup ---
+
 void HeartbeatSafetySystem::setup(CanInterface* can_interface,
-                                 Callback missed_heartbeat_callback,
-                                 Board self_board)
+                                  Callback missed_heartbeat_callback,
+                                  Node self_board)
 {
-    can = can_interface;
+    can       = can_interface;
     missed_cb = missed_heartbeat_callback;
-    self = self_board;
+    self      = self_board;
 
-    // Register CAN callback for heartbeat messages
-    can->register_callback(heartbeat_can_m_id, HeartbeatSafetySystem::heartbeat_can_callback);
+    can->register_callback(Heartbeat::get_message_ID(),
+                           HeartbeatSafetySystem::heartbeat_can_callback);
 
-    // Setup timeouts
-    for (int i = 0; i < static_cast<int>(Board::COUNT); i++) {
-        if (!board_enabled[i]) {
+    for (int i = 0; i < NUM_NODES; i++) {
+        Node board = static_cast<Node>(i);
+
+        if (!is_board_enabled(board)) {
             log_info("Heartbeat: Board %d disabled", i);
             continue;
         }
@@ -57,24 +53,22 @@ void HeartbeatSafetySystem::setup(CanInterface* can_interface,
         }, HEARTBEAT_TIMEOUT_MS);
     }
 
-    // Sender thread
     static Thread sender_thread;
     sender_thread.start(sender_task);
 }
+
+// --- Sender ---
 
 void HeartbeatSafetySystem::sender_task()
 {
     Clock clock;
 
     while (true) {
-        HeartbeatMsg msg{};
-        msg.id = static_cast<uint16_t>(self);
+        Heartbeat hb{};
+        hb.source = static_cast<uint8_t>(self);
 
         SerializedCanMessage scm{};
-        scm.id = heartbeat_can_m_id;
-        scm.len = sizeof(msg);
-
-        std::memcpy(scm.data, &msg, sizeof(msg));
+        hb.serialize(&scm);
 
         can->write(&scm);
 
@@ -82,19 +76,26 @@ void HeartbeatSafetySystem::sender_task()
     }
 }
 
-void HeartbeatSafetySystem::handle_received_heartbeat(uint16_t board_id)
-{
-    if (board_id >= static_cast<int>(Board::COUNT)) return;
-    if (!board_enabled[board_id]) return;
+// --- Timeout handler ---
 
-    timeouts[board_id].refresh();
-}
-
-void HeartbeatSafetySystem::timeout_triggered(uint16_t board_id)
+void HeartbeatSafetySystem::timeout_triggered(int board_idx)
 {
-    log_fault("Heartbeat missed from board %d", board_id);
+    log_fault("Heartbeat missed from board %d", board_idx);
 
     if (missed_cb) {
         missed_cb();
     }
+}
+
+// --- Private helpers ---
+
+bool HeartbeatSafetySystem::is_board_enabled(Node board)
+{
+    for (int i = 0; i < ALWAYS_DISABLED_BOARDS_COUNT; i++) {
+        if (ALWAYS_DISABLED_BOARDS[i] == board) return false;
+    }
+    for (int i = 0; i < DISABLED_BOARDS_COUNT; i++) {
+        if (DISABLED_BOARDS[i] == board) return false;
+    }
+    return true;
 }
