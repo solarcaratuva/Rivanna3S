@@ -7,8 +7,9 @@
 // Construction & lifecycle
 // ---------------------------------------------------------------------------
 
-FirmwareUploader::FirmwareUploader(UART& uart, uint32_t queue_depth)
+FirmwareUploader::FirmwareUploader(UART& uart, CanInterface& can, uint32_t queue_depth)
     : uart_(uart),
+      can_(can),
       queue_(queue_depth, FW_BLOCK_SIZE)
 {}
 

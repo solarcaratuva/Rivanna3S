@@ -6,6 +6,8 @@
 #include "FiniteQueue.h"
 #include "thread.h"
 #include "Clock.h"
+#include "CanInterface.h"
+
 
 #define FW_BLOCK_SIZE         64         // Must match Python sender's block size
 #define FW_MAX_FIRMWARE_SIZE  (4096 * 1024)  // 4 MB
@@ -16,9 +18,10 @@ public:
     /**
      * @brief Construct a FirmwareUploader.
      * @param uart          Reference to the UART peripheral to use.
+     * @param can           Reference to the CAN peripheral to use for communication with target boards.
      * @param queue_depth   Number of blocks the internal queue can hold.
      */
-    FirmwareUploader(UART& uart, uint32_t queue_depth = 100);
+    FirmwareUploader(UART& uart, CanInterface& can, uint32_t queue_depth = 100);
 
     /**
      * @brief Start the background consumer thread that drains received blocks.
@@ -45,6 +48,7 @@ public:
 
 private:
     UART&         uart_;
+    CanInterface& can_;
     FiniteQueue   queue_;
     Thread        consumer_thread_;
     Clock         clock_;
