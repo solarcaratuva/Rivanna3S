@@ -10,26 +10,6 @@
 using Callback = std::function<void()>;
 
 /**
- * Always disabled boards — should NOT edit this list.
- * These boards are never monitored regardless of DISABLED_BOARDS.
- */
-const Node HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS[] = {
-    Node::MotorController,
-    Node::BMS
-};
-const int HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS_COUNT =
-    sizeof(ALWAYS_DISABLED_BOARDS) / sizeof(ALWAYS_DISABLED_BOARDS[0]);
-
-/**
- * Edit this list to disable specific boards from heartbeat monitoring.
- */
-const Node HeartbeatSafetySystem::DISABLED_BOARDS[] = {
-    // e.g. Node::TelemetryBoard
-};
-const int HeartbeatSafetySystem::DISABLED_BOARDS_COUNT =
-    sizeof(DISABLED_BOARDS) / sizeof(DISABLED_BOARDS[0]);
-
-/**
  * Heartbeat safety monitor system.
  * Uses CAN callbacks via CanInterface (no polling).
  */
@@ -61,13 +41,33 @@ private:
     static void sender_task();
     static void timeout_triggered(int board_idx);
 
-    static bool is_board_enabled(Node board);
+    static int is_board_disabled(Node board);
 
     static CanInterface* can;
     static Callback missed_cb;
-    static Node self;
+    static Node self_board;
 
     static Timeout timeouts[NUM_NODES];
 };
+
+/**
+ * Always disabled boards — do NOT edit this list.
+ * These boards are never monitored regardless of DISABLED_BOARDS.
+ */
+const Node HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS[] = {
+    Node::MotorController,
+    Node::BMS
+};
+const int HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS_COUNT =
+    sizeof(HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS) / sizeof(HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS[0]);
+
+/**
+ * Edit this list to disable specific boards from heartbeat monitoring.
+ */
+const Node HeartbeatSafetySystem::DISABLED_BOARDS[] = {
+    // e.g. Node::TelemetryBoard
+};
+const int HeartbeatSafetySystem::DISABLED_BOARDS_COUNT =
+    sizeof(HeartbeatSafetySystem::DISABLED_BOARDS) / sizeof(HeartbeatSafetySystem::DISABLED_BOARDS[0]);
 
 #endif // HEARTBEAT_H
