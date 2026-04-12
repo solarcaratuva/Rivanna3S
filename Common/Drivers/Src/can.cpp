@@ -33,12 +33,12 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     hfdcan = FDCAN_init(fdcan_periph->handle, baudrate);
     HAL_FDCAN_Start(hfdcan);
 
-    // Default Tx header setup; fields that change per-frame will be set in write().
-    txHeader.IdType = FDCAN_STANDARD_ID;
+    // Set txHeader so that it can support FD 64-byte frames
+    txHeader.IdType = FDCAN_EXTENDED_ID;
     txHeader.TxFrameType = FDCAN_DATA_FRAME;
     txHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
     txHeader.BitRateSwitch = FDCAN_BRS_OFF;
-    txHeader.FDFormat = FDCAN_CLASSIC_CAN;
+    txHeader.FDFormat = FDCAN_FD_CAN;
     txHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
     txHeader.MessageMarker = 0;
 
@@ -109,7 +109,7 @@ int CAN::read(SerializedCanMessage *msg)
     }
 #endif
     
-    uint8_t rxData[8] = {0};
+    uint8_t rxData[64] = {0};
 
     HAL_StatusTypeDef status =
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rxData);
@@ -135,11 +135,12 @@ int CAN::read(SerializedCanMessage *msg)
 
 uint32_t CAN::bytesToDlc(uint8_t len) const
 {
-    // Clamp to 8 bytes; extend if you move to CAN FD later.
-    if (len > 8) {
-        len = 8;
+    // Clamp to 64 bytes; extend if you move to CAN FD later.
+    if (len > 64) {
+        len = 64;
     }
 
+    //Have case for each possible byte count, returning the corresponding FDCAN DLC constant.
     switch (len) {
     case 0: return FDCAN_DLC_BYTES_0;
     case 1: return FDCAN_DLC_BYTES_1;
@@ -150,12 +151,20 @@ uint32_t CAN::bytesToDlc(uint8_t len) const
     case 6: return FDCAN_DLC_BYTES_6;
     case 7: return FDCAN_DLC_BYTES_7;
     case 8: return FDCAN_DLC_BYTES_8;
+    case 12: return FDCAN_DLC_BYTES_12;
+    case 16: return FDCAN_DLC_BYTES_16;
+    case 20: return FDCAN_DLC_BYTES_20;
+    case 24: return FDCAN_DLC_BYTES_24;
+    case 32: return FDCAN_DLC_BYTES_32;
+    case 48: return FDCAN_DLC_BYTES_48;
+    case 64: return FDCAN_DLC_BYTES_64;
     default: return FDCAN_DLC_BYTES_8;
     }
 }
 
 uint8_t CAN::dlcToBytes(uint32_t dlc) const
 {
+    // Convert FDCAN DLC constant back to byte count.
     switch (dlc) {
     case FDCAN_DLC_BYTES_0: return 0;
     case FDCAN_DLC_BYTES_1: return 1;
@@ -166,6 +175,13 @@ uint8_t CAN::dlcToBytes(uint32_t dlc) const
     case FDCAN_DLC_BYTES_6: return 6;
     case FDCAN_DLC_BYTES_7: return 7;
     case FDCAN_DLC_BYTES_8: return 8;
+    case FDCAN_DLC_BYTES_12: return 12;
+    case FDCAN_DLC_BYTES_16: return 16;
+    case FDCAN_DLC_BYTES_20: return 20;
+    case FDCAN_DLC_BYTES_24: return 24;
+    case FDCAN_DLC_BYTES_32: return 32;
+    case FDCAN_DLC_BYTES_48: return 48;
+    case FDCAN_DLC_BYTES_64: return 64;
     default: return 8; // conservative fallback
     }
 }

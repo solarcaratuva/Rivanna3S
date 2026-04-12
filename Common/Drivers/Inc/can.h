@@ -15,8 +15,8 @@
  */
 struct SerializedCanMessage {
     uint16_t id;       ///< CAN identifier (11-bit standard ID, range: 0x000 - 0x7FF)
-    uint8_t  len;      ///< Number of data bytes in the payload (0..8)
-    uint8_t  data[8];  ///< Message payload data
+    uint8_t  len;      ///< Number of data bytes in the payload (0..64)
+    uint8_t  data[64];  ///< Message payload data
 };
 
 /**

@@ -109,6 +109,8 @@ void FirmwareUploader::consumer_task(void* arg) {
     FirmwareUploader* self = static_cast<FirmwareUploader*>(arg);
     uint8_t block[FW_BLOCK_SIZE];
 
+    
+
     while (true) {
         if (self->queue_.get(block, FW_BLOCK_SIZE)) {
             // TODO: forward block over CAN, write to flash, etc.
