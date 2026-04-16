@@ -91,7 +91,7 @@ void HeartbeatSafetySystem::timeout_triggered(int board_idx)
 
     char node_str[32];
     node_to_str(board, node_str, sizeof(node_str));
-    log_fault("Heartbeat missed from %d", node_str);
+    log_fault("Heartbeat missed from %s", node_str);
 
     if (missed_cb) {
         missed_cb();
