@@ -10,6 +10,31 @@
 using Callback = std::function<void()>;
 
 /**
+ * Always disabled boards — do NOT edit this list.
+ * These boards are never monitored regardless of DISABLED_BOARDS.
+ */
+constexpr Node ALWAYS_DISABLED_BOARDS[] = {
+    Node::MotorController,
+    Node::BMS
+};
+constexpr int ALWAYS_DISABLED_BOARDS_COUNT =
+    sizeof(ALWAYS_DISABLED_BOARDS) / sizeof(ALWAYS_DISABLED_BOARDS[0]);
+
+/**
+ * Edit this list to disable specific boards from heartbeat monitoring.
+ */
+constexpr Node DISABLED_BOARDS[] = {
+    Node::BottomDistBoard,
+    Node::MotorBoard,
+    Node::RelayBoard,
+    //Node::TelemetryBoard,
+    Node::TopDistBoard,
+    //Node::WheelBoard,
+};
+constexpr int DISABLED_BOARDS_COUNT =
+    sizeof(DISABLED_BOARDS) / sizeof(DISABLED_BOARDS[0]);
+
+/**
  * Heartbeat safety monitor system.
  * Uses CAN callbacks via CanInterface (no polling).
  */
@@ -19,19 +44,21 @@ public:
     static constexpr uint32_t HEARTBEAT_TIMEOUT_MS = 250;
 
     /**
-     * Boards that are permanently excluded from heartbeat monitoring.
-     * Do NOT edit this list.
-     */
-    static const Node ALWAYS_DISABLED_BOARDS[];
-    static const int  ALWAYS_DISABLED_BOARDS_COUNT;
-
-    /**
-     * Boards that are currently disabled from heartbeat monitoring.
-     * Edit this list to enable or disable boards.
-     */
-    static const Node DISABLED_BOARDS[];
-    static const int  DISABLED_BOARDS_COUNT;
-
+    * @brief Initializes the HeartbeatSafetySystem.
+    *
+    * Configures the CAN interface, registers the heartbeat receive callback,
+    * initializes timeout handlers for all enabled nodes, and starts the
+    * background sender thread responsible for periodically transmitting
+    * this board's heartbeat message.
+    *
+    * Disabled boards are skipped during timeout setup based on configuration:
+    * * Permanently disabled boards are ignored silently.
+    * * Conditionally disabled boards are skipped with a log message.
+    *
+    * @param can_interface Pointer to the CAN interface used for sending and receiving heartbeat messages.
+    * @param missed_heartbeat_callback Callback function invoked when a heartbeat timeout is detected.
+    * @param this_board Identifier of the current node/board.
+    */
     static void setup(CanInterface* can_interface,
                       Callback missed_heartbeat_callback,
                       Node self_board);
@@ -49,25 +76,5 @@ private:
 
     static Timeout timeouts[NUM_NODES];
 };
-
-/**
- * Always disabled boards — do NOT edit this list.
- * These boards are never monitored regardless of DISABLED_BOARDS.
- */
-const Node HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS[] = {
-    Node::MotorController,
-    Node::BMS
-};
-const int HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS_COUNT =
-    sizeof(HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS) / sizeof(HeartbeatSafetySystem::ALWAYS_DISABLED_BOARDS[0]);
-
-/**
- * Edit this list to disable specific boards from heartbeat monitoring.
- */
-const Node HeartbeatSafetySystem::DISABLED_BOARDS[] = {
-    // e.g. Node::TelemetryBoard
-};
-const int HeartbeatSafetySystem::DISABLED_BOARDS_COUNT =
-    sizeof(HeartbeatSafetySystem::DISABLED_BOARDS) / sizeof(HeartbeatSafetySystem::DISABLED_BOARDS[0]);
 
 #endif // HEARTBEAT_H

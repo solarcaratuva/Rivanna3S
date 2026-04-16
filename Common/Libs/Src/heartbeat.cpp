@@ -18,32 +18,14 @@ void HeartbeatSafetySystem::heartbeat_can_callback(const SerializedCanMessage &m
     Heartbeat hb{};
     hb.deserialize(&msg);
 
-    Node sender = static_cast<Node>(hb.source);
-    int  idx    = static_cast<int>(sender);
+    Node sender = (Node)(hb.source);
+    int  idx    = (int)(sender);
 
     if (is_board_disabled(sender))   
         return;
 
     timeouts[idx].refresh();
 }
-
-/**
-
-* @brief Initializes the HeartbeatSafetySystem.
-*
-* Configures the CAN interface, registers the heartbeat receive callback,
-* initializes timeout handlers for all enabled nodes, and starts the
-* background sender thread responsible for periodically transmitting
-* this board's heartbeat message.
-*
-* Disabled boards are skipped during timeout setup based on configuration:
-* * Permanently disabled boards are ignored silently.
-* * Conditionally disabled boards are skipped with a log message.
-*
-* @param can_interface Pointer to the CAN interface used for sending and receiving heartbeat messages.
-* @param missed_heartbeat_callback Callback function invoked when a heartbeat timeout is detected.
-* @param this_board Identifier of the current node/board.
-  */
 
 void HeartbeatSafetySystem::setup(CanInterface* can_interface,
                                   Callback missed_heartbeat_callback,
@@ -57,10 +39,16 @@ void HeartbeatSafetySystem::setup(CanInterface* can_interface,
                            HeartbeatSafetySystem::heartbeat_can_callback);
 
     for (int i = 0; i < NUM_NODES; i++) {
-        Node board = static_cast<Node>(i);
+        Node board = (Node)(i);
+
+        if (board == self_board) {
+            continue;
+        }
 
         if (is_board_disabled(board) == 1) {
-            log_info("Heartbeat: Board %d disabled (this board is not an always-disabled board)", i); // only log the boards that are not permanently disabled
+            char node_str[32];
+            node_to_str(board, node_str, sizeof(node_str));
+            log_info("Heartbeat: %s disabled", node_str); // only log the boards that are not permanently disabled
             continue;
         }
         else if (is_board_disabled(board) == 2) {
@@ -82,13 +70,13 @@ void HeartbeatSafetySystem::sender_task()
 {
     Clock clock;
 
+    Heartbeat hb{};
+    hb.source = (uint8_t)(self_board);
+
+    SerializedCanMessage scm{};
+    hb.serialize(&scm);
+
     while (true) {
-        Heartbeat hb{};
-        hb.source = static_cast<uint8_t>(self_board);
-
-        SerializedCanMessage scm{};
-        hb.serialize(&scm);
-
         can->write(&scm);
 
         clock.sleep_for(HEARTBEAT_SEND_INTERVAL_MS);
@@ -99,7 +87,11 @@ void HeartbeatSafetySystem::sender_task()
 
 void HeartbeatSafetySystem::timeout_triggered(int board_idx)
 {
-    log_fault("Heartbeat missed from board %d", board_idx);
+    Node board = (Node)(board_idx);
+
+    char node_str[32];
+    node_to_str(board, node_str, sizeof(node_str));
+    log_fault("Heartbeat missed from %d", node_str);
 
     if (missed_cb) {
         missed_cb();

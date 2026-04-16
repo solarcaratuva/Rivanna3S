@@ -4,6 +4,7 @@
 #include "../../Common/Drivers/Inc/SPI.h"
 #include "SD.h"
 #include "task.h"
+#include "heartbeat.h"
 #include <cstdio>
 
 #define LOG_LEVEL DEBUG_LVL
@@ -39,7 +40,13 @@ void handle_all_messages(const SerializedCanMessage &msg) {
     log_can_frame(msg);
 }
 
+void log_missed_heartbeat() {
+    log_fault("missed heartbeat callback func");
+}
+
 void app_main() {
+    HeartbeatSafetySystem::setup(&main_can, log_missed_heartbeat, Node::TelemetryBoard);
+
     log_configure(LOG_LEVEL, LOG_TX, LOG_RX, 921600);
     log_info("Telemetry Board starting up...");
     
