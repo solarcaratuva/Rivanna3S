@@ -21,6 +21,9 @@ BOARD_MAP = {
     "relay": "build/bin/RelayBoard.bin",
     "telemetry": "build/bin/TelemetryBoard.bin",
     "topdist": "build/bin/TopDistBoard.bin",
+    "wheel": "build/bin/WheelBoard.bin",
+    "bms": "build/bin/BMSBoard.bin",
+    "motorctrl": "build/bin/MotorCtrlBoard.bin",
 }
 
 BOARD_ID_MAP = {
@@ -29,6 +32,9 @@ BOARD_ID_MAP = {
     "relay":      2,
     "telemetry":  3,
     "topdist":    4,
+    "wheel":      5,
+    "bms":        6,
+    "motorctrl":   7,
 }
 
 def crc16(data: bytes) -> int:

@@ -2,6 +2,7 @@
 #include "log.h"        // log_info / log_error — remove if not in your project
 #include "FreeRTOS.h"
 #include "task.h"
+#include "Rivanna3SCanStructs.h"
 
 // ---------------------------------------------------------------------------
 // Construction & lifecycle
@@ -14,14 +15,6 @@ FirmwareUploader::FirmwareUploader(UART& uart, CanInterface& can, uint32_t queue
 {}
 
 void FirmwareUploader::start() {
-    // Pass `this` so the static trampoline can reach instance members.
-    // consumer_thread_.start([]() {
-    //     // FreeRTOS tasks must not return; loop handled inside consumer_task.
-    // });
-    // Re-implement with proper argument passing via your Thread API:
-    // consumer_thread_.start(consumer_task, this);
-    //
-    // If your Thread class only accepts a plain function pointer (no arg),
     // store `this` in a file-scope pointer and call it from a wrapper lambda:
       static FirmwareUploader* s_instance = this;
       consumer_thread_.start([]{ s_instance->consumer_task(s_instance); });
@@ -41,8 +34,14 @@ int FirmwareUploader::run_once() {
     if (board_id >= '0' && board_id <= '9')
         board_id -= '0';
 
-    if (board_id < 0 || board_id > 4)
+    if (board_id < 0 || board_id > 9)
         return -1;
+
+    //Create update control msg to sent to target over CAN
+    UpdateControl update_msg{};
+    update_msg.target_board = board_id;
+    update_msg.setup = 1; // signal sender is ready to send data
+    can_.write(&update_msg);
 
     handle_upload();   // board_id available here for future CAN routing
     return board_id;
@@ -108,8 +107,6 @@ bool FirmwareUploader::handle_upload() {
 void FirmwareUploader::consumer_task(void* arg) {
     FirmwareUploader* self = static_cast<FirmwareUploader*>(arg);
     uint8_t block[FW_BLOCK_SIZE];
-
-    
 
     while (true) {
         if (self->queue_.get(block, FW_BLOCK_SIZE)) {
