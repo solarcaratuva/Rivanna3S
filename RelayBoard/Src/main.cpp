@@ -39,7 +39,6 @@ uint32_t PRECHARGE_CONTROL_PERIOD_MS = 100;
 bool has_other_fault = false;
 bool has_cont12_fault = false;
 uint16_t pack_voltage = 0;
-
 DigitalOut motor_main_en(MAIN_EN);
 DigitalOut motor_precharge_en(PRECHARGE_EN);
 DigitalOut mppt_main_en(MPPT_PWR_ON);

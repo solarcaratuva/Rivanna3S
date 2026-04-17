@@ -2,6 +2,7 @@
 
 #include "Clock.h"
 #include "log.h"
+#include "pindef.h"
 
 constexpr float CONT12_HIGH_THRESHOLD_V = 1.0f;
 constexpr float PACK_VOLT_PCT = 0.9f;
@@ -10,16 +11,27 @@ constexpr float VCC = 5.0f;
 constexpr float PRECHARGE_RESISTANCE = 74.0f;
 constexpr uint32_t HAL_EFFECT_BELOW_THRESHOLD_TIME_MS = 50;
 constexpr uint32_t MAIN_RELAY_SETTLE_TIME_MS = 250;
+constexpr uint32_t SAFETY_ENABLE_DELAY_MS = 3000;
 
-Precharge::Precharge(DigitalOut &main_en, DigitalOut &precharge_en, AnalogIn &contactor12_voltage, AnalogIn &hal_effect_voltage)
+DigitalOut safety_hv_enable(SAFETY_HV_EN);
+DigitalOut safety_mtr_enable(SAFETY_MTR_EN);
+
+Precharge::Precharge(
+    DigitalOut &main_en,
+    DigitalOut &precharge_en,
+    AnalogIn &contactor12_voltage,
+    AnalogIn &hal_effect_voltage)
     : main_en_(main_en),
       precharge_en_(precharge_en),
       contactor12_voltage_(contactor12_voltage),
       hal_effect_voltage_(hal_effect_voltage),
-      state_(State::WaitForEnable)
+      state_(State::WaitForHV)
 {
     main_en_.write(false);
     precharge_en_.write(true);
+    state_entry_time_ms_ = Clock::get_current_time();
+    safety_hv_enable.write(false);
+    safety_mtr_enable.write(false);
 }
 
 void Precharge::run(uint16_t pack_voltage, bool cont12_fault, bool other_fault)
@@ -36,8 +48,11 @@ void Precharge::run(uint16_t pack_voltage, bool cont12_fault, bool other_fault)
     {
         return;
     }
-
-    if (state_ == State::WaitForEnable)
+    if (state_ == State::WaitForHV)
+    {
+        run_wait_for_hv_state();
+    }
+    else if (state_ == State::WaitForEnable)
     {
         run_wait_for_enable_state();
     }
@@ -77,7 +92,7 @@ bool Precharge::cont12_high() const
 
 void Precharge::fault_trap()
 {
-    if (!cont12_high_ && state_ != State::WaitForEnable)
+    if (!cont12_high_ && state_ != State::WaitForHV && state_ != State::WaitForEnable)
     {
         cont12_fault_ = true;
     }
@@ -91,12 +106,32 @@ void Precharge::fault_trap()
     main_en_.write(false);
     precharge_en_.write(false);
     timing_threshold_ = false;
-    state_ = State::WaitForEnable;
+    state_ = State::WaitForHV;
+    state_entry_time_ms_ = Clock::get_current_time();
+    safety_hv_enable.write(false);
+    safety_mtr_enable.write(false);
 
     if (!fault_logged_)
     {
         log_fault("Precharge disabled due to fault");
         fault_logged_ = true;
+    }
+}
+
+void Precharge::run_wait_for_hv_state()
+{
+    main_en_.write(false);
+    precharge_en_.write(true);
+    safety_hv_enable.write(false);
+    safety_mtr_enable.write(false);
+
+    const uint32_t time_in_state_ms = Clock::get_current_time() - state_entry_time_ms_;
+    if (time_in_state_ms >= SAFETY_ENABLE_DELAY_MS)
+    {
+        safety_mtr_enable.write(true);
+        safety_hv_enable.write(true);
+        state_ = State::WaitForEnable;
+        state_entry_time_ms_ = Clock::get_current_time();
     }
 }
 
