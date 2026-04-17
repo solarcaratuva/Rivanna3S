@@ -8,10 +8,11 @@
 // Construction & lifecycle
 // ---------------------------------------------------------------------------
 
-FirmwareUploader::FirmwareUploader(UART& uart, CanInterface& can, uint32_t queue_depth)
+FirmwareUploader::FirmwareUploader(UART& uart, CanInterface& can, uint32_t queue_depth, uint32_t current_board)
     : uart_(uart),
       can_(can),
-      queue_(queue_depth, FW_BLOCK_SIZE)
+      queue_(queue_depth, FW_BLOCK_SIZE),
+      current_board_(current_board)
 {}
 
 void FirmwareUploader::start() {
@@ -149,4 +150,25 @@ uint16_t FirmwareUploader::crc16_hqx(const uint8_t* data, uint16_t len) {
             crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1;
     }
     return crc;
+}
+
+// ---------------------------------------------------------------------------
+// Target board CAN handlers
+// ---------------------------------------------------------------------------
+
+void FirmwareUploader::target_receive_update_control(const SerializedCanMessage &msg) {
+    UpdateControl control{};
+    control.deserialize(&msg);
+
+    int target_board = control.target_board;
+    if (target_board == current_board_){
+        if (control.setup) {
+            target_send_setup_ack();
+            target_begin_mass_erase();
+        }
+        if (control.done) {
+            target_handle_done();
+        }
+    }
+    
 }

@@ -21,7 +21,7 @@ public:
      * @param can           Reference to the CAN peripheral to use for communication with target boards.
      * @param queue_depth   Number of blocks the internal queue can hold.
      */
-    FirmwareUploader(UART& uart, CanInterface& can, uint32_t queue_depth = 100);
+    FirmwareUploader(UART& uart, CanInterface& can, uint32_t queue_depth = 100, uint32_t current_board);
 
     /**
      * @brief Start the background consumer thread that drains received blocks.
@@ -52,6 +52,8 @@ private:
     FiniteQueue   queue_;
     Thread        consumer_thread_;
     Clock         clock_;
+    uint32_t      current_board_;
+    uint32_t      is_host_ = 0; // 0 for target, 1 for host
 
     /**
      * @brief Receive one firmware stream over UART into the queue.
@@ -67,4 +69,65 @@ private:
 
     /** @brief Read a '\n'-terminated line. Returns byte count or -1 on timeout. */
     int  read_line(char* buf, uint16_t max_len, uint32_t timeout_ms);
+
+    //--------------------------------------------------
+    // TARGET BOARD UPDATE HANDLING
+    //--------------------------------------------------
+
+    /** @brief Handle UpdateControl CAN messsage */
+    void target_receive_update_control(const SerializedCanMessage &msg);
+
+    /** @brief Handle UpdateData CAN message */
+    void target_receive_update_data(const SerializedCanMessage &msg);
+
+    /**
+     * @brief Begin mass erase after SETUP command.
+     */
+    void target_begin_mass_erase();
+
+    /**
+     * @brief Called when mass erase completes.
+     */
+    void target_mass_erase_complete();
+
+    /**
+     * @brief Handle DONE command from host.
+     */
+    void target_handle_done();
+
+    /**
+     * @brief Write received firmware block to flash.
+     */
+    bool target_write_flash_block(const uint8_t* data, uint16_t len);
+
+    /**
+     * @brief Lock flash after programming finishes.
+     */
+    void target_lock_flash();
+
+    //--------------------------------------------------
+    // TARGET CAN TRANSMIT HELPERS
+    //--------------------------------------------------
+
+    void target_send_setup_ack();
+    void target_send_ready_for_data();
+    void target_send_done_with_crc(uint16_t crc);
+
+    //--------------------------------------------------
+    // TARGET UPDATE STATE
+    //--------------------------------------------------
+
+    enum class TargetUpdateState {
+        IDLE,
+        ERASING,
+        READY_FOR_DATA,
+        RECEIVING_DATA,
+        FINALIZING
+    };
+
+    TargetUpdateState target_state_;
+
+    uint32_t target_flash_address_;
+    uint16_t target_running_crc_;
+
 };
