@@ -5,6 +5,7 @@
 #include "peripheralmap.h"
 #include "lock.h"
 #include "fdcan.h"
+#include "clock.h"
 
 // extern "C" void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef* fdcanHandle, Pin pin, uint8_t af);
 // extern "C" FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* fdcan, uint32_t baudrate);
@@ -89,17 +90,19 @@ int CAN::read(SerializedCanMessage *msg)
         return 1;
     }
 
-    instance_lock.lock();
-
-    // Check how many frames are pending in FIFO0
+    // Wait for at least one frame without holding the shared CAN lock.
+    // Holding the lock here can block writers indefinitely on a quiet bus.
     uint32_t pending = 0;
     while (pending == 0) {
+        Clock::sleep_for(1);
         pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
     }
 
+    instance_lock.lock();
+
     // Check if the RX queue is full (field name differs across STM32 families).
 #if defined(STM32G474xx)
-    if (pending > 0) {
+    if (pending > 2) {
         // G4 HAL does not expose FIFO element count in the init struct.
         log_warn("CAN RX pending=%lu; monitor for dropped frames", pending);
     }
