@@ -41,7 +41,7 @@ constexpr int DISABLED_BOARDS_COUNT =
 class HeartbeatSafetySystem {
 public:
     static constexpr uint32_t HEARTBEAT_SEND_INTERVAL_MS = 100;
-    static constexpr uint32_t HEARTBEAT_TIMEOUT_MS = 250;
+    static constexpr uint32_t HEARTBEAT_TIMEOUT_MS = 5000;
 
     /**
     * @brief Initializes the HeartbeatSafetySystem.
