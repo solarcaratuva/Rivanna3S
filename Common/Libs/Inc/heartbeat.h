@@ -27,8 +27,8 @@ constexpr Node DISABLED_BOARDS[] = {
     Node::BottomDistBoard,
     Node::MotorBoard,
     Node::RelayBoard,
-    //Node::TelemetryBoard,
-    Node::TopDistBoard,
+    Node::TelemetryBoard,
+    // Node::TopDistBoard,
     //Node::WheelBoard,
 };
 constexpr int DISABLED_BOARDS_COUNT =

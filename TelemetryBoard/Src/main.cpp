@@ -41,14 +41,15 @@ void handle_all_messages(const SerializedCanMessage &msg) {
 }
 
 void log_missed_heartbeat() {
-    log_fault("missed heartbeat callback func");
+    log_fault("missed heartbeat callback func xxxx");
 }
 
 void app_main() {
-    HeartbeatSafetySystem::setup(&main_can, log_missed_heartbeat, Node::TelemetryBoard);
-
     log_configure(LOG_LEVEL, LOG_TX, LOG_RX, 921600);
     log_info("Telemetry Board starting up...");
+
+    HeartbeatSafetySystem::setup(&main_can, log_missed_heartbeat, Node::TelemetryBoard);
+
     
     static SPI sd_spi(SPI2_MOSI, SPI2_MISO, SPI2_SCK, 400000);
     static SdCard sd_card(&sd_spi);

@@ -31,6 +31,7 @@
 #include "log.h"
 #include "pindef.h"
 #include "thread.h"
+#include "heartbeat.h"
 
 DigitalOut left_turn_signal(LEFT_TURN_EN);
 DigitalOut right_turn_signal(RIGHT_TURN_EN);
@@ -144,10 +145,16 @@ void signal_flash_handler()
     }
 }
 
+void log_missed_heartbeat() {
+    log_fault("missed heartbeat callback func xxxx");
+}
+
 void app_main()
 {
     log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Top Dist Board starting up...");
+
+    HeartbeatSafetySystem::setup(&main_can, log_missed_heartbeat, Node::TopDistBoard);
 
     signal_thread.start(signal_flash_handler);
 
