@@ -37,7 +37,7 @@ int FirmwareUploader::run_once() {
     if (board_id < 0 || board_id > 9)
         return -1;
 
-    //Create update control msg to sent to target over CAN
+    //Create update control msg to send to target over CAN
     UpdateControl update_msg{};
     update_msg.target_board = board_id;
     update_msg.setup = 1; // signal sender is ready to send data
