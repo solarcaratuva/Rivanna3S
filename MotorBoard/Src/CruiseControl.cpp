@@ -48,53 +48,43 @@ void CruiseControl::decrease_target()
 
 uint8_t CruiseControl::target_speed_command() const
 {
-    return static_cast<uint8_t>(target_speed_mph_);
+    return (uint8_t)(target_speed_mph_);
 }
 
 double CruiseControl::speed_from_motor_rpm(uint16_t motor_rpm) const
 {
-    return static_cast<double>(motor_rpm) * kMotorRpmToMphRatio;
+    return (double)(motor_rpm) * kMotorRpmToMphRatio;
 }
 
 uint16_t CruiseControl::compute_throttle(double current_speed_mph, uint32_t now_ms)
 {
     if (!should_control()) {
-        reset_controller_state();
+        integral_ = 0.0;
         return 0;
     }
 
-    const double error = target_speed_mph_ - current_speed_mph;
-
-    if (previous_time_ms_ == 0 || now_ms <= previous_time_ms_) {
-        previous_time_ms_ = now_ms;
-        previous_error_ = error;
-        const double output = clamp_double(kKp * error, kMinOutput, kMaxOutput);
-        return static_cast<uint16_t>(output);
-    }
-
+    const bool first_update = (previous_time_ms_ == 0);
     uint32_t dt_ms = now_ms - previous_time_ms_;
-    if (dt_ms > 250) {
-        dt_ms = 100;
+    previous_time_ms_ = now_ms;
+    if (dt_ms > 20 || first_update) {
+        dt_ms = 10;
     }
     if (dt_ms == 0) {
         dt_ms = 1;
     }
 
-    const double dt_s = static_cast<double>(dt_ms) / 1000.0;
-
-    integral_ += error * dt_s;
-    integral_ = clamp_double(integral_, kIntegralMin, kIntegralMax);
-
-    const double derivative = (error - previous_error_) / dt_s;
+    const double error = target_speed_mph_ - current_speed_mph;
+    const double proportional = kKp * error;
+    integral_ += error * (double)(dt_ms);
+    const double integral = kKi * integral_;
+    const double derivative = (100.0 * (error - previous_error_)) / static_cast<double>(dt_ms);
     const double output =
-        kKp * error +
-        kKi * integral_ +
+        proportional +
+        integral +
         kKd * derivative;
 
     previous_error_ = error;
-    previous_time_ms_ = now_ms;
-
-    return static_cast<uint16_t>(clamp_double(output, kMinOutput, kMaxOutput));
+    return (uint16_t)(clamp_double(output, kMinOutput, kMaxOutput));
 }
 
 void CruiseControl::reset()

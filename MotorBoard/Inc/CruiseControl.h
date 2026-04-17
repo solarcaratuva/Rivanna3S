@@ -22,18 +22,18 @@ public:
     void reset();
 
 private:
-    // TODO: Validate these tuning values and the RPM-to-MPH conversion on-car.
-    static constexpr double kMotorRpmToMphRatio = 0.02;
-    static constexpr double kKp = 8.0;
-    static constexpr double kKi = 0.15;
+    // Keep these aligned with the older cruise-control tuning until they are retuned on-car.
+    static constexpr double kMotorRpmToMphRatio = 0.0596;
+    static constexpr double kKp = 25.0;
+    static constexpr double kKi = 0.1;
     static constexpr double kKd = 0.0;
     static constexpr double kIntegralMin = -500.0;
     static constexpr double kIntegralMax = 500.0;
     static constexpr double kMinOutput = 0.0;
-    static constexpr double kMaxOutput = 256.0;
+    static constexpr double kMaxOutput = 150.0;
     static constexpr uint8_t kMinSpeedMph = 0;
-    static constexpr uint8_t kMaxSpeedMph = 120;
-    static constexpr uint8_t kSpeedStepMph = 1;
+    static constexpr uint8_t kMaxSpeedMph = 40;
+    static constexpr uint8_t kSpeedStepMph = 5;
 
     bool enabled_;
     bool brake_latched_;
