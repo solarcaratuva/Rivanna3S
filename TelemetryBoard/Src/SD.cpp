@@ -4,14 +4,16 @@
 #include "log.h"
 #include "task.h"
 #include "string.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MESSAGE_QUEUE_BUFFER_LENGTH 16
+#define SD_QUEUE_BUFFER_BYTES 2048
+#define SD_MESSAGE_MAX_BYTES 256
 
 SdCard* SdCard::_SdCard = nullptr;
 
-SdCard::SdCard(SPI* spi_peripheral) : _mq(MESSAGE_QUEUE_BUFFER_LENGTH) {
+SdCard::SdCard(SPI* spi_peripheral) : _mq(SD_QUEUE_BUFFER_BYTES) {
     _spi = spi_peripheral;
     _ready = false;
     _SdCard = this;
@@ -36,27 +38,47 @@ SdCard::SdCard(SPI* spi_peripheral) : _mq(MESSAGE_QUEUE_BUFFER_LENGTH) {
     _flush_thread.start(continous_flush);
 }
 
-char* _getFileName() {
+char* SdCard::_getFileName() {
     static char file_name[32];
     DIR dir;
     FILINFO file_info;
     unsigned long max_index = 0;
     file_name[0] = '\0';
-    unsigned long max_idx = 0; 
-        
+
     if (f_opendir(&dir, "/") == FR_OK) {
         while (1){
             // Empty 
             FRESULT res = f_readdir(&dir,&file_info);
             if (res != FR_OK || file_info.fname[0] == '\0') break; // Check File is valid
             char* current_name = file_info.fname;
-            if (strncmp(current_name, "telem", 5) != 0) continue; // First chars should 5 
+            if (strlen(current_name) < 9) continue;
+
+            // Check for existence of TELEM{N}.LOG
+            bool has_telem_prefix =
+                (tolower(current_name[0]) == 't') &&
+                (tolower(current_name[1]) == 'e') &&
+                (tolower(current_name[2]) == 'l') &&
+                (tolower(current_name[3]) == 'e') &&
+                (tolower(current_name[4]) == 'm');
+            if (!has_telem_prefix) continue;
             size_t name_len = strlen(current_name);
-            if (name_len <= 9 || strcmp(current_name + name_len - 4, ".log") != 0) continue; // Doesnt end in ".log"
+            
+            if (name_len <= 9) continue;
+
+            const char* ext = current_name + name_len - 4;
+            bool has_log_ext =
+                (tolower(ext[0]) == '.') &&
+                (tolower(ext[1]) == 'l') &&
+                (tolower(ext[2]) == 'o') &&
+                (tolower(ext[3]) == 'g');
+            if (!has_log_ext) continue; // Doesn't end in .log (case-insensitive)
+
             char* end_ptr = nullptr;
             unsigned long current_index = strtoul(current_name + 5, &end_ptr, 10); // converting to number
-            // Maybe check vlaiidy of 
-            max_idx = current_index + 1;
+            if (end_ptr == current_name + name_len - 4 && current_index >= max_index) {
+                //bounds check
+                max_index = current_index + 1;
+            }
         }
         f_closedir(&dir);
     }
@@ -65,15 +87,15 @@ char* _getFileName() {
 }
 
 int SdCard::write(uint8_t* buffer, uint16_t len) {
-    if (!_ready) return 0;
+    if (!_ready || len == 0 || len > SD_MESSAGE_MAX_BYTES) return 0;
     int send_status = _mq.send(buffer, len);
     return (send_status == 0) ? len : 0;
 }
 
 void SdCard::write_and_flush_loop() {
     if (!_ready) return;
-    uint8_t buffer[MESSAGE_QUEUE_BUFFER_LENGTH];
-    int bytes_received = _mq.receive(buffer, MESSAGE_QUEUE_BUFFER_LENGTH);
+    uint8_t buffer[SD_MESSAGE_MAX_BYTES];
+    int bytes_received = _mq.receive(buffer, SD_MESSAGE_MAX_BYTES);
     if (bytes_received <= 0) return;
 
     UINT bytes_written = 0;
@@ -87,7 +109,10 @@ void SdCard::continous_flush() {
 }
 
 void SdCard::attach_to_log() {
-    if (!_ready) return;
+    if (!_ready) {
+        log_warn("****************SD: attach_to_log skipped, SD not ready******************");
+        return;
+    }
     log_set_output_callback([](const uint8_t* data, uint16_t len) {
         if (_SdCard) _SdCard->write(const_cast<uint8_t*>(data), len);
     });

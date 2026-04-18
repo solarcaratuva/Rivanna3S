@@ -50,6 +50,12 @@ class SdCard {
         static SdCard* _SdCard;
 
         /**
+         * @brief Generate the next telemetry log filename
+         * @return Pointer to a static, null-terminated filename buffer
+         */
+        char* _getFileName();
+
+        /**
          * @brief Background worker that drains the write queue and flushes the file
          */
         static void continous_flush();

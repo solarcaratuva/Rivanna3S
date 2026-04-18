@@ -46,7 +46,7 @@ void app_main() {
     static SPI sd_spi(SPI2_MOSI, SPI2_MISO, SPI2_SCK, 400000);
     static SdCard sd_card(&sd_spi);
     global_sd_card = &sd_card;
-    // sd_card.attach_to_log();
+    sd_card.attach_to_log();
     
     main_can.register_always_callback(handle_all_messages);
 
