@@ -102,7 +102,7 @@ bool FirmwareUploader::handle_upload() {
 }
 
 // ---------------------------------------------------------------------------
-// Background consumer
+// Background Threads
 // ---------------------------------------------------------------------------
 
 void FirmwareUploader::consumer_task(void* arg) {
@@ -116,6 +116,26 @@ void FirmwareUploader::consumer_task(void* arg) {
         }
         self->clock_.sleep_for(2);
     }
+}
+
+void FirmwareUploader::uart_listener_task(void* arg) {
+    FirmwareUploader* self = static_cast<FirmwareUploader*>(arg);
+    char cmd_buf[32];
+
+    while (true) {
+        if (self->read_line(cmd_buf, sizeof(cmd_buf), 10) > 0) {
+            int board_id = cmd_buf[0];
+            if (board_id >= '0' && board_id <= '9')
+                board_id -= '0';
+            else
+                continue;
+
+            //Call run_once
+            self->is_host_ = 1; // Set flag to indicate we're in host mode
+
+            
+            self->handle_upload();
+        }
 }
 
 // ---------------------------------------------------------------------------

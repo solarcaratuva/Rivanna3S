@@ -51,6 +51,7 @@ private:
     CanInterface& can_;
     FiniteQueue   queue_;
     Thread        consumer_thread_;
+    Thread        UART_listener_thread_;
     Clock         clock_;
     uint32_t      current_board_;
     uint32_t      is_host_ = 0; // 0 for target, 1 for host
@@ -63,6 +64,9 @@ private:
 
     /** @brief Background thread entry: drains queue_ and processes blocks. */
     static void consumer_task(void* arg);
+
+    /** @brief UART listener thread entry: listens for board id */
+    static void uart_listener_task(void* arg);
 
     /** @brief Read exactly `len` bytes with a millisecond timeout. */
     bool read_exact(uint8_t* buf, uint16_t len, uint32_t timeout_ms);
