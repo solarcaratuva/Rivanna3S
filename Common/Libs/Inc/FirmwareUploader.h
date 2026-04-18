@@ -8,12 +8,12 @@
 #include "Clock.h"
 #include "CanInterface.h"
 
+#define FW_BLOCK_SIZE 64                   // Must match Python sender's block size
+#define FW_MAX_FIRMWARE_SIZE (4096 * 1024) // 4 MB
+#define FW_CRC16_INIT 0xFFFF
 
-#define FW_BLOCK_SIZE         64         // Must match Python sender's block size
-#define FW_MAX_FIRMWARE_SIZE  (4096 * 1024)  // 4 MB
-#define FW_CRC16_INIT         0xFFFF
-
-class FirmwareUploader {
+class FirmwareUploader
+{
 public:
     /**
      * @brief Construct a FirmwareUploader.
@@ -21,7 +21,8 @@ public:
      * @param can           Reference to the CAN peripheral to use for communication with target boards.
      * @param queue_depth   Number of blocks the internal queue can hold.
      */
-    FirmwareUploader(UART& uart, CanInterface& can, uint32_t queue_depth = 100, uint32_t current_board);
+    FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth = 100);
+    FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth = 100, uint32_t current_board);
 
     /**
      * @brief Start the background consumer thread that drains received blocks.
@@ -44,17 +45,34 @@ public:
      * @brief CRC-16/HQXA (matches Python's binascii.crc_hqx).
      *        Exposed publicly so callers can verify blocks independently.
      */
-    static uint16_t crc16_hqx(const uint8_t* data, uint16_t len);
+    static uint16_t crc16_hqx(const uint8_t *data, uint16_t len);
+
+public:
+    /**
+     * @brief Set the active flash bank (1 or 2).
+     *        Bank 1: 0x08000000, Bank 2: 0x08100000
+     */
+    void set_flash_bank(uint8_t bank);
 
 private:
-    UART&         uart_;
-    CanInterface& can_;
-    FiniteQueue   queue_;
-    Thread        consumer_thread_;
+    UART &uart_;
+    CanInterface &can_;
+    FiniteQueue queue_;
+    Thread consumer_thread_;
     Thread        UART_listener_thread_;
-    Clock         clock_;
-    uint32_t      current_board_;
-    uint32_t      is_host_ = 0; // 0 for target, 1 for host
+    Clock clock_;
+    uint32_t flash_base_addr_ = 0x08100000UL; // Default to Bank 2
+    uint32_t current_board_;
+    uint32_t is_host_ = 0; // 0 for target, 1 for host
+
+    /**
+     * @brief Write a block of data to flash at the given address.
+     * @param address Flash address to write to.
+     * @param data Pointer to data buffer.
+     * @param len Length of data in bytes (must be multiple of 32 for flash word).
+     * @return true on success, false on failure.
+     */
+    bool write_flash(uint32_t address, const uint8_t *data, size_t len);
 
     /**
      * @brief Receive one firmware stream over UART into the queue.
@@ -65,14 +83,11 @@ private:
     /** @brief Background thread entry: drains queue_ and processes blocks. */
     static void consumer_task(void* arg);
 
-    /** @brief UART listener thread entry: listens for board id */
-    static void uart_listener_task(void* arg);
-
     /** @brief Read exactly `len` bytes with a millisecond timeout. */
-    bool read_exact(uint8_t* buf, uint16_t len, uint32_t timeout_ms);
+    bool read_exact(uint8_t *buf, uint16_t len, uint32_t timeout_ms);
 
     /** @brief Read a '\n'-terminated line. Returns byte count or -1 on timeout. */
-    int  read_line(char* buf, uint16_t max_len, uint32_t timeout_ms);
+    int read_line(char *buf, uint16_t max_len, uint32_t timeout_ms);
 
     //--------------------------------------------------
     // TARGET BOARD UPDATE HANDLING
@@ -102,7 +117,7 @@ private:
     /**
      * @brief Write received firmware block to flash.
      */
-    bool target_write_flash_block(const uint8_t* data, uint16_t len);
+    bool target_write_flash_block(const uint8_t *data, uint16_t len);
 
     /**
      * @brief Lock flash after programming finishes.
@@ -121,7 +136,8 @@ private:
     // TARGET UPDATE STATE
     //--------------------------------------------------
 
-    enum class TargetUpdateState {
+    enum class TargetUpdateState
+    {
         IDLE,
         ERASING,
         READY_FOR_DATA,
@@ -133,5 +149,4 @@ private:
 
     uint32_t target_flash_address_;
     uint16_t target_running_crc_;
-
 };
