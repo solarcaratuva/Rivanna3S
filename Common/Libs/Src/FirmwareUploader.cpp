@@ -17,8 +17,9 @@ FirmwareUploader::FirmwareUploader(UART& uart, CanInterface& can, uint32_t queue
 
 void FirmwareUploader::start() {
     // store `this` in a file-scope pointer and call it from a wrapper lambda:
-      static FirmwareUploader* s_instance = this;
-      consumer_thread_.start([]{ s_instance->consumer_task(s_instance); });
+    static FirmwareUploader* s_instance = this;
+    consumer_thread_.start([]{ s_instance->consumer_task(s_instance); });
+    UART_listener_thread_.start([]{ s_instance->uart_listener_task(s_instance); });
 }
 
 // ---------------------------------------------------------------------------
@@ -130,11 +131,15 @@ void FirmwareUploader::uart_listener_task(void* arg) {
             else
                 continue;
 
-            //Call run_once
+            
             self->is_host_ = 1; // Set flag to indicate we're in host mode
 
-            
-            self->handle_upload();
+            //Create update control msg to send to target over CAN
+            UpdateControl update_msg{};
+            update_msg.target_board = board_id;
+            update_msg.setup = 1; // signal sender is ready to send data
+            can_.write(&update_msg);
+
         }
 }
 
