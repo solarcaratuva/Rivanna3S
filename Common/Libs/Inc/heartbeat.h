@@ -6,6 +6,7 @@
 #include "Timeout.h"
 #include "CanInterface.h"
 #include "nodes.h"
+#include "FiniteQueue.h"
 
 using Callback = std::function<void()>;
 
@@ -24,12 +25,12 @@ constexpr int ALWAYS_DISABLED_BOARDS_COUNT =
  * Edit this list to disable specific boards from heartbeat monitoring.
  */
 constexpr Node DISABLED_BOARDS[] = {
-    Node::BottomDistBoard,
+    // Node::BottomDistBoard,
     Node::MotorBoard,
     Node::RelayBoard,
     Node::TelemetryBoard,
-    // Node::TopDistBoard,
-    //Node::WheelBoard,
+    //Node::TopDistBoard,
+    Node::WheelBoard,
 };
 constexpr int DISABLED_BOARDS_COUNT =
     sizeof(DISABLED_BOARDS) / sizeof(DISABLED_BOARDS[0]);
@@ -41,7 +42,7 @@ constexpr int DISABLED_BOARDS_COUNT =
 class HeartbeatSafetySystem {
 public:
     static constexpr uint32_t HEARTBEAT_SEND_INTERVAL_MS = 100;
-    static constexpr uint32_t HEARTBEAT_TIMEOUT_MS = 5000;
+    static constexpr uint32_t HEARTBEAT_TIMEOUT_MS = 500;
 
     /**
     * @brief Initializes the HeartbeatSafetySystem.
@@ -66,13 +67,15 @@ public:
 private:
     static void heartbeat_can_callback(const SerializedCanMessage &msg);
     static void sender_task();
-    static void timeout_triggered(int board_idx);
+    static void sender_queue_task();
+    static void timeout_triggered(uint8_t board_idx);
 
     static int is_board_disabled(Node board);
 
     static CanInterface* can;
     static Callback missed_cb;
     static Node self_board;
+    static FiniteQueue callback_queue;
 
     static Timeout timeouts[NUM_NODES];
 };

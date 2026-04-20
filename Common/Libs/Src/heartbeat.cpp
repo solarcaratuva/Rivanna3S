@@ -10,6 +10,7 @@ CanInterface*  HeartbeatSafetySystem::can       = nullptr;
 Callback       HeartbeatSafetySystem::missed_cb = nullptr;
 Node           HeartbeatSafetySystem::self_board;
 Timeout        HeartbeatSafetySystem::timeouts[NUM_NODES];
+FiniteQueue    HeartbeatSafetySystem::callback_queue = FiniteQueue(NUM_NODES, sizeof(uint8_t));
 
 // --- CAN callback (also handles the received heartbeat) ---
 
@@ -21,10 +22,15 @@ void HeartbeatSafetySystem::heartbeat_can_callback(const SerializedCanMessage &m
     Node sender = (Node)(hb.source);
     int  idx    = (int)(sender);
 
+    char node_str[32];
+    node_to_str(sender, node_str, sizeof(node_str));
+    log_info("Heartbeat: %s heartbeat received", node_str);
+
     if (is_board_disabled(sender))   
         return;
 
     timeouts[idx].refresh();
+    log_info("Heartbeat: %s timeout refreshed", node_str);
 }
 
 void HeartbeatSafetySystem::setup(CanInterface* can_interface,
@@ -41,13 +47,14 @@ void HeartbeatSafetySystem::setup(CanInterface* can_interface,
     for (int i = 0; i < NUM_NODES; i++) {
         Node board = (Node)(i);
 
+        char node_str[32];
+        node_to_str(board, node_str, sizeof(node_str));
+
         if (board == self_board) {
             continue;
         }
 
         if (is_board_disabled(board) == 1) {
-            char node_str[32];
-            node_to_str(board, node_str, sizeof(node_str));
             log_info("Heartbeat: %s disabled", node_str); // only log the boards that are not permanently disabled
             continue;
         }
@@ -56,12 +63,17 @@ void HeartbeatSafetySystem::setup(CanInterface* can_interface,
         }
 
         timeouts[i].attach([i]() {
-            timeout_triggered(i);
+            timeout_triggered((uint8_t) i);
         }, HEARTBEAT_TIMEOUT_MS);
+
+        log_info("Heartbeat: Timeout for %s started", node_str);
     }
 
     static Thread sender_thread;
     sender_thread.start(sender_task);
+
+    static Thread sender_queue_thread;
+    sender_queue_thread.start(sender_queue_task);
 }
 
 // --- Sender ---
@@ -83,19 +95,34 @@ void HeartbeatSafetySystem::sender_task()
     }
 }
 
+void HeartbeatSafetySystem::sender_queue_task()
+{
+    Clock clock;
+
+    uint8_t board_num;
+
+    while (true) {
+        if(callback_queue.get(&board_num) == 0) {
+            if (missed_cb) {
+                missed_cb();
+            }
+        }
+
+        clock.sleep_for(HEARTBEAT_SEND_INTERVAL_MS);
+    }
+}
+
 // --- Timeout handler ---
 
-void HeartbeatSafetySystem::timeout_triggered(int board_idx)
+void HeartbeatSafetySystem::timeout_triggered(uint8_t board_idx)
 {
     Node board = (Node)(board_idx);
 
-    char node_str[32];
-    node_to_str(board, node_str, sizeof(node_str));
-    log_fault("Heartbeat missed from %s", node_str);
+    // char node_str[32];
+    // node_to_str(board, node_str, sizeof(node_str));
+    // log_fault("Heartbeat missed from %s", node_str);
 
-    if (missed_cb) {
-        missed_cb();
-    }
+    callback_queue.append_to_back(&board_idx);
 }
 
 // --- Private helpers ---

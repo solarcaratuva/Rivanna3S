@@ -146,7 +146,7 @@ void signal_flash_handler()
 }
 
 void log_missed_heartbeat() {
-    log_fault("missed heartbeat callback func xxxx");
+    log_info("missed heartbeat callback func xxxx");
 }
 
 void app_main()
