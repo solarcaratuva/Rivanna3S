@@ -38,10 +38,7 @@
 #include "peripheralmap.h"
 #include "FreeRTOS.h"
 #include "task.h"
-<<<<<<< HEAD
-=======
 #include "semphr.h"
->>>>>>> 3d1af017c3a5099d1746c564c81a97b741208cf4
 
 /**
  * @class UART

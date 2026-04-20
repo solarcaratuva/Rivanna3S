@@ -28,7 +28,3 @@ BaseType_t Thread::start(void (*fn)()) {
 TaskHandle_t Thread::get_task_handle(){
     return xTaskGetCurrentTaskHandle();
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> 3d1af017c3a5099d1746c564c81a97b741208cf4
