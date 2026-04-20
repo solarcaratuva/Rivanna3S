@@ -3,10 +3,16 @@
 #include <cstdio>
 #include <cstdarg>
 #include <cstring>
+#include "DigitalOut.h"
 
 volatile LogLevel global_log_level;
 
 static UART* log_uart = nullptr;
+static LogOutputCallback log_sd_callback = nullptr;
+
+void log_set_output_callback(LogOutputCallback cb) {
+    log_sd_callback = cb;
+}
 
 #define LOG_BUF_SIZE 256
 
@@ -23,6 +29,9 @@ void log_configure(LogLevel level, Pin tx, Pin rx, uint32_t baudrate) {
     global_log_level = level;
     static UART instance(tx, rx, baudrate); // static so that it is NOT on the stack, so its not overwritten, etc.
     log_uart = &instance;
+
+    DigitalOut LED1(PC_1);
+    LED1.write(log_uart->initialized); // if log_uart is null, then turn on LED1 to indicate error, otherwise keep it off
 }
 
 void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
@@ -82,5 +91,6 @@ void log(LogLevel level, const char* file, int line, const char* fmt, ...) {
     }
 
     log_uart->write(reinterpret_cast<uint8_t*>(buf), strlen(buf));
+    if (log_sd_callback) log_sd_callback(reinterpret_cast<uint8_t*>(buf), strlen(buf));
     return;
 }

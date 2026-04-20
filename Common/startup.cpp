@@ -2,9 +2,8 @@
 #include "thread.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "stm32h7xx_hal.h"
-
-
+#include "stm32_hal.h"
+#include "DigitalOut.h"
 
 int main(void)
 {

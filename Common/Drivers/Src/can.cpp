@@ -46,7 +46,7 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
 }
 
 
-int CAN::write(const SerializedCanMessage &msg)
+int CAN::write(const SerializedCanMessage *msg)
 {
     if (!initialized) {
         log_warn("CAN write failed: CAN not initialized");
@@ -54,13 +54,13 @@ int CAN::write(const SerializedCanMessage &msg)
     }
 
     instance_lock.lock();
-    txHeader.Identifier = msg.id;
-    txHeader.DataLength = bytesToDlc(msg.len);
+    txHeader.Identifier = msg->id;
+    txHeader.DataLength = bytesToDlc(msg->len);
 
     // HAL expects a uint8_t* to data
     HAL_StatusTypeDef status =
         HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, &txHeader,
-                                      const_cast<uint8_t *>(msg.data));
+                                      const_cast<uint8_t *>(msg->data));
 
     if (status != HAL_OK) {
         log_warn("CAN write failed: status %d, error code %lx", status, hfdcan->ErrorCode);
@@ -78,7 +78,7 @@ int CAN::write(CanMessage *msg)
     SerializedCanMessage scm;
     msg->serialize(&scm);
 
-    return write(scm);
+    return write(&scm);
 }
 
 
@@ -97,10 +97,17 @@ int CAN::read(SerializedCanMessage *msg)
         pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
     }
 
-    // Check if the RX queue is full, meaning some messages were likely dropped
+    // Check if the RX queue is full (field name differs across STM32 families).
+#if defined(STM32G474xx)
+    if (pending > 0) {
+        // G4 HAL does not expose FIFO element count in the init struct.
+        log_warn("CAN RX pending=%lu; monitor for dropped frames", pending);
+    }
+#else
     if (pending == hfdcan->Init.RxFifo0ElmtsNbr) {
         log_warn("CAN RX FIFO0 full; messages were likely dropped");
     }
+#endif
     
     uint8_t rxData[8] = {0};
 

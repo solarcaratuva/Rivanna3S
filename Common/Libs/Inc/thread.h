@@ -30,6 +30,10 @@ public:
      */
     BaseType_t start(void(*fn)());
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3d1af017c3a5099d1746c564c81a97b741208cf4
     /**
      * @brief Get the handle of the currently executing FreeRTOS task
      * @return TaskHandle_t Handle of the calling task

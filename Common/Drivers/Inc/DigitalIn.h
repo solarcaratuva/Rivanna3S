@@ -10,7 +10,7 @@
 
 
 #include "pinmap.h"
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 
 /**
  * @brief Pull resistor configuration for digital input pins
@@ -56,6 +56,7 @@ private:
     Pin pin_;
     bool active_high_;
     Pull pull_;
+    bool initialized_;
 
     void configure_pin(); // internal helper to configure GPIO
 };

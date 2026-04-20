@@ -33,11 +33,15 @@
 #ifndef UART_H
 #define UART_H
 
-#include "stm32h7xx_hal.h"
+#include "stm32_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "FreeRTOS.h"
 #include "task.h"
+<<<<<<< HEAD
+=======
+#include "semphr.h"
+>>>>>>> 3d1af017c3a5099d1746c564c81a97b741208cf4
 
 /**
  * @class UART
@@ -114,6 +118,7 @@ public:
 
 private:
     UART_HandleTypeDef* huart;   /**< HAL UART handle used for configuration and I/O. */
+    SemaphoreHandle_t mutex;     /**< Mutex for thread-safe access. */
 
     void init_gpio(UART_Peripheral* uart_periph);
 
