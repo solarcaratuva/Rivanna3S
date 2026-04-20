@@ -36,6 +36,9 @@ UART::UART(Pin tx, Pin rx, uint32_t baud)
     
     huart = UART_init(uart_periph->handle, baud);
 
+    // Clear any startup glitches/errors once
+    __HAL_UART_CLEAR_IT(huart, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF);
+
     // Register this UART instance
     for (size_t i = 0; i < UART_PERIPHERAL_COUNT; ++i) {
         if (UART_Peripherals[i].handle == huart->Instance) {
