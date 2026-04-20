@@ -103,6 +103,10 @@ void HeartbeatSafetySystem::sender_queue_task()
 
     while (true) {
         if(callback_queue.get(&board_num) == 0) {
+            char node_str[32];
+            node_to_str((Node) board_num, node_str, sizeof(node_str));
+            log_fault("Heartbeat missed from %s", node_str);
+
             if (missed_cb) {
                 missed_cb();
             }
@@ -117,11 +121,6 @@ void HeartbeatSafetySystem::sender_queue_task()
 void HeartbeatSafetySystem::timeout_triggered(uint8_t board_idx)
 {
     Node board = (Node)(board_idx);
-
-    // char node_str[32];
-    // node_to_str(board, node_str, sizeof(node_str));
-    // log_fault("Heartbeat missed from %s", node_str);
-
     callback_queue.append_to_back(&board_idx);
 }
 
