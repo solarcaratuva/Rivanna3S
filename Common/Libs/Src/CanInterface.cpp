@@ -7,29 +7,39 @@
 // global pointer used by the lambda
 static CanInterface* main_can_interface_instance = nullptr;
 static CanInterface* motor_can_interface_instance = nullptr;
+static constexpr uint32_t CAN_QUEUE_DROP_WARN_INTERVAL_MS = 250;
+static constexpr int CAN_RECEIVE_BURST_LIMIT = 8;
 
 
 CanInterface::CanInterface(Pin tx, Pin rx, Pin standby, uint32_t baudrate, CanNetwork network)
     : my_can(tx, rx, baudrate),
       standby_pin(standby),
       receiverRunning(true),
-      interface_thread(),
-      alwayscallback(nullptr),
-      network(network)
+      receiver_thread_handle(),
+      handler_thread_handle(),
+      receive_queue(receive_queue_depth, sizeof(SerializedCanMessage)),
+      network(network),
+      alwayscallback(nullptr)
 {
     // Remember this instance so the thread can call back into it
     if (network == CanNetwork::Main) {
         main_can_interface_instance = this;
-        interface_thread.start(+[]() {
+        receiver_thread_handle.start(+[]() {
             main_can_interface_instance->receiver_thread();
+        });
+        handler_thread_handle.start(+[]() {
+            main_can_interface_instance->handle_thread();
         });
     } else if (network == CanNetwork::Motor) {
         motor_can_interface_instance = this;
-        interface_thread.start(+[]() {
+        receiver_thread_handle.start(+[]() {
             motor_can_interface_instance->receiver_thread();
         });
+        handler_thread_handle.start(+[]() {
+            motor_can_interface_instance->handle_thread();
+        });
     } else {
-        log_warn("CanInterface: Unknown network type, receiver thread not started");
+        log_warn("CanInterface: Unknown network type, receiver/handler threads not started");
     }
 
     standby_pin.write(false); // ensure standby is low (transceiver enabled)
@@ -43,8 +53,8 @@ int CanInterface::write(SerializedCanMessage *msg) {
 
     int status = my_can.write(msg);
     if (status == 0) {
-        uint8_t data_hex[17]; // 16 bytes + null terminator
-        bytes_to_hex(msg->data, msg->len, reinterpret_cast<char*>(data_hex), sizeof(data_hex));
+        char data_hex[17]; // 16 bytes + null terminator
+        bytes_to_hex(msg->data, msg->len, data_hex, sizeof(data_hex));
         log_debug("CanInterface: Sent CAN message with ID %d Length %d Data 0x%s", msg->id, msg->len, data_hex);
     }
     return status;
@@ -123,43 +133,87 @@ void CanInterface::receiver_thread()
 void CanInterface::receive()
 {
     SerializedCanMessage msg{};
+    auto enqueue_message = [this](const SerializedCanMessage &queued_msg) {
+        SerializedCanMessage msg_copy = queued_msg;
+        int queue_ret = receive_queue.append_to_back(&msg_copy, 0);
+        if (queue_ret == -2) {
+            uint32_t now_ms = Clock::get_current_time();
+            if ((now_ms - last_queue_drop_warn_time_ms) >= CAN_QUEUE_DROP_WARN_INTERVAL_MS) {
+                last_queue_drop_warn_time_ms = now_ms;
+                log_warn("CanInterface: Software RX queue full on %s CAN; dropping frames", CanNetworkToString(network));
+            }
+        }
+    };
 
     int ret = my_can.read(&msg);
     if (ret != 0) {
         return;
     }
-    else {
-        uint8_t data_hex[17]; // 16 bytes + null terminator
-        bytes_to_hex(msg.data, msg.len, reinterpret_cast<char*>(data_hex), sizeof(data_hex));
-        log_debug("CanInterface: Received CAN message with ID %d Length %d Data 0x%s", msg.id, msg.len, data_hex);
+
+    enqueue_message(msg);
+
+    //try to read burst onto the queue
+    for (int i = 0; i < CAN_RECEIVE_BURST_LIMIT; ++i) {
+        ret = my_can.try_read(&msg);
+        if (ret == 3) {
+            break;
+        }
+
+        if (ret != 0) {
+            break;
+        }
+
+        enqueue_message(msg);
     }
+}
+
+void CanInterface::handle_thread()
+{
+    while (true) {
+        if (!receiverRunning) {
+            Clock::sleep_for(10);
+            continue;
+        }
+
+        handle();
+    }
+}
+
+void CanInterface::handle()
+{
+    SerializedCanMessage msg{};
+    if (receive_queue.get(&msg) != 0) {
+        return;
+    }
+
+    char data_hex[17]; // 16 bytes + null terminator
+    bytes_to_hex(msg.data, msg.len, data_hex, sizeof(data_hex));
+    log_debug("CanInterface: Received CAN message with ID %d Length %d Data 0x%s", msg.id, msg.len, data_hex);
+
+    CanCallback cb = nullptr;
+    CanCallback always_cb = nullptr;
 
     callback_lock.lock();
 
-    // Find index of matching CAN ID
-    int idx = -1;
     for (int i = 0; i < num_callbacks; ++i) {
         if (CANid_arr[i] == msg.id) {
-            idx = i;
+            cb = callback_arr[i];
             break;
         }
     }
 
-    // Call the callback for the can ID
-    if (idx != -1) {                 // only if we found one
-        CanCallback cb = callback_arr[idx];
-        if (cb) {
-            cb(msg);
-        }
-    }
-
-    // Call the "always" callback
-    if (alwayscallback) {
-        alwayscallback(msg);
-    }
-
+    always_cb = alwayscallback;
     callback_lock.unlock();
+
+    if (cb) {
+        cb(msg);
+    }
+
+    if (always_cb) {
+        always_cb(msg);
+    }
 }
+
 
 
 void CanInterface::bytes_to_hex(const uint8_t* data, uint8_t len, char* out_str, size_t out_str_size)

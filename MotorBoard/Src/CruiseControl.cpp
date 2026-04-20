@@ -78,10 +78,7 @@ uint16_t CruiseControl::compute_throttle(double current_speed_mph, uint32_t now_
     integral_ += error * (double)(dt_ms);
     const double integral = kKi * integral_;
     const double derivative = (100.0 * (error - previous_error_)) / static_cast<double>(dt_ms);
-    const double output =
-        proportional +
-        integral +
-        kKd * derivative;
+    const double output = proportional + integral + kKd * derivative;
 
     previous_error_ = error;
     return (uint16_t)(clamp_double(output, kMinOutput, kMaxOutput));
