@@ -54,12 +54,12 @@ typedef struct BpsError : CanMessage, bps_bps_error_t {
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "BpsError: internal_cell_communication_fault %u, weak_cell_fault %u, low_cell_voltage_fault %u, cell_open_wiring_fault %u, current_sensor_fault %u, weak_pack_fault %u, thermistor_fault %u, can_communication_fault %u, redundant_power_supply_fault %u, high_voltage_isolation_fault %u, charge_enable_relay_fault %u, discharge_enable_relay_fault %u, internal_hardware_fault %u, internal_heatsink_thermistor_fault %u, internal_logic_fault %u, highest_cell_voltage_too_high_fault %u, lowest_cell_voltage_too_low_fault %u, pack_too_hot_fault %u",
-            internal_cell_communication_fault, weak_cell_fault, low_cell_voltage_fault, cell_open_wiring_fault, current_sensor_fault, weak_pack_fault, thermistor_fault, can_communication_fault, redundant_power_supply_fault, high_voltage_isolation_fault, charge_enable_relay_fault, discharge_enable_relay_fault, internal_hardware_fault, internal_heatsink_thermistor_fault, internal_logic_fault, highest_cell_voltage_too_high_fault, lowest_cell_voltage_too_low_fault, pack_too_hot_fault);
+            "BpsError: internal_cell_communication_fault %u, weak_cell_fault %u, low_cell_voltage_fault %u, cell_open_wiring_fault %u, thermistor_fault %u, current_sensor_fault %u, weak_pack_fault %u, can_communication_fault %u, redundant_power_supply_fault %u, high_voltage_isolation_fault %u, charge_enable_relay_fault %u, discharge_enable_relay_fault %u, internal_conversion_fault %u, internal_memory_fault %u, internal_thermistor_fault %u, internal_logic_fault %u",
+            internal_cell_communication_fault, weak_cell_fault, low_cell_voltage_fault, cell_open_wiring_fault, thermistor_fault, current_sensor_fault, weak_pack_fault, can_communication_fault, redundant_power_supply_fault, high_voltage_isolation_fault, charge_enable_relay_fault, discharge_enable_relay_fault, internal_conversion_fault, internal_memory_fault, internal_thermistor_fault, internal_logic_fault);
     }
 
     bool has_active_fault() {
-        return internal_cell_communication_fault || low_cell_voltage_fault || current_sensor_fault || weak_pack_fault || thermistor_fault || can_communication_fault || redundant_power_supply_fault || high_voltage_isolation_fault || charge_enable_relay_fault || discharge_enable_relay_fault || internal_hardware_fault || internal_heatsink_thermistor_fault || internal_logic_fault || highest_cell_voltage_too_high_fault || lowest_cell_voltage_too_low_fault || pack_too_hot_fault;
+        return internal_cell_communication_fault || low_cell_voltage_fault || thermistor_fault || current_sensor_fault || weak_pack_fault || can_communication_fault || redundant_power_supply_fault || high_voltage_isolation_fault || charge_enable_relay_fault || discharge_enable_relay_fault || internal_conversion_fault || internal_memory_fault || internal_thermistor_fault || internal_logic_fault;
     }
 } BpsError;
 
