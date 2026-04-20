@@ -24,7 +24,7 @@
 
 CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
 
-static UART radio_uart(RADIO_TX, RADIO_RX, 921600);
+static UART radio_uart(RADIO_TX, RADIO_RX, 9600);
 static UartCobs radio(&radio_uart);
 
 /**
@@ -51,7 +51,7 @@ void radio_send(const SerializedCanMessage &msg)
         buf[2 + i] = msg.data[i];
     }
 
-    radio.write(buf, 2 + data_len);
+    radio_uart.write((uint8_t *)"Hi Troy", 7);
 }
 
 void handle_all_messages(const SerializedCanMessage &msg) {
@@ -93,6 +93,7 @@ void app_main()
     // log_debug("%s","HERE");
     HAL_Delay(1000);
     LED1.write(!LED1.read());
+    radio_send_test();
   }
 }
 
