@@ -2,6 +2,7 @@
 
 import subprocess
 import argparse
+import re
 import sys
 
 CONTAINER = "Rivanna3S_compile"
@@ -26,6 +27,52 @@ def create_container():
         check=True
     )
     print("Container created successfully.")
+
+def process_compilation_output(output):
+    linkerErrors = r"^(?P<path>[^:]+):(?P<line>\d+):\(.*?\):\s*(?P<message>.*)"
+    compiler_ptrn = r"(?P<path>[^:]+):(?P<line>\d+):(?P<column>\d+)?:\s*(?P<severity>error|warning|note):\s*(?P<message>.*)"
+    RED = "\033[1;31m"
+    YELLOW = "\033[1;33m"
+    BLUE = "\033[1;34m"
+    RESET = "\033[0m"
+    linkerList = set()
+    comp_errs = set()
+    comp_warns = set()
+    for line in output.splitlines():
+        #print(line)
+        linker_match = re.search(linkerErrors, line)
+        if linker_match is not None:
+            details = linker_match.groupdict()
+            message = f"{RED}[LINKER ERROR]{RESET} in {details['path']} at line {details['line']}: {details['message']}"
+            linkerList.add(message)
+            continue
+
+        c_match = re.search(compiler_ptrn, line)
+        if c_match:
+            d = c_match.groupdict()
+            sev = d['severity'].lower()
+            msg = f"{d['path']}:{d['line']} -> {d['message']}"
+
+            if sev == 'error':
+                comp_errs.add(f"{RED}[COMP ERROR]{RESET} {msg}")
+            elif sev == 'warning':
+                comp_warns.add(f"{YELLOW}[COMP WARNING]{RESET} {msg}")
+            elif sev == 'note':
+                continue
+    print(f"{RED} ___LINKER ERRORS___{RESET}")
+    for err in linkerList:
+        print(err)
+    print(f"{RED} ___COMP ERRORS___{RESET}")
+    for err in comp_errs:
+        print(err)
+    print(f"{YELLOW} ___COMP WARNS___{RESET}")
+    for warn in comp_warns:
+        print(warn)
+    
+
+    return linkerList, comp_errs, comp_warns
+
+
 
 
 arg_parser = argparse.ArgumentParser(description="Compile Rivanna3S code in the Docker container.")
@@ -69,7 +116,9 @@ if args.silent and process.returncode != 0:
     print("CMake configuration failed.")
 
 command = f"cd {CONTAINER_DIR} && cmake --build {build_dir} {' '.join(args.args)}"
-compile_process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=args.silent, text=True)
+compile_process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=True, text=True)
+full_output = compile_process.stdout + compile_process.stderr
+process_compilation_output(full_output)
 if args.silent and compile_process.returncode != 0:
     print("Compilation failed.")
 
