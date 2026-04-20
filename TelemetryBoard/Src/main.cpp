@@ -56,7 +56,7 @@ void radio_send(const SerializedCanMessage &msg)
         buf[2 + i] = msg.data[i];
     }
 
-    radio_uart.write(buf, 2 + data_len);
+    radio.write(buf, 2 + data_len);
 }
 
 void handle_all_messages(const SerializedCanMessage &msg) {
