@@ -34,6 +34,13 @@ public:
      * @return Voltage value from 0.0 to 3.3V
      */
     float read_voltage();
+
+    /**
+     * @brief Read the analog input value as a percentage of the voltage range, scaled to 0-255
+     * @return Scaled percentage value (0-255)
+     */
+    uint8_t read_hex_percent();
+
 private:
     ADC_Peripheral* adc_periph_;
     uint32_t adc_get_rank(const ADC_Peripheral* peripheral);
