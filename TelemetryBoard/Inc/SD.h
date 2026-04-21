@@ -24,7 +24,8 @@ class SPI;
 /**
  * @brief Interval between background flush attempts, in milliseconds
  */
-#define SD_FLUSH_INTERVAL_MS 1000
+#define SD_FLUSH_INTERVAL_MS 100
+#define SD_SYNC_MESSAGE_COUNT 16
 
 /**
  * @class SdCard
@@ -48,6 +49,7 @@ class SdCard {
         bool _ready;
         MessageQueue _mq;
         static SdCard* _SdCard;
+        uint16_t _messages_since_sync;
 
         /**
          * @brief Generate the next telemetry log filename

@@ -16,6 +16,7 @@ SdCard* SdCard::_SdCard = nullptr;
 SdCard::SdCard(SPI* spi_peripheral) : _mq(SD_QUEUE_BUFFER_BYTES) {
     _spi = spi_peripheral;
     _ready = false;
+    _messages_since_sync = 0;
     _SdCard = this;
     _retUSER = FATFS_LinkDriver(&USER_Driver, _USERPath);
     if (_retUSER != 0) {
@@ -95,13 +96,24 @@ int SdCard::write(uint8_t* buffer, uint16_t len) {
 void SdCard::write_and_flush_loop() {
     if (!_ready) return;
     uint8_t buffer[SD_MESSAGE_MAX_BYTES];
-    int bytes_received = _mq.receive(buffer, SD_MESSAGE_MAX_BYTES);
-    if (bytes_received <= 0) return;
+    int bytes_received = _mq.receive(buffer, SD_MESSAGE_MAX_BYTES, SD_FLUSH_INTERVAL_MS);
+
+    if (bytes_received <= 0) {
+        if (_messages_since_sync > 0) {
+            f_sync(&_USERFile);
+            _messages_since_sync = 0;
+        }
+        return;
+    }
 
     UINT bytes_written = 0;
     f_write(&_USERFile, buffer, static_cast<UINT>(bytes_received), &bytes_written);
-    f_sync(&_USERFile); // maybe only sync every n-miliseconds
-    vTaskDelay(pdMS_TO_TICKS(SD_FLUSH_INTERVAL_MS));
+    _messages_since_sync++;
+
+    if (_messages_since_sync >= SD_SYNC_MESSAGE_COUNT) {
+        f_sync(&_USERFile);
+        _messages_since_sync = 0;
+    }
 }
 
 void SdCard::continous_flush() {

@@ -6,13 +6,15 @@
 #include "task.h"
 #include <cstdio>
 
-#define LOG_LEVEL DEBUG_LVL
+#define LOG_LEVEL INFO_LVL
 
 CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
 
 static SdCard* global_sd_card = nullptr;
 
 void log_can_frame(const SerializedCanMessage& msg) {
+    if (!global_sd_card) return;
+
     char line[96];
     
     unsigned long time_ms = (unsigned long)xTaskGetTickCount();
@@ -36,13 +38,11 @@ void log_can_frame(const SerializedCanMessage& msg) {
 void handle_all_messages(const SerializedCanMessage &msg) {
     // 1. send message over radio
     // 2. send message over LTE
-    log_can_frame(msg);
+    // log_can_frame(msg);
 }
 
 void app_main() {
     log_configure(LOG_LEVEL, LOG_TX, LOG_RX, 921600);
-    log_info("Telemetry Board starting up...");
-    
     static SPI sd_spi(SPI2_MOSI, SPI2_MISO, SPI2_SCK, 400000);
     static SdCard sd_card(&sd_spi);
     global_sd_card = &sd_card;
