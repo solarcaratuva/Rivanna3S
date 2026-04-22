@@ -32,7 +32,7 @@ ADC_HandleTypeDef hadc3;
 ADC_HandleTypeDef hadc4;
 
 /* ADC1 init function */
-void MX_ADC1_Init(uint32_t channel, uint32_t rank) // <-- This line changed when importing
+void MX_ADC1_Init(uint32_t channel, bool first_use) // <-- This line changed when importing
 {
 
   /* USER CODE BEGIN ADC1_Init 0 */
@@ -64,7 +64,7 @@ void MX_ADC1_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc1.Init.OversamplingMode = DISABLE;
-  if (rank == ADC_REGULAR_RANK_1) {
+  if (first_use) {
      if (HAL_ADC_Init(&hadc1) != HAL_OK)
       {
         //Error_Handler(); // <-- This line changed when importing
@@ -98,7 +98,7 @@ void MX_ADC1_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
 
 }
 /* ADC2 init function */
-void MX_ADC2_Init(uint32_t channel, uint32_t rank) // <-- This line changed when importing
+void MX_ADC2_Init(uint32_t channel, bool first_use) // <-- This line changed when importing
 {
 
   /* USER CODE BEGIN ADC2_Init 0 */
@@ -129,7 +129,7 @@ void MX_ADC2_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   hadc2.Init.DMAContinuousRequests = DISABLE;
   hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc2.Init.OversamplingMode = DISABLE;
-  if (rank == ADC_REGULAR_RANK_1) {
+  if (first_use) {
      if (HAL_ADC_Init(&hadc2) != HAL_OK)
       {
         //Error_Handler(); // <-- This line changed when importing
@@ -154,7 +154,7 @@ void MX_ADC2_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
 
 }
 /* ADC3 init function */
-void MX_ADC3_Init(uint32_t channel, uint32_t rank) // <-- This line changed when importing
+void MX_ADC3_Init(uint32_t channel, bool first_use) // <-- This line changed when importing
 {
 
   /* USER CODE BEGIN ADC3_Init 0 */
@@ -186,7 +186,7 @@ void MX_ADC3_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   hadc3.Init.DMAContinuousRequests = DISABLE;
   hadc3.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc3.Init.OversamplingMode = DISABLE;
-  if (rank == ADC_REGULAR_RANK_1) {
+  if (first_use) {
      if (HAL_ADC_Init(&hadc3) != HAL_OK)
       {
         //Error_Handler(); // <-- This line changed when importing
@@ -219,7 +219,7 @@ void MX_ADC3_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
 
 }
 /* ADC4 init function */
-void MX_ADC4_Init(uint32_t channel, uint32_t rank) // <-- This line changed when importing
+void MX_ADC4_Init(uint32_t channel, bool first_use) // <-- This line changed when importing
 {
 
   /* USER CODE BEGIN ADC4_Init 0 */
@@ -250,7 +250,7 @@ void MX_ADC4_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   hadc4.Init.DMAContinuousRequests = DISABLE;
   hadc4.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc4.Init.OversamplingMode = DISABLE;
-  if (rank == ADC_REGULAR_RANK_1) {
+  if (first_use) {
      if (HAL_ADC_Init(&hadc4) != HAL_OK)
       {
         //Error_Handler(); // <-- This line changed when importing
@@ -425,21 +425,21 @@ void HAL_ADC_MspInit_custom(const ADC_TypeDef* adcHandle, Pin pin) // <-- This l
 
 /* USER CODE END 1 */
 
-ADC_HandleTypeDef* ADC_init(ADC_TypeDef* inst, uint32_t channel, uint32_t rank) {
+ADC_HandleTypeDef* ADC_init(ADC_TypeDef* inst, uint32_t channel, bool first_use) {
     if (inst == ADC1) {
-        MX_ADC1_Init(channel, rank);
+        MX_ADC1_Init(channel, first_use);
         return &hadc1;
     }
     else if (inst == ADC2) {
-        MX_ADC2_Init(channel, rank);
+        MX_ADC2_Init(channel, first_use);
         return &hadc2;
     }
     else if (inst == ADC3) {
-        MX_ADC3_Init(channel, rank);
+        MX_ADC3_Init(channel, first_use);
         return &hadc3;
     }
     else if (inst == ADC4) {
-        MX_ADC4_Init(channel, rank);
+        MX_ADC4_Init(channel, first_use);
         return &hadc4;
     }
     else {
