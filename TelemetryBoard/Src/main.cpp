@@ -24,7 +24,7 @@
 #include "UartCobs.h"
 
 
-#define LOG_LEVEL DEBUG_LVL
+#define LOG_LEVEL INFO_LVL
 
 CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
 static SdCard* global_sd_card = nullptr;
@@ -70,11 +70,10 @@ void handle_all_messages(const SerializedCanMessage &msg) {
 
 void app_main() {
     log_configure(LOG_LEVEL, LOG_TX, LOG_RX, 921600);
-    log_info("Telemetry Board starting up...");
-    
     static SPI sd_spi(SPI2_MOSI, SPI2_MISO, SPI2_SCK, 400000);
     static SdCard sd_card(&sd_spi);
     global_sd_card = &sd_card;
+    sd_card.attach_to_log();
     sd_card.attach_to_log();
     
     main_can.register_always_callback(handle_all_messages);
