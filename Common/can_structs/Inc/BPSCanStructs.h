@@ -59,7 +59,7 @@ typedef struct BpsError : CanMessage, bps_bps_error_t {
     }
 
     bool has_active_fault() {
-        return internal_cell_communication_fault || low_cell_voltage_fault || thermistor_fault || current_sensor_fault || weak_pack_fault || can_communication_fault || redundant_power_supply_fault || high_voltage_isolation_fault || charge_enable_relay_fault || discharge_enable_relay_fault || internal_conversion_fault || internal_memory_fault || internal_thermistor_fault || internal_logic_fault;
+        return internal_cell_communication_fault || low_cell_voltage_fault || thermistor_fault || current_sensor_fault || weak_pack_fault || can_communication_fault || high_voltage_isolation_fault || charge_enable_relay_fault || discharge_enable_relay_fault || internal_conversion_fault || internal_memory_fault || internal_thermistor_fault || internal_logic_fault;
     }
 } BpsError;
 
