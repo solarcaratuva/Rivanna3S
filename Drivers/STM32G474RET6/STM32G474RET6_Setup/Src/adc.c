@@ -83,7 +83,7 @@ void MX_ADC1_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   /** Configure Regular Channel
   */
   sConfig.Channel = channel; // <-- This line changed when importing
-  sConfig.Rank = rank; // <-- This line changed when importing
+  sConfig.Rank = ADC_REGULAR_RANK_1; // <-- This line changed when importing
   sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
@@ -139,7 +139,7 @@ void MX_ADC2_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   /** Configure Regular Channel
   */
   sConfig.Channel = channel; // <-- This line changed when importing
-  sConfig.Rank = rank; // <-- This line changed when importing
+  sConfig.Rank = ADC_REGULAR_RANK_1; // <-- This line changed when importing
   sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
@@ -204,7 +204,7 @@ void MX_ADC3_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   /** Configure Regular Channel
   */
   sConfig.Channel = channel; // <-- This line changed when importing
-  sConfig.Rank = rank; // <-- This line changed when importing
+  sConfig.Rank = ADC_REGULAR_RANK_1; // <-- This line changed when importing
   sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
@@ -260,7 +260,7 @@ void MX_ADC4_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   /** Configure Regular Channel
   */
   sConfig.Channel = channel; // <-- This line changed when importing
-  sConfig.Rank = rank; // <-- This line changed when importing
+  sConfig.Rank = ADC_REGULAR_RANK_1; // <-- This line changed when importing
   sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
