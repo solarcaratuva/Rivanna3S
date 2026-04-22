@@ -22,7 +22,6 @@ public:
      * @param queue_depth   Number of blocks the internal queue can hold.
      * @param current_board  ID of the board this instance is running on (0-4). Used for CAN routing.
      */
-    FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth = 100);
     FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth = 100, uint32_t current_board);
 
     /**
@@ -48,7 +47,6 @@ public:
      */
     static uint16_t crc16_hqx(const uint8_t *data, uint16_t len, uint16_t crc = FW_CRC16_INIT);
 
-public:
     /**
      * @brief Set the active flash bank (1 or 2).
      *        Bank 1: 0x08000000, Bank 2: 0x08100000
@@ -60,7 +58,7 @@ private:
     CanInterface &can_;
     FiniteQueue queue_;
     Thread consumer_thread_;
-    Thread        UART_listener_thread_;
+    Thread UART_listener_thread_;
     Clock clock_;
     uint32_t flash_base_addr_ = 0x08100000UL; // Default to Bank 2
     uint32_t current_board_;
@@ -83,6 +81,9 @@ private:
 
     /** @brief Background thread entry: drains queue_ and processes blocks. */
     static void consumer_task(void* arg);
+
+    /** @brief Background thread entry: listens for UART commands to trigger uploads. */
+    static void uart_listener_task(void* arg);
 
     /** @brief Read exactly `len` bytes with a millisecond timeout. */
     bool read_exact(uint8_t *buf, uint16_t len, uint32_t timeout_ms);
@@ -110,16 +111,6 @@ private:
      */
     void target_handle_done();
 
-    /**
-     * @brief Write received firmware block to flash.
-     */
-    bool target_write_flash_block(const uint8_t *data, uint16_t len);
-
-    /**
-     * @brief Lock flash after programming finishes.
-     */
-    void target_lock_flash();
-
     //--------------------------------------------------
     // TARGET CAN TRANSMIT HELPERS
     //--------------------------------------------------
@@ -143,6 +134,5 @@ private:
 
     TargetUpdateState target_state_;
 
-    uint32_t target_flash_address_;
     uint16_t target_running_crc_;
 };

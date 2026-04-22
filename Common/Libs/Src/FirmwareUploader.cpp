@@ -12,11 +12,14 @@
 // Construction & lifecycle
 // ---------------------------------------------------------------------------
 
-FirmwareUploader::FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth)
+FirmwareUploader::FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth, uint32_t current_board)
     : uart_(uart),
       can_(can),
-      queue_(queue_depth, FW_BLOCK_SIZE)
+      queue_(queue_depth, FW_BLOCK_SIZE),
+      current_board_(current_board)
 {
+    can_.register_callback(UpdateControl::get_message_id(), receive_update_control);
+    can_.register_callback(UpdateData::get_message_id(), receive_update_data);
 }
 
 void FirmwareUploader::start()
@@ -142,8 +145,8 @@ void FirmwareUploader::consumer_task(void *arg)
             flash_addr += FW_BLOCK_SIZE;
         }
 
-        // Swap bank if finalizing_ is set and queue is empty
-        if (self->FINALIZING && self->queue_.size() == 0)
+        // Swap bank if target is in finalizing state and queue is empty
+        if (self->target_state_ == TargetUpdateState::FINALIZING && self->queue_.size() == 0)
         {
             if (self->flash_base_addr_ == 0x08000000UL)
                 self->set_flash_bank(2);
@@ -151,7 +154,7 @@ void FirmwareUploader::consumer_task(void *arg)
                 self->set_flash_bank(1);
             log_info("Switched flash bank. New base: 0x%08lX", self->flash_base_addr_);
             flash_addr = self->flash_base_addr_;
-            self->FINALIZING = false; // Reset flag
+            self->target_state_ = TargetUpdateState::IDLE; // Reset flag
         }
 
         self->clock_.sleep_for(2);
@@ -179,29 +182,6 @@ void FirmwareUploader::uart_listener_task(void* arg) {
             update_msg.setup = 1; // signal sender is ready to send data
             can_.write(&update_msg);
 
-        }
-}
-
-void FirmwareUploader::uart_listener_task(void* arg) {
-    FirmwareUploader* self = static_cast<FirmwareUploader*>(arg);
-    char cmd_buf[32];
-
-    while (true) {
-        if (self->read_line(cmd_buf, sizeof(cmd_buf), 10) > 0) {
-            int board_id = cmd_buf[0];
-            if (board_id >= '0' && board_id <= '9')
-                board_id -= '0';
-            else
-                continue;
-
-            
-            self->is_host_ = 1; // Set flag to indicate we're in host mode
-
-            //Create update control msg to send to target over CAN
-            UpdateControl update_msg{};
-            update_msg.target_board = board_id;
-            update_msg.setup = 1; // signal sender is ready to send data
-            can_.write(&update_msg);
         }
     }
 }
@@ -321,7 +301,7 @@ void FirmwareUploader::receive_update_data(const SerializedCanMessage &msg) {
         // Update the running CRC with the new block of data
         target_running_crc_ = crc16_hqx(msg.data, msg.len, target_running_crc_);
 
-        target_write_flash_block(msg.data, msg.len);
+        queue_.append_to_back((void *)msg.data, portMAX_DELAY); // Push raw data into queue for flash writing
     }
 }
 
@@ -330,9 +310,9 @@ bool FirmwareUploader::mass_erase() {
     uint32_t page_error = 0;
     uint32_t bank;
 
-    if ((target_flash_address_ >= FLASH_BANK1_BASE) && (target_flash_address_ < FLASH_BANK2_BASE)) {
+    if ((flash_base_addr_ >= FLASH_BANK1_BASE) && (flash_base_addr_ < FLASH_BANK2_BASE)) {
         bank = FLASH_BANK_1;
-    } else if ((target_flash_address_ >= FLASH_BANK2_BASE) && (target_flash_address_ < FLASH_END)) {
+    } else if ((flash_base_addr_ >= FLASH_BANK2_BASE) && (flash_base_addr_ < FLASH_END)) {
         bank = FLASH_BANK_2;
     } else {
         // Invalid address
@@ -363,11 +343,6 @@ void FirmwareUploader::target_handle_done() {
         HAL_FLASH_Lock();
         target_send_done_with_crc(target_running_crc_);
     }
-}
-
-bool FirmwareUploader::target_write_flash_block(const uint8_t* data, uint16_t len) {
-    // Implement flash write procedure here, using data and len
-    return true;
 }
 
 //--------------------------------------------------
