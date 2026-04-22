@@ -33,6 +33,7 @@ uint16_t AnalogIn::read_u12() {
         log_warn("AnalogIn read failed: AnalogIn not initialized");
         return 10.0f;
     }
+    ADC_init(adc_periph_->instance, adc_periph_->channel, ADC_REGULAR_RANK_2);
 
     // Start ADC conversion
     HAL_StatusTypeDef check = HAL_ADC_Start(hadc_);
