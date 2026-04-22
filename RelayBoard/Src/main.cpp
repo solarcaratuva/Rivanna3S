@@ -32,6 +32,7 @@
 #include "log.h"
 #include "pindef.h"
 #include "thread.h"
+#include "heartbeat.h"
 /* USER CODE END Includes */
 
 uint32_t PRECHARGE_CONTROL_PERIOD_MS = 100;
@@ -120,10 +121,16 @@ void run_precharge()
     }
 }
 
+void missed_heartbeat_callback() {
+    log_fault("missed heartbeat callback func xxxx");
+}
+
 void app_main()
 {
     log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Relay Board starting up...");
+
+    HeartbeatSafetySystem::setup(&main_can, missed_heartbeat_callback, Node::RelayBoard);
 
     main_can.register_callback(BpsStatus::get_message_ID(), handle_bps_status);
     main_can.register_callback(BpsError::get_message_ID(), handle_bps_fault);

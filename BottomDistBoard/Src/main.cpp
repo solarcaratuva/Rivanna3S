@@ -31,6 +31,7 @@
 #include "log.h"
 #include "pindef.h"
 #include "thread.h"
+#include "heartbeat.h"
 /* USER CODE END Includes */
 
 DigitalOut left_turn_signal(LEFT_TURN_EN);
@@ -153,6 +154,10 @@ void send_pedal_status()
     }
 }
 
+void missed_heartbeat_callback() {
+    log_fault("missed heartbeat callback func xxxx");
+}
+
 void app_main()
 {   
     DigitalOut init_indicator(PC_1);
@@ -160,6 +165,8 @@ void app_main()
 
     log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Bottom Distance Board starting up...");
+
+    HeartbeatSafetySystem::setup(&main_can, missed_heartbeat_callback, Node::BottomDistBoard);
 
     drl.write(PIN_ON);
 
