@@ -64,10 +64,13 @@ void MX_ADC1_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc1.Init.OversamplingMode = DISABLE;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    //Error_Handler(); // <-- This line changed when importing
+  if (rank == ADC_REGULAR_RANK_1) {
+     if (HAL_ADC_Init(&hadc1) != HAL_OK)
+      {
+        //Error_Handler(); // <-- This line changed when importing
+      }
   }
+ 
 
   /** Configure the ADC multi-mode
   */
@@ -126,9 +129,11 @@ void MX_ADC2_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   hadc2.Init.DMAContinuousRequests = DISABLE;
   hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc2.Init.OversamplingMode = DISABLE;
-  if (HAL_ADC_Init(&hadc2) != HAL_OK)
-  {
-    //Error_Handler(); // <-- This line changed when importing
+  if (rank == ADC_REGULAR_RANK_1) {
+     if (HAL_ADC_Init(&hadc2) != HAL_OK)
+      {
+        //Error_Handler(); // <-- This line changed when importing
+      }
   }
 
   /** Configure Regular Channel
@@ -181,9 +186,11 @@ void MX_ADC3_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   hadc3.Init.DMAContinuousRequests = DISABLE;
   hadc3.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc3.Init.OversamplingMode = DISABLE;
-  if (HAL_ADC_Init(&hadc3) != HAL_OK)
-  {
-    //Error_Handler(); // <-- This line changed when importing
+  if (rank == ADC_REGULAR_RANK_1) {
+     if (HAL_ADC_Init(&hadc3) != HAL_OK)
+      {
+        //Error_Handler(); // <-- This line changed when importing
+      }
   }
 
   /** Configure the ADC multi-mode
@@ -243,9 +250,11 @@ void MX_ADC4_Init(uint32_t channel, uint32_t rank) // <-- This line changed when
   hadc4.Init.DMAContinuousRequests = DISABLE;
   hadc4.Init.Overrun = ADC_OVR_DATA_PRESERVED;
   hadc4.Init.OversamplingMode = DISABLE;
-  if (HAL_ADC_Init(&hadc4) != HAL_OK)
-  {
-    //Error_Handler(); // <-- This line changed when importing
+  if (rank == ADC_REGULAR_RANK_1) {
+     if (HAL_ADC_Init(&hadc4) != HAL_OK)
+      {
+        //Error_Handler(); // <-- This line changed when importing
+      }
   }
 
   /** Configure Regular Channel
