@@ -20,6 +20,7 @@ public:
      * @param uart          Reference to the UART peripheral to use.
      * @param can           Reference to the CAN peripheral to use for communication with target boards.
      * @param queue_depth   Number of blocks the internal queue can hold.
+     * @param current_board  ID of the board this instance is running on (0-4). Used for CAN routing.
      */
     FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth = 100);
     FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth = 100, uint32_t current_board);
@@ -45,7 +46,7 @@ public:
      * @brief CRC-16/HQXA (matches Python's binascii.crc_hqx).
      *        Exposed publicly so callers can verify blocks independently.
      */
-    static uint16_t crc16_hqx(const uint8_t *data, uint16_t len);
+    static uint16_t crc16_hqx(const uint8_t *data, uint16_t len, uint16_t crc = FW_CRC16_INIT);
 
 public:
     /**
@@ -94,20 +95,15 @@ private:
     //--------------------------------------------------
 
     /** @brief Handle UpdateControl CAN messsage */
-    void target_receive_update_control(const SerializedCanMessage &msg);
+    void receive_update_control(const SerializedCanMessage &msg);
 
     /** @brief Handle UpdateData CAN message */
-    void target_receive_update_data(const SerializedCanMessage &msg);
+    void receive_update_data(const SerializedCanMessage &msg);
 
     /**
      * @brief Begin mass erase after SETUP command.
      */
-    void target_begin_mass_erase();
-
-    /**
-     * @brief Called when mass erase completes.
-     */
-    void target_mass_erase_complete();
+    bool mass_erase();
 
     /**
      * @brief Handle DONE command from host.

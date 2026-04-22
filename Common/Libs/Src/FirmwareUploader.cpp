@@ -5,6 +5,8 @@
 #include "stm32h7xx_hal.h"
 #include <cstring>
 #include "Rivanna3SCanStructs.h"
+#include "stm32h7xx_hal.h"
+#include "stm32h743xx.h"
 
 // ---------------------------------------------------------------------------
 // Construction & lifecycle
@@ -273,11 +275,8 @@ int FirmwareUploader::read_line(char *buf, uint16_t max_len, uint32_t timeout_ms
 // CRC-16/HQXA
 // ---------------------------------------------------------------------------
 
-uint16_t FirmwareUploader::crc16_hqx(const uint8_t *data, uint16_t len)
-{
-    uint16_t crc = FW_CRC16_INIT;
-    for (uint16_t i = 0; i < len; i++)
-    {
+uint16_t FirmwareUploader::crc16_hqx(const uint8_t* data, uint16_t len, uint16_t crc) {
+    for (uint16_t i = 0; i < len; i++) {
         crc ^= (uint16_t)data[i] << 8;
         for (int j = 0; j < 8; j++)
             crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1;
@@ -289,22 +288,116 @@ uint16_t FirmwareUploader::crc16_hqx(const uint8_t *data, uint16_t len)
 // Target board CAN handlers
 // ---------------------------------------------------------------------------
 
-void FirmwareUploader::target_receive_update_control(const SerializedCanMessage &msg)
-{
+void FirmwareUploader::receive_update_control(const SerializedCanMessage &msg) {
     UpdateControl control{};
     control.deserialize(&msg);
 
     int target_board = control.target_board;
-    if (target_board == current_board_)
-    {
-        if (control.setup)
-        {
+    if (is_host_) {
+        // Do host actions
+    }
+
+    if (target_board == current_board_){
+        if (control.setup) {
             target_send_setup_ack();
-            target_begin_mass_erase();
+            target_running_crc_ = FW_CRC16_INIT; // Reset CRC for new upload
+            target_state_ = TargetUpdateState::ERASING;
+            if (!mass_erase()){
+                return; // Erase failed, cannot proceed
+            }
+            target_state_ = TargetUpdateState::READY_FOR_DATA;
+            target_send_ready_for_data();
         }
         if (control.done)
         {
             target_handle_done();
         }
     }
+}
+
+void FirmwareUploader::receive_update_data(const SerializedCanMessage &msg) {
+    // No need to deserialize into a struct since it's just raw data blocks. Just forward to flash write.
+    if (target_state_ == TargetUpdateState::RECEIVING_DATA) {
+        // Update the running CRC with the new block of data
+        target_running_crc_ = crc16_hqx(msg.data, msg.len, target_running_crc_);
+
+        target_write_flash_block(msg.data, msg.len);
+    }
+}
+
+bool FirmwareUploader::mass_erase() {
+    FLASH_EraseInitTypeDef erase;
+    uint32_t page_error = 0;
+    uint32_t bank;
+
+    if ((target_flash_address_ >= FLASH_BANK1_BASE) && (target_flash_address_ < FLASH_BANK2_BASE)) {
+        bank = FLASH_BANK_1;
+    } else if ((target_flash_address_ >= FLASH_BANK2_BASE) && (target_flash_address_ < FLASH_END)) {
+        bank = FLASH_BANK_2;
+    } else {
+        // Invalid address
+        return false;
+    }
+
+    if (HAL_FLASH_Unlock() != HAL_OK) {
+        return false;
+    }
+
+    erase.TypeErase = FLASH_TYPEERASE_MASSERASE;
+    erase.Banks = bank;
+    erase.VoltageRange = FLASH_VOLTAGE_RANGE_3; // 2.7V to 3.6V
+
+    if (HAL_FLASHEx_Erase(&erase, &page_error) != HAL_OK) {
+        // Erase failed, lock flash and return false
+        HAL_FLASH_Lock();
+        return false;
+    }
+
+    HAL_FLASH_Lock();
+    return true;
+}
+
+void FirmwareUploader::target_handle_done() {
+    if (target_state_ == TargetUpdateState::RECEIVING_DATA) {
+        target_state_ = TargetUpdateState::FINALIZING;
+        HAL_FLASH_Lock();
+        target_send_done_with_crc(target_running_crc_);
+    }
+}
+
+bool FirmwareUploader::target_write_flash_block(const uint8_t* data, uint16_t len) {
+    // Implement flash write procedure here, using data and len
+    return true;
+}
+
+//--------------------------------------------------
+// TARGET CAN TRANSMIT HELPERS
+//--------------------------------------------------
+
+void FirmwareUploader::target_send_setup_ack() {
+    UpdateControl msg{};
+    msg.target_board = current_board_;
+    msg.setup_ack = 1;
+
+    can_.write(&msg);
+}
+
+void FirmwareUploader::target_send_ready_for_data() {
+    if (target_state_ == TargetUpdateState::READY_FOR_DATA) {
+        UpdateControl msg{};
+        msg.target_board = current_board_;
+        msg.ready_for_data = 1;
+
+        can_.write(&msg);
+        target_state_ = TargetUpdateState::RECEIVING_DATA;
+    }
+}
+
+void FirmwareUploader::target_send_done_with_crc(uint16_t crc) {
+    UpdateControl msg{};
+    msg.target_board = current_board_;
+    msg.done = 1;
+    msg.final_crc = crc;
+
+    can_.write(&msg);
 }
