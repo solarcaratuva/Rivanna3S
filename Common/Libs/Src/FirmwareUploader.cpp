@@ -126,35 +126,42 @@ void FirmwareUploader::consumer_task(void *arg)
     uint8_t block[FW_BLOCK_SIZE];
     uint32_t flash_addr = self->flash_base_addr_;
     bool targetstate_finished = false; // This should be set externally when the target state is finished
-    while (true)
-    {
-        if (self->queue_.get(block, FW_BLOCK_SIZE))
-        {
-            // Write block to flash
-            if (!self->write_flash(flash_addr, block, FW_BLOCK_SIZE))
-            {
-                log_fault("Flash write failed at 0x%08lX", flash_addr);
-            }
-            else
-            {
-                log_info("Block written to flash @ 0x%08lX", flash_addr);
-            }
-            flash_addr += FW_BLOCK_SIZE;
-        }
+    if(self->is_host_){
+        //pop data from queue and send over CAN
 
-        // Swap bank if finalizing_ is set and queue is empty
-        if (self->FINALIZING && self->queue_.size() == 0)
+    }
+    else(self->target_state_ == TargetUpdateState::RECEIVING_DATA){
+    
+        while (true)
         {
-            if (self->flash_base_addr_ == 0x08000000UL)
-                self->set_flash_bank(2);
-            else
-                self->set_flash_bank(1);
-            log_info("Switched flash bank. New base: 0x%08lX", self->flash_base_addr_);
-            flash_addr = self->flash_base_addr_;
-            self->FINALIZING = false; // Reset flag
-        }
+            if (self->queue_.get(block, FW_BLOCK_SIZE))
+            {
+                // Write block to flash
+                if (!self->write_flash(flash_addr, block, FW_BLOCK_SIZE))
+                {
+                    log_fault("Flash write failed at 0x%08lX", flash_addr);
+                }
+                else
+                {
+                    log_info("Block written to flash @ 0x%08lX", flash_addr);
+                }
+                flash_addr += FW_BLOCK_SIZE;
+            }
 
-        self->clock_.sleep_for(2);
+            // Swap bank if finalizing_ is set and queue is empty
+            if (self->FINALIZING && self->queue_.size() == 0)
+            {
+                if (self->flash_base_addr_ == 0x08000000UL)
+                    self->set_flash_bank(2);
+                else
+                    self->set_flash_bank(1);
+                log_info("Switched flash bank. New base: 0x%08lX", self->flash_base_addr_);
+                flash_addr = self->flash_base_addr_;
+                self->FINALIZING = false; // Reset flag
+            }
+
+            self->clock_.sleep_for(2);
+        }
     }
 }
 
@@ -179,29 +186,6 @@ void FirmwareUploader::uart_listener_task(void* arg) {
             update_msg.setup = 1; // signal sender is ready to send data
             can_.write(&update_msg);
 
-        }
-}
-
-void FirmwareUploader::uart_listener_task(void* arg) {
-    FirmwareUploader* self = static_cast<FirmwareUploader*>(arg);
-    char cmd_buf[32];
-
-    while (true) {
-        if (self->read_line(cmd_buf, sizeof(cmd_buf), 10) > 0) {
-            int board_id = cmd_buf[0];
-            if (board_id >= '0' && board_id <= '9')
-                board_id -= '0';
-            else
-                continue;
-
-            
-            self->is_host_ = 1; // Set flag to indicate we're in host mode
-
-            //Create update control msg to send to target over CAN
-            UpdateControl update_msg{};
-            update_msg.target_board = board_id;
-            update_msg.setup = 1; // signal sender is ready to send data
-            can_.write(&update_msg);
         }
     }
 }

@@ -31,6 +31,7 @@ public:
      */
     void start();
 
+
     /**
      * @brief Block until a valid board-ID command line arrives, then receive
      *        the firmware stream for that board.
@@ -48,7 +49,6 @@ public:
      */
     static uint16_t crc16_hqx(const uint8_t *data, uint16_t len, uint16_t crc = FW_CRC16_INIT);
 
-public:
     /**
      * @brief Set the active flash bank (1 or 2).
      *        Bank 1: 0x08000000, Bank 2: 0x08100000
@@ -80,6 +80,9 @@ private:
      * @return true on clean completion (DONE), false on overflow or error.
      */
     bool handle_upload();
+
+    static void uart_listener_task(void* arg);
+
 
     /** @brief Background thread entry: drains queue_ and processes blocks. */
     static void consumer_task(void* arg);
@@ -141,7 +144,16 @@ private:
         FINALIZING
     };
 
+    enum class HostBoardState
+    {
+        NONE,
+        RECEIVING,
+        DONE
+    };
+
     TargetUpdateState target_state_;
+
+    HostBoardState host_board_state_ = HostBoardState::NONE;
 
     uint32_t target_flash_address_;
     uint16_t target_running_crc_;
