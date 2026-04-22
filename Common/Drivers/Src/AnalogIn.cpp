@@ -5,7 +5,7 @@
 #include "log.h"
 
 // function declarations for init functions in a hardware-specific adc.c file
-extern "C" ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, uint32_t rank);
+extern "C" ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, bool first_use);
 extern "C" void HAL_ADC_MspInit_custom(ADC_TypeDef* adcHandle, Pin pin);
 
 
@@ -22,8 +22,8 @@ AnalogIn::AnalogIn(Pin pin) {
 
     HAL_ADC_MspInit_custom(adc_periph_->instance, pin);
 
-    uint32_t rank = adc_get_rank(adc_periph_);
-    hadc_ = ADC_init(adc_periph_->instance, adc_periph_->channel, rank);
+    bool first_use = adc_periph_->instance_num == 0;
+    hadc_ = ADC_init(adc_periph_->instance, adc_periph_->channel, first_use);
     
     initialized = true;
 }
@@ -33,7 +33,7 @@ uint16_t AnalogIn::read_u12() {
         log_warn("AnalogIn read failed: AnalogIn not initialized");
         return 10.0f;
     }
-    ADC_init(adc_periph_->instance, adc_periph_->channel, ADC_REGULAR_RANK_2);
+    ADC_init(adc_periph_->instance, adc_periph_->channel, false);
 
     // Start ADC conversion
     HAL_StatusTypeDef check = HAL_ADC_Start(hadc_);
@@ -92,26 +92,4 @@ ADC_Peripheral* AnalogIn::findADCPin(Pin pin) {
         }
     }
     return nullptr; // No matching ADC peripheral found
-}
-
-uint32_t AnalogIn::adc_get_rank(const ADC_Peripheral* peripheral) {
-	uint8_t index = peripheral->instance_num;
-
-	uint32_t rank;
-	switch (adc_channels_claimed[index]) {
-		case 0: rank = ADC_REGULAR_RANK_1; break;
-		case 1: rank = ADC_REGULAR_RANK_2; break;
-		case 2: rank = ADC_REGULAR_RANK_3; break;
-		case 3: rank = ADC_REGULAR_RANK_4; break;
-		case 4: rank = ADC_REGULAR_RANK_5; break;
-		case 5: rank = ADC_REGULAR_RANK_6; break;
-		case 6: rank = ADC_REGULAR_RANK_7; break;
-		case 7: rank = ADC_REGULAR_RANK_8; break;
-		case 8: rank = ADC_REGULAR_RANK_9; break;
-		case 9: rank = ADC_REGULAR_RANK_10; break;
-		default: rank = ADC_REGULAR_RANK_1; break;
-	}
-
-	adc_channels_claimed[index] += 1;
-	return rank;
 }
