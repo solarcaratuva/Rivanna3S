@@ -42,7 +42,7 @@ struct CanMessage {
      * @brief Convert raw CAN frame to logical message structure
      * @param[in] message Pointer to SerializedCanMessage to deserialize
      */
-    virtual void deserialize(SerializedCanMessage *message) = 0;
+    virtual void deserialize(const SerializedCanMessage *message) = 0;
 
     /**
      * @brief Log the message contents for debugging
