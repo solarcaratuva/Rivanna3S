@@ -190,7 +190,7 @@ def fix_adc_c(text: str) -> str:
 
     # fix ADC_init
     pattern = r'void\s+MX_ADC(\d+)_Init\s*\(\s*void\s*\)'
-    replacement = r'void MX_ADC\1_Init(uint32_t channel, uint32_t rank)'
+    replacement = r'void MX_ADC\1_Init(uint32_t channel, bool first_use)'
 
     text = regex_replace_all(text, pattern, replacement)
 
