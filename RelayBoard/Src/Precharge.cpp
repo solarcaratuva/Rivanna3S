@@ -4,7 +4,7 @@
 #include "log.h"
 #include "pindef.h"
 
-constexpr float CONT12_HIGH_THRESHOLD_V = 1.0f;
+constexpr float CONT12_HIGH_THRESHOLD_V = 2.8f;
 constexpr float PACK_VOLT_PCT = 0.9f;
 constexpr float HAL_EFFECT_SENSITIVITY = 0.8f;
 constexpr float VCC = 5.0f;
@@ -38,7 +38,7 @@ void Precharge::run(uint16_t pack_voltage, bool cont12_fault, bool other_fault)
 {
     cont12_high_ = contactor12_voltage_.read_voltage() > CONT12_HIGH_THRESHOLD_V;
     pack_voltage_ = pack_voltage;
-    cont12_fault_ = cont12_fault;
+    cont12_fault_ = cont12_fault || local_cont12_fault_;
     other_fault_ = other_fault;
     threshold_millivolts_ = calculate_hal_effect_threshold_millivolts();
     hal_effect_millivolts_ = static_cast<uint16_t>(hal_effect_voltage_.read_voltage() * 1000.0f);
@@ -90,10 +90,16 @@ bool Precharge::cont12_high() const
     return cont12_high_;
 }
 
+bool Precharge::local_cont12_fault() const
+{
+    return local_cont12_fault_;
+}
+
 void Precharge::fault_trap()
 {
     if (!cont12_high_ && state_ != State::WaitForHV && state_ != State::WaitForEnable)
     {
+        local_cont12_fault_ = true;
         cont12_fault_ = true;
     }
 
@@ -189,6 +195,7 @@ void Precharge::run_done_state()
 {
     main_en_.write(true);
     precharge_en_.write(false);
+    log_info("reached done state");
 }
 
 uint16_t Precharge::calculate_hal_effect_threshold_millivolts() const

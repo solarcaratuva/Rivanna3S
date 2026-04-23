@@ -32,9 +32,12 @@
 #include "log.h"
 #include "pindef.h"
 #include "thread.h"
+#include "ScaledAnalogIn.h"
 /* USER CODE END Includes */
 
 uint32_t PRECHARGE_CONTROL_PERIOD_MS = 100;
+uint32_t AUXBATTERY_CONTROL_PERIOD_MS = 10000;
+
 
 bool has_other_fault = false;
 bool has_cont12_fault = false;
@@ -46,9 +49,12 @@ DigitalOut mppt_precharge_en(PRECHARGE_MPPT_EN);
 AnalogIn cont12_voltage(CONT12_VOLTAGE);
 AnalogIn motor_hal_effect_voltage(HAL_EFFECT_VOLTAGE);
 AnalogIn mppt_hal_effect_voltage(HAL_EFFECT_MPPT);
+ScaledAnalogIn aux_battery(AUX_PLUS, 0, 3.3, 10.5, 12.6); //aux battery is 12V, scaled down to 3.3V by HI, we want to log in original 12V
 
 CanInterface main_can(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
+
 Thread precharge_thread;
+Thread auxbattery_thread;
 
 Precharge motor_precharge(motor_main_en, motor_precharge_en, cont12_voltage, motor_hal_effect_voltage);
 Precharge mppt_precharge(mppt_main_en, mppt_precharge_en, cont12_voltage, mppt_hal_effect_voltage);
@@ -105,6 +111,16 @@ void run_precharge()
         motor_precharge.run(pack_voltage, has_cont12_fault, has_other_fault);
         mppt_precharge.run(pack_voltage, has_cont12_fault, has_other_fault);
 
+        const bool local_cont12_fault = motor_precharge.local_cont12_fault() || mppt_precharge.local_cont12_fault();
+        if (local_cont12_fault && !has_cont12_fault)
+        {
+            has_cont12_fault = true;
+
+            Contactor12Error error{};
+            error.cont12_went_low = 1;
+            main_can.write(&error);
+        }
+
         PrechargeStatus status{};
         status.motor_stage = motor_precharge.stage();
         status.mppt_stage = mppt_precharge.stage();
@@ -120,9 +136,25 @@ void run_precharge()
     }
 }
 
+void monitor_auxbattery(){
+    Clock auxbattery_clock;
+    while (true) {
+        AuxBatteryStatus status{};
+        status.aux_voltage = aux_battery.read_u12();
+        status.percent_full = aux_battery.read_hex_percent();
+
+        
+        log_info("aux battery %u, full: %u, init: %d", (int)(status.aux_voltage*1000), status.percent_full, aux_battery.initialized);
+
+        main_can.write(&status);
+        auxbattery_clock.sleep_since(AUXBATTERY_CONTROL_PERIOD_MS);
+    }
+}
+
+
 void app_main()
 {
-    log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
+    log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Relay Board starting up...");
 
     main_can.register_callback(BpsStatus::get_message_ID(), handle_bps_status);
@@ -131,6 +163,7 @@ void app_main()
     main_can.register_callback(MotorControllerError::get_message_ID(), handle_motor_fault);
 
     precharge_thread.start(run_precharge);
+    auxbattery_thread.start(monitor_auxbattery);
 
     log_info("Relay Board initialized");
     Clock::sleep_forever();

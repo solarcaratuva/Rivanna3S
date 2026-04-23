@@ -20,6 +20,7 @@ public:
     uint16_t threshold() const;
     uint16_t hal_effect_millivolts() const;
     bool cont12_high() const;
+    bool local_cont12_fault() const;
 
 private:
     enum class State : uint8_t
@@ -50,6 +51,7 @@ private:
     uint16_t hal_effect_millivolts_ = 0;
     bool cont12_high_ = false;
     bool cont12_fault_ = false;
+    bool local_cont12_fault_ = false;
     bool other_fault_ = false;
     bool fault_logged_ = false;
     bool timing_threshold_ = false;

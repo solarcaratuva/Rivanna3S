@@ -8,7 +8,7 @@
 static CanInterface* main_can_interface_instance = nullptr;
 static CanInterface* motor_can_interface_instance = nullptr;
 static constexpr uint32_t CAN_QUEUE_DROP_WARN_INTERVAL_MS = 250;
-static constexpr int CAN_RECEIVE_BURST_LIMIT = 8;
+static constexpr int CAN_RECEIVE_BURST_LIMIT = 128;
 
 
 CanInterface::CanInterface(Pin tx, Pin rx, Pin standby, uint32_t baudrate, CanNetwork network)

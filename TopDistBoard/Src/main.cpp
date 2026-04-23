@@ -44,12 +44,15 @@ bool has_faulted = false;
 bool brake_from_pedal = false;
 bool brake_from_motor = false;
 bool bms_fault_active = false;
+bool cont12_fault_active = false;
 
 #define SIGNAL_FLASH_PERIOD 500
+#define SIGNAL_FAULT_PERIOD 250
 
 CanInterface main_can(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
 
 Thread signal_thread;
+Thread fault_thread;
 
 void handle_dashboard_commands(const SerializedCanMessage &msg)
 {
@@ -99,6 +102,7 @@ void handle_contactor_fault(const SerializedCanMessage &msg)
     if (status.has_active_fault())
     {
         has_faulted = true;
+        cont12_fault_active = true;
         log_fault("Contactor fault detected!");
     }
 }
@@ -120,11 +124,6 @@ void signal_flash_handler()
     Clock signal_flash_clock;
 
     while (true) {
-        if (bms_fault_active) {
-            bps_strobe.write(!bps_strobe.read());
-        } else {
-            bps_strobe.write(PIN_OFF);
-        }
 
         if (flashHazards || has_faulted) {
             left_turn_signal.write(!left_turn_signal.read());
@@ -144,12 +143,26 @@ void signal_flash_handler()
     }
 }
 
+void signal_fault_handler() {
+    Clock signal_fault_clock;
+
+    while (true){
+        if (bms_fault_active || cont12_fault_active) {
+            bps_strobe.write(!bps_strobe.read());
+        } else {
+            bps_strobe.write(PIN_OFF);
+        }
+        signal_fault_clock.sleep_since(SIGNAL_FAULT_PERIOD);
+    }
+}
+
 void app_main()
 {
     log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Top Dist Board starting up...");
 
     signal_thread.start(signal_flash_handler);
+    fault_thread.start(signal_fault_handler);
 
     main_can.register_callback(DashboardCommands::get_message_ID(), handle_dashboard_commands);
     main_can.register_callback(PedalStatus::get_message_ID(), handle_pedal_status);

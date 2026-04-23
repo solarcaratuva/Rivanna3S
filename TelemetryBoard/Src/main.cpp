@@ -78,4 +78,6 @@ void app_main() {
     sd_card.attach_to_log();
     
     main_can.register_always_callback(handle_all_messages);
+
+    Clock::sleep_forever();
 }

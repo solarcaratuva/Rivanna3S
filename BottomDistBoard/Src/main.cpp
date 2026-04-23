@@ -31,14 +31,14 @@
 #include "log.h"
 #include "pindef.h"
 #include "thread.h"
+#include "ScaledAnalogIn.h"
 /* USER CODE END Includes */
 
 DigitalOut left_turn_signal(LEFT_TURN_EN);
 DigitalOut right_turn_signal(RIGHT_TURN_EN);
 DigitalOut drl(DRL_EN);
 AnalogIn throttle_pedal(THROTTLE_WIPER);
-//DigitalIn brake_pedal(BRAKE_WIPER);
-AnalogIn brake_pedal(BRAKE_WIPER);
+ScaledAnalogIn brake_pedal(BRAKE_WIPER, 0, 3.3, 0, 100);
 
 bool flashLeftTurnSignal = false;
 bool flashRightTurnSignal = false;
@@ -146,8 +146,9 @@ void send_pedal_status()
 
         PedalStatus msg{};
         msg.throttle_pedal = current_throttle;
-        msg.brake_pedal = brake_pedal.read_voltage() > 1.0f ? 1:0; //brake pedal is analog signal;
 
+        msg.brake_pedal = brake_pedal.read(); //brake pedal is analog signal which needs to be scaled.
+        
         main_can.write(&msg);
         pedal_status_clock.sleep_since(PEDAL_STATUS);
     }

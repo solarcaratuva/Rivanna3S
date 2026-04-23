@@ -6,9 +6,12 @@
 #include "lock.h"
 #include "fdcan.h"
 #include "clock.h"
+#include "DigitalOut.h";
 
 // extern "C" void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef* fdcanHandle, Pin pin, uint8_t af);
 // extern "C" FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* fdcan, uint32_t baudrate);
+
+DigitalOut light(PC_1);
 
 
 CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
@@ -104,7 +107,8 @@ int CAN::read(SerializedCanMessage *msg)
 #if defined(STM32G474xx)
     if (pending > 2) {
         // G4 HAL does not expose FIFO element count in the init struct.
-        log_warn("CAN RX pending=%lu; monitor for dropped frames", pending);
+       log_warn("CAN RX pending=%lu; monitor for dropped frames", pending);
+       //light.write(!light.read());
     }
 #else
     if (pending == hfdcan->Init.RxFifo0ElmtsNbr) {
