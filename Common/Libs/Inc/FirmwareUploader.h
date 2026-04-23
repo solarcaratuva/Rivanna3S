@@ -59,7 +59,7 @@ private:
     CanInterface &can_;
     FiniteQueue queue_;
     Thread consumer_thread_;
-    Thread        UART_listener_thread_;
+    Thread UART_listener_thread_;
     Clock clock_;
     uint32_t flash_base_addr_ = 0x08100000UL; // Default to Bank 2
     uint32_t current_board_;
@@ -86,6 +86,9 @@ private:
     /** @brief Background thread entry: drains queue_ and processes blocks. */
     static void consumer_task(void* arg);
 
+    /** @brief Background thread entry: listens for UART commands to trigger uploads. */
+    static void uart_listener_task(void* arg);
+
     /** @brief Read exactly `len` bytes with a millisecond timeout. */
     bool read_exact(uint8_t *buf, uint16_t len, uint32_t timeout_ms);
 
@@ -111,16 +114,6 @@ private:
      * @brief Handle DONE command from host.
      */
     void target_handle_done();
-
-    /**
-     * @brief Write received firmware block to flash.
-     */
-    bool target_write_flash_block(const uint8_t *data, uint16_t len);
-
-    /**
-     * @brief Lock flash after programming finishes.
-     */
-    void target_lock_flash();
 
     //--------------------------------------------------
     // TARGET CAN TRANSMIT HELPERS
@@ -157,7 +150,8 @@ private:
 
     HostBoardState host_board_state_ = HostBoardState::NONE;
 
-    uint32_t target_flash_address_;
+    HostBoardState host_board_state_ = HostBoardState::NONE;
+
     uint16_t target_running_crc_;
     uint16_t host_running_crc_;
 };
