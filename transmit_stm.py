@@ -106,6 +106,15 @@ def upload_file(port: str, filepath: str, board_id: int):
         wait_for(ser, b"REQ") #Board sends REQ before DONE
         wait_for(ser, b"DONE")
 
+        #check if "SUCCESS" or "FAILED" is sent after DONE
+        result = ser.read(7)
+        if result == b"SUCCESS":
+            print("Upload successful!")
+        elif result == b"FAILED":
+            print("Upload failed: CRC mismatch")
+        else:
+            print(f"Unexpected result after DONE: {result}")
+
         print("Upload complete")
 
 def get_args():

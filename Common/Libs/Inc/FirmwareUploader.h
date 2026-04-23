@@ -22,7 +22,6 @@ public:
      * @param queue_depth   Number of blocks the internal queue can hold.
      * @param current_board  ID of the board this instance is running on (0-4). Used for CAN routing.
      */
-    FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth = 100);
     FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth = 100, uint32_t current_board);
 
     /**
@@ -147,8 +146,11 @@ private:
     enum class HostBoardState
     {
         NONE,
-        RECEIVING,
-        DONE
+        SETUP,
+        SENDING_DATA,
+        DONE,
+        SUCCESS,
+        FAILED
     };
 
     TargetUpdateState target_state_;
@@ -157,4 +159,5 @@ private:
 
     uint32_t target_flash_address_;
     uint16_t target_running_crc_;
+    uint16_t host_running_crc_;
 };

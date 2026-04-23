@@ -65,15 +65,29 @@ bool FirmwareUploader::handle_upload()
 {
     uint8_t packet[FW_BLOCK_SIZE + 2]; // block + 2-byte CRC
     uint32_t offset = 0;
+    host_running_crc_ = FW_CRC16_INIT; 
+
 
     while (offset < FW_MAX_FIRMWARE_SIZE)
     {
         uart_.write((uint8_t *)"REQ", 3);
-
+    
         // Receive block + CRC; timeout means the sender has finished.
         if (!read_exact(packet, sizeof(packet), 1000))
         {
             uart_.write((uint8_t *)"DONE", 4);
+            host_board_state_ = HostBoardState::DONE;
+
+            while(host_board_state_ != HostBoardState::SUCCESS && host_board_state_ != HostBoardState::FAILED){
+                // Wait for target to respond with final status
+                clock_.sleep_for(1);
+            }
+            if(host_board_state_ == HostBoardState::SUCCESS){
+                uart_.write((uint8_t *)"SUCCESS\n", 8);
+            }
+            else{
+                uart_.write((uint8_t *)"FAILED\n", 7);
+            }
             return true;
         }
 
@@ -81,6 +95,7 @@ bool FirmwareUploader::handle_upload()
         uint16_t received_crc =
             ((uint16_t)packet[FW_BLOCK_SIZE] << 8) | packet[FW_BLOCK_SIZE + 1];
         uint16_t computed_crc = crc16_hqx(packet, FW_BLOCK_SIZE);
+        host_running_crc_ = crc16_hqx(packet, FW_BLOCK_SIZE, host_running_crc_);
 
         if (computed_crc != received_crc)
         {
@@ -128,6 +143,32 @@ void FirmwareUploader::consumer_task(void *arg)
     bool targetstate_finished = false; // This should be set externally when the target state is finished
     if(self->is_host_){
         //pop data from queue and send over CAN
+        while(self->host_board_state_ != HostBoardState::SENDING_DATA){
+            // Wait for target to be ready for CAN data messages
+            self->clock_.sleep_for(1);
+        }
+        while (true){
+            if (self->queue_.get(block, FW_BLOCK_SIZE))
+            {
+                // Send block over CAN to target board
+                UpdateData data_msg{};
+                // Copy block data into message structure 
+                for(int i = 0; i < FW_BLOCK_SIZE; i++){
+                    data_msg.data[i] = block[i];
+                }
+                self->can_.write(&data_msg);
+
+            }
+            if(self->queue_.size() == 0 && self->host_board_state_ == HostBoardState::DONE){
+                // send update control message to signal target we're done sending data
+                UpdateControl control_msg{};
+                control_msg.done = 1;
+                self->can_.write(&control_msg);
+
+                break;
+            }
+        }
+         
 
     }
     else(self->target_state_ == TargetUpdateState::RECEIVING_DATA){
@@ -185,6 +226,13 @@ void FirmwareUploader::uart_listener_task(void* arg) {
             update_msg.target_board = board_id;
             update_msg.setup = 1; // signal sender is ready to send data
             can_.write(&update_msg);
+
+            while(self->host_board_state_ != HostBoardState::SETUP){
+                // Wait for target to acknowledge setup and be ready for data
+                self->clock_.sleep_for(1);
+            }
+
+            self->handle_upload(); 
 
         }
     }
@@ -279,6 +327,25 @@ void FirmwareUploader::receive_update_control(const SerializedCanMessage &msg) {
     int target_board = control.target_board;
     if (is_host_) {
         // Do host actions
+        if(control.setup_ack){
+            host_board_state_ = HostBoardState::SETUP;
+        }
+        if(control.ready_for_data){
+            // Target is ready for data, we can start sending blocks from the queue
+            host_board_state_ = HostBoardState::SENDING_DATA;
+
+        }
+        if(control.done){
+            host_board_state_ = HostBoardState::DONE;
+            if(control.final_crc == host_running_crc_){
+                host_board_state_ = HostBoardState::SUCCESS;
+            }
+            else{
+                host_board_state_ = HostBoardState::FAILED;
+            }
+
+        }
+
     }
 
     if (target_board == current_board_){
