@@ -27,7 +27,7 @@
 
 #define LOG_LEVEL INFO_LVL
 
-CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
+CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
 static SdCard* global_sd_card = nullptr;
 
 static UART radio_uart(RADIO_TX, RADIO_RX, 9600);
@@ -82,7 +82,8 @@ void app_main() {
     static SdCard sd_card(&sd_spi);
     global_sd_card = &sd_card;
     sd_card.attach_to_log();
-    sd_card.attach_to_log();
     
     main_can.register_always_callback(handle_all_messages);
+
+    Clock::sleep_forever();
 }
