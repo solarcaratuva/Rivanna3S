@@ -32,8 +32,8 @@
 
 // #define DEBUG_LED_1     NC
 // #define RADIO_DTR       NC
-// #define RADIO_TX        NC
-// #define RADIO_RX        NC
+// #define RADIO_TX        PA_2
+// #define RADIO_RX        PA_3
 // #define DEBUG_BTN       NC
 // #define SD_SELECT       NC
 // #define SPI2_SCK        NC 
