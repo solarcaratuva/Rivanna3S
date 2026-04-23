@@ -27,7 +27,7 @@
 
 #define LOG_LEVEL INFO_LVL
 
-CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
+CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
 static SdCard* global_sd_card = nullptr;
 
 static UART radio_uart(RADIO_TX, RADIO_RX, 9600);
@@ -69,7 +69,7 @@ void handle_all_messages(const SerializedCanMessage &msg) {
 }
 
 void missed_heartbeat_callback() {
-    log_fault("missed heartbeat callback func xxxx");
+    log_fault("telemetry had a missed heartbeat, callback func xxxx");
 }
 
 void app_main() {
