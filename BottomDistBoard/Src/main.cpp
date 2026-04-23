@@ -166,7 +166,7 @@ void app_main()
     log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Bottom Distance Board starting up...");
 
-    HeartbeatSafetySystem::setup(&main_can, missed_heartbeat_callback, Node::BottomDistBoard);
+    // HeartbeatSafetySystem::setup(&main_can, missed_heartbeat_callback, Node::BottomDistBoard);
 
     drl.write(PIN_ON);
 

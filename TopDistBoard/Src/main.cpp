@@ -154,7 +154,7 @@ void app_main()
     log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Top Dist Board starting up...");
 
-    HeartbeatSafetySystem::setup(&main_can, missed_heartbeat_callback, Node::TopDistBoard);
+    // HeartbeatSafetySystem::setup(&main_can, missed_heartbeat_callback, Node::TopDistBoard);
 
     signal_thread.start(signal_flash_handler);
 
