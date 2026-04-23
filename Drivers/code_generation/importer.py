@@ -194,6 +194,25 @@ def fix_adc_c(text: str) -> str:
 
     text = regex_replace_all(text, pattern, replacement)
 
+    #add in ADC if(first_use)
+    pattern = (
+        r'^([ \t]*)if\s*\(HAL_ADC_Init\(&(?P<hadc>hadc\d+)\)\s*!=\s*HAL_OK\)\s*\n'
+        r'\1\{\s*\n'
+        r'\1[ \t]*//Error_Handler\(\); // <-- This line changed when importing\n'
+        r'\1\}'
+    )
+
+    replacement = (
+        r'\1if (first_use) {\n'
+        r'\1   if (HAL_ADC_Init(&\g<hadc>) != HAL_OK) \n'
+        r'\1    {\n'
+        r'\1      //Error_Handler(); // <-- This line changed when importing\n'
+        r'\1    }\n'
+        r'\1}'
+    )
+
+    text = regex_replace_all(text, pattern, replacement)
+
     # fix channels
     pattern = r'^\s*sConfig\.Channel\s*=.*?;'
     replacement = r'  sConfig.Channel = channel;'
@@ -202,7 +221,7 @@ def fix_adc_c(text: str) -> str:
 
     # fix ranks
     pattern = r'^\s*sConfig\.Rank\s*=.*?;'
-    replacement = r'  sConfig.Rank = rank;'
+    replacement = r'  sConfig.Rank = ADC_REGULAR_RANK_1;'
 
     text = regex_replace_all(text, pattern, replacement)
 
@@ -239,8 +258,8 @@ def fix_adc_c(text: str) -> str:
         instance_type="ADC_TypeDef",
         instance_prefixes=("ADC",),
         handle_prefix="h",
-        init_params="uint32_t channel, uint32_t rank",
-        init_call_args="channel, rank",
+        init_params="uint32_t channel, bool first_use",
+        init_call_args="channel, first_use",
     )
 
     return text
