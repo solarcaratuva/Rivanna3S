@@ -1,7 +1,7 @@
 #define TRUE  1
 #define FALSE 0
 
-#include "stm32_hal.h"
+#include "Clock.h"
 #include "SPI.h" // SPI wrapper functions
 #include "diskio.h"
 #include "pinmap.h"
@@ -10,7 +10,7 @@
 #include "DigitalOut.h"
 
 
-static SPI sd_spi(SPI2_MOSI, SPI2_MISO,SPI2_SCK, 400000); // TODO: Swap out with the real SD card hardware pins but for now 
+static SPI sd_spi(SPI2_MOSI, SPI2_MISO,SPI2_SCK, 400000);
 static DigitalOut sd_cs(SD_SELECT);
 
 // FIX 1: Add volatile keyword
@@ -41,14 +41,14 @@ static SPI* SD_SPI(void)
 static void SELECT(void)
 {
     sd_cs.write(false);
-    HAL_Delay(1);
+    Clock::sleep_for(1);
 }
 
 /* slave deselect */
 static void DESELECT(void)
 {
     sd_cs.write(true);
-    HAL_Delay(1);
+    Clock::sleep_for(1);
 }
 
 /* SPI transmit a byte */

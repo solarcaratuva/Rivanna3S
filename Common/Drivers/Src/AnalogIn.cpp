@@ -71,6 +71,14 @@ float AnalogIn::read_voltage(){
 	return read() * 3.3f;
 }
 
+uint8_t AnalogIn::read_hex_percent() {
+    float voltage = read_voltage();
+    float percent = (voltage / 3.3f) * 255.0f;
+    if (percent < 0.0f) percent = 0.0f;
+    if (percent > 255.0f) percent = 255.0f;
+    return static_cast<uint8_t>(percent);
+}
+
 
 ADC_Peripheral* AnalogIn::findADCPin(Pin pin) {
     for (uint8_t i = 0; i < ADC_PERIPHERAL_COUNT; i++) {
