@@ -13,12 +13,10 @@ Lock AnalogIn::lock_;
 
 
 AnalogIn::AnalogIn(Pin pin) {
-    lock_.lock(); 
     adc_periph_ = findADCPin(pin);
     if(adc_periph_ == nullptr) {
         initialized = false;
         log_warn("AnalogIn init failed: no matching ADC peripheral for pin");
-        lock_.unlock();
         return;
     }
     adc_periph_->used_pin = pin;
@@ -31,7 +29,6 @@ AnalogIn::AnalogIn(Pin pin) {
     hadc_ = ADC_init(adc_periph_->instance, adc_periph_->channel, first_use);
     
     initialized = true;
-    lock_.unlock();
 }
 
 uint16_t AnalogIn::read_u12() {
