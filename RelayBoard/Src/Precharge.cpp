@@ -12,6 +12,7 @@ constexpr float PRECHARGE_RESISTANCE = 74.0f;
 constexpr uint32_t HAL_EFFECT_BELOW_THRESHOLD_TIME_MS = 50;
 constexpr uint32_t MAIN_RELAY_SETTLE_TIME_MS = 250;
 constexpr uint32_t SAFETY_ENABLE_DELAY_MS = 3000;
+constexpr uint32_t PRECHARGE_SLEEP = 2000;
 
 
 Precharge::Precharge(
@@ -155,30 +156,38 @@ void Precharge::run_wait_for_enable_state()
 
 void Precharge::run_wait_for_threshold_state()
 {
-    if (hal_effect_millivolts_ < threshold_millivolts_)
-    {
-        if (!timing_threshold_)
-        {
-            timing_threshold_ = true;
-            threshold_start_time_ms_ = Clock::get_current_time();
-        }
-    }
-    else
-    {
-        timing_threshold_ = false;
-    }
+    // if (hal_effect_millivolts_ < threshold_millivolts_)
+    // {
+    //     if (!timing_threshold_)
+    //     {
+    //         timing_threshold_ = true;
+    //         threshold_start_time_ms_ = Clock::get_current_time();
+    //     }
+    // }
+    // else
+    // {
+    //     timing_threshold_ = false;
+    // }
 
-    if (timing_threshold_)
+    // if (timing_threshold_)
+    // {
+    //     const uint32_t time_below_threshold_ms = Clock::get_current_time() - threshold_start_time_ms_;
+    //     if (time_below_threshold_ms >= HAL_EFFECT_BELOW_THRESHOLD_TIME_MS)
+    //     {
+    //         main_en_.write(true);
+    //         timing_threshold_ = false;
+    //         state_ = State::WaitForMainRelay;
+    //         state_entry_time_ms_ = Clock::get_current_time();
+    //     }
+    // }
+
+    const uint32_t time_in_state_ms = Clock::get_current_time() - state_entry_time_ms_;
+    if (time_in_state_ms >= PRECHARGE_SLEEP)
     {
-        const uint32_t time_below_threshold_ms = Clock::get_current_time() - threshold_start_time_ms_;
-        if (time_below_threshold_ms >= HAL_EFFECT_BELOW_THRESHOLD_TIME_MS)
-        {
-            main_en_.write(true);
-            timing_threshold_ = false;
-            state_ = State::WaitForMainRelay;
-            state_entry_time_ms_ = Clock::get_current_time();
-        }
+        state_ = State::WaitForMainRelay;
+        state_entry_time_ms_ = Clock::get_current_time();
     }
+    
 }
 
 void Precharge::run_wait_for_main_relay_state()
@@ -190,6 +199,7 @@ void Precharge::run_wait_for_main_relay_state()
     {
         precharge_en_.write(false);
         state_ = State::Done;
+        state_entry_time_ms_ = Clock::get_current_time();
     }
 }
 
