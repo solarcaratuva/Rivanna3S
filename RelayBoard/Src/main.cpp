@@ -106,7 +106,6 @@ void run_precharge()
         has_cont12_fault = motor_precharge.cont12_fault() || mppt_precharge.cont12_fault();
         if (has_cont12_fault)
         {
-
             Contactor12Error error{};
             error.cont12_went_low = 1;
             main_can.write(&error);
