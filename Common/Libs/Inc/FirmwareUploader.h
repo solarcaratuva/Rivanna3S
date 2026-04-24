@@ -64,6 +64,7 @@ private:
     uint32_t flash_base_addr_ = 0x08100000UL; // Default to Bank 2
     uint32_t current_board_;
     uint32_t is_host_ = 0; // 0 for target, 1 for host
+    static FirmwareUploader* s_instance_; // For static callback access
 
     /**
      * @brief Write a block of data to flash at the given address.
