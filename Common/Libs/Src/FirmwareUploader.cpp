@@ -6,9 +6,6 @@
 #include "Rivanna3SCanStructs.h"
 #include "stm32_hal.h"
 
-// #include "stm32h7xx_hal.h"
-// #include "stm32h743xx.h"
-
 // ---------------------------------------------------------------------------
 // Construction & lifecycle
 // ---------------------------------------------------------------------------
@@ -268,7 +265,7 @@ bool FirmwareUploader::write_flash(uint32_t address, const uint8_t *data, size_t
     for (size_t i = 0; i < len; i += 32)
     {
         status = HAL_FLASH_Program(
-            FLASH_TYPEPROGRAM_FLASHWORD,
+            FLASH_TYPEPROGRAM_DOUBLEWORD,
             address + i,
             (uint32_t)(data + i));
         if (status != HAL_OK)
@@ -385,6 +382,8 @@ bool FirmwareUploader::mass_erase() {
     uint32_t page_error = 0;
     uint32_t bank;
 
+    #if defined(STM32H743xx)
+
     if ((flash_base_addr_ >= FLASH_BANK1_BASE) && (flash_base_addr_ < FLASH_BANK2_BASE)) {
         bank = FLASH_BANK_1;
     } else if ((flash_base_addr_ >= FLASH_BANK2_BASE) && (flash_base_addr_ < FLASH_END)) {
@@ -411,6 +410,27 @@ bool FirmwareUploader::mass_erase() {
 
     HAL_FLASH_Lock();
     return true;
+
+
+    #elif defined(STM32G474xx)
+    if ((flash_base_addr_ >= 0x08000000UL) && (flash_base_addr_ < 0x08040000UL)) {
+        bank = FLASH_BANK_1;
+    } else if ((flash_base_addr_ >= 0x08040000UL) && (flash_base_addr_ < 0x08080000UL)) {
+        bank = FLASH_BANK_2;
+    } else {
+        // Invalid address
+        return false;
+    }
+
+    if (HAL_FLASH_Unlock() != HAL_OK) {
+        return false;
+    }
+
+    FLASH_MassErase(bank);
+
+    HAL_FLASH_Lock();
+    return true;
+
 }
 
 void FirmwareUploader::target_handle_done() {
