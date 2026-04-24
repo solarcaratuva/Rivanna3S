@@ -1,25 +1,3 @@
-/* USER CODE BEGIN Header */
-/**
- ******************************************************************************
- * @file           : main.c
- * @brief          : Main program body
- ******************************************************************************
- * @attention
- *
- * Copyright (c) 2025 STMicroelectronics.
- * All rights reserved.
- *
- * This software is licensed under terms that can be found in the LICENSE file
- * in the root directory of this software component.
- * If no LICENSE file comes with this software, it is provided AS-IS.
- *
- ******************************************************************************
- */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
-
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 #include "AnalogIn.h"
 #include "BPSCanStructs.h"
 #include "CanInterface.h"
@@ -32,13 +10,12 @@
 #include "pindef.h"
 #include "thread.h"
 #include "ScaledAnalogIn.h"
-/* USER CODE END Includes */
 
 DigitalOut left_turn_signal(LEFT_TURN_EN);
 DigitalOut right_turn_signal(RIGHT_TURN_EN);
 DigitalOut drl(DRL_EN);
 AnalogIn throttle_pedal(THROTTLE_WIPER);
-ScaledAnalogIn brake_pedal(BRAKE_WIPER, 0, 3.3, 0, 100);
+ScaledAnalogIn brake_pedal(BRAKE_WIPER, 0.5f / 5.0f * 3.27f, 4.5f / 5.0f * 3.27f, 0, 1500);
 
 bool flashLeftTurnSignal = false;
 bool flashRightTurnSignal = false;
@@ -147,7 +124,7 @@ void send_pedal_status()
         PedalStatus msg{};
         msg.throttle_pedal = current_throttle;
 
-        msg.brake_pedal = brake_pedal.read(); //brake pedal is analog signal which needs to be scaled.
+        msg.brake_pedal = static_cast<uint16_t>(brake_pedal.read()); //brake pedal is analog signal which needs to be scaled.
         
         main_can.write(&msg);
         pedal_status_clock.sleep_since(PEDAL_STATUS);
