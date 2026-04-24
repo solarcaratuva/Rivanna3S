@@ -22,7 +22,7 @@ AnalogIn::AnalogIn(Pin pin) {
 
     HAL_ADC_MspInit_custom(adc_periph_->instance, pin);
 
-    bool first_use = adc_periph_->instance_num == 0;
+    bool first_use = use_adc(adc_periph_->instance);
     hadc_ = ADC_init(adc_periph_->instance, adc_periph_->channel, first_use);
     
     initialized = true;

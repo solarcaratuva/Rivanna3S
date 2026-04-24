@@ -71,6 +71,29 @@ const uint8_t ADC_PERIPHERAL_COUNT = sizeof(ADC_Peripherals) / sizeof(ADC_Periph
 
 uint8_t adc_channels_claimed[] = {0, 0, 0, 0, 0};
 
+bool use_adc(const ADC_TypeDef* handle) {
+    if(handle == ADC1) {
+        adc_channels_claimed[0]++;
+        return adc_channels_claimed[0] == 1; // only enable the ADC if this is the first channel being used on it
+    }
+    if(handle == ADC2) {
+        adc_channels_claimed[1]++;
+        return adc_channels_claimed[1] == 1; // only enable the ADC if this is the first channel being used on it
+    }
+    if(handle == ADC3) {
+        adc_channels_claimed[2]++;
+        return adc_channels_claimed[2] == 1; // only enable the ADC if this is the first channel being used on it
+    }
+    if(handle == ADC4) {
+        adc_channels_claimed[3]++;
+        return adc_channels_claimed[3] == 1; // only enable the ADC if this is the first channel being used on it
+    }
+    if(handle == ADC5) {
+        adc_channels_claimed[4]++;
+        return adc_channels_claimed[4] == 1; // only enable the ADC if this is the first channel being used on it
+    }
+}
+
 
 
 uint8_t get_UART_AF(const USART_TypeDef* handle, const Pin* pin, uint8_t mode) {
