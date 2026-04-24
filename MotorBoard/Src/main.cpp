@@ -50,7 +50,7 @@ void app_main()
 {
     UART USB_UART(PC_12, PD_2, 115200);
     CanInterface main_can = CanInterface(PA_12, PA_11, PA_10, 250000, CanNetwork::Main);
-    FirmwareUploader uploader(USB_UART, main_can);
+    FirmwareUploader uploader(USB_UART, main_can, 1); // current_board=1 for MotorBoard
     uploader.start();
 
     while (1) {

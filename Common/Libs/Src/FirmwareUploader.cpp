@@ -2,11 +2,12 @@
 #include "log.h" // log_info / log_error — remove if not in your project
 #include "FreeRTOS.h"
 #include "task.h"
-#include "stm32h7xx_hal.h"
 #include <cstring>
 #include "Rivanna3SCanStructs.h"
-#include "stm32h7xx_hal.h"
-#include "stm32h743xx.h"
+#include "stm32_hal.h"
+
+// #include "stm32h7xx_hal.h"
+// #include "stm32h743xx.h"
 
 // ---------------------------------------------------------------------------
 // Construction & lifecycle
@@ -174,7 +175,7 @@ void FirmwareUploader::consumer_task(void *arg)
          
 
     }
-    else(self->target_state_ == TargetUpdateState::RECEIVING_DATA){
+    else if(self->target_state_ == TargetUpdateState::RECEIVING_DATA){
     
         while (true)
         {
@@ -399,7 +400,8 @@ bool FirmwareUploader::mass_erase() {
 
     erase.TypeErase = FLASH_TYPEERASE_MASSERASE;
     erase.Banks = bank;
-    erase.VoltageRange = FLASH_VOLTAGE_RANGE_3; // 2.7V to 3.6V
+    erase.VoltageRange = VOLTAGE_RANGE_3; // 2.7V to 3.6V
+    
 
     if (HAL_FLASHEx_Erase(&erase, &page_error) != HAL_OK) {
         // Erase failed, lock flash and return false

@@ -22,7 +22,7 @@ public:
      * @param queue_depth   Number of blocks the internal queue can hold.
      * @param current_board  ID of the board this instance is running on (0-4). Used for CAN routing.
      */
-    FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth = 100, uint32_t current_board);
+    FirmwareUploader(UART &uart, CanInterface &can, uint32_t current_board, uint32_t queue_depth = 100);
 
     /**
      * @brief Start the background consumer thread that drains received blocks.
@@ -79,9 +79,6 @@ private:
      * @return true on clean completion (DONE), false on overflow or error.
      */
     bool handle_upload();
-
-    static void uart_listener_task(void* arg);
-
 
     /** @brief Background thread entry: drains queue_ and processes blocks. */
     static void consumer_task(void* arg);
@@ -147,8 +144,6 @@ private:
     };
 
     TargetUpdateState target_state_;
-
-    HostBoardState host_board_state_ = HostBoardState::NONE;
 
     HostBoardState host_board_state_ = HostBoardState::NONE;
 
