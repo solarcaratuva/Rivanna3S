@@ -46,6 +46,8 @@ DigitalOut motor_main_en(MAIN_EN);
 DigitalOut motor_precharge_en(PRECHARGE_EN);
 DigitalOut mppt_main_en(MPPT_PWR_ON);
 DigitalOut mppt_precharge_en(PRECHARGE_MPPT_EN);
+DigitalOut hv_safety_en(SAFETY_HV_EN);
+DigitalOut motor_safety_en(SAFETY_MTR_EN);
 AnalogIn cont12_voltage(CONT12_VOLTAGE);
 AnalogIn motor_hal_effect_voltage(HAL_EFFECT_VOLTAGE);
 AnalogIn mppt_hal_effect_voltage(HAL_EFFECT_MPPT);
@@ -78,18 +80,6 @@ void handle_bps_fault(const SerializedCanMessage &msg)
     }
 }
 
-void handle_contactor_fault(const SerializedCanMessage &msg)
-{
-    Contactor12Error status{};
-    status.deserialize(&msg);
-
-    if (status.has_active_fault())
-    {
-        has_cont12_fault = true;
-        log_fault("Contactor12 fault detected!");
-    }
-}
-
 void handle_motor_fault(const SerializedCanMessage &msg)
 {
     MotorControllerError status{};
@@ -108,30 +98,42 @@ void run_precharge()
 
     while (true)
     {
-        motor_precharge.run(pack_voltage, has_cont12_fault, has_other_fault);
-        mppt_precharge.run(pack_voltage, has_cont12_fault, has_other_fault);
+        // run the precharge finite state machines
+        motor_precharge.run(pack_voltage, has_other_fault);
+        mppt_precharge.run(pack_voltage, has_other_fault);
 
-        const bool local_cont12_fault = motor_precharge.local_cont12_fault() || mppt_precharge.local_cont12_fault();
-        if (local_cont12_fault && !has_cont12_fault)
+        // handle any Contactor 12 faults
+        has_cont12_fault = motor_precharge.cont12_fault() || mppt_precharge.cont12_fault();
+        if (has_cont12_fault)
         {
-            has_cont12_fault = true;
 
             Contactor12Error error{};
             error.cont12_went_low = 1;
             main_can.write(&error);
         }
 
+        // handle the safety enables (HV and motor)
+        const bool hv_safe = motor_precharge.stage() != Precharge::State::WaitForHV && 
+                             mppt_precharge.stage() != Precharge::State::WaitForHV &&
+                             !has_cont12_fault && !has_other_fault;
+        hv_safety_en.write(hv_safe);
+        const bool motor_safe = motor_precharge.stage() == Precharge::State::Done &&
+                                mppt_precharge.stage() == Precharge::State::Done &&
+                                !has_cont12_fault && !has_other_fault;
+        motor_safety_en.write(motor_safe);
+
+        // fill and send precharge status as a CAN message
         PrechargeStatus status{};
-        status.motor_stage = motor_precharge.stage();
-        status.mppt_stage = mppt_precharge.stage();
+        status.motor_stage = motor_precharge.stage_uint();
+        status.mppt_stage = mppt_precharge.stage_uint();
         status.cont12_fault = has_cont12_fault ? 1 : 0;
         status.other_fault = has_other_fault ? 1 : 0;
         status.threshold = motor_precharge.threshold();
         status.cont12 = motor_precharge.cont12_high() ? 1 : 0;
         status.hal_effect_motor = motor_precharge.hal_effect_millivolts();
         status.hal_effect_mppt = mppt_precharge.hal_effect_millivolts();
-
         main_can.write(&status);
+
         precharge_clock.sleep_since(PRECHARGE_CONTROL_PERIOD_MS);
     }
 }
@@ -139,12 +141,11 @@ void run_precharge()
 void monitor_auxbattery(){
     Clock auxbattery_clock;
     while (true) {
-        AuxBatteryStatus status{};
-        status.aux_voltage = aux_battery.read_u12();
-        status.percent_full = aux_battery.read_hex_percent();
+        float voltage_scaled = aux_battery.read_voltage() * 13.3f / 3.3f; // scale back up to real voltage using the voltage divider ratio
 
-        
-        log_info("aux battery %u, full: %u, init: %d", (int)(status.aux_voltage*1000), status.percent_full, aux_battery.initialized);
+        AuxBatteryStatus status{};
+        status.aux_voltage = static_cast<uint16_t>(voltage_scaled * 1000.0f); // convert to millivolts for logging
+        status.percent_full = aux_battery.read_hex_percent();
 
         main_can.write(&status);
         auxbattery_clock.sleep_since(AUXBATTERY_CONTROL_PERIOD_MS);
@@ -159,7 +160,6 @@ void app_main()
 
     main_can.register_callback(BpsStatus::get_message_ID(), handle_bps_status);
     main_can.register_callback(BpsError::get_message_ID(), handle_bps_fault);
-    main_can.register_callback(Contactor12Error::get_message_ID(), handle_contactor_fault);
     main_can.register_callback(MotorControllerError::get_message_ID(), handle_motor_fault);
 
     precharge_thread.start(run_precharge);

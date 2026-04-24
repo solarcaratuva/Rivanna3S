@@ -9,20 +9,6 @@
 class Precharge
 {
 public:
-    Precharge(
-        DigitalOut& main_en,
-        DigitalOut& precharge_en,
-        AnalogIn& contactor12_voltage,
-        AnalogIn& hal_effect_voltage);
-
-    void run(uint16_t pack_voltage, bool cont12_fault, bool other_fault);
-    uint8_t stage() const;
-    uint16_t threshold() const;
-    uint16_t hal_effect_millivolts() const;
-    bool cont12_high() const;
-    bool local_cont12_fault() const;
-
-private:
     enum class State : uint8_t
     {
         WaitForHV = 0,
@@ -32,6 +18,21 @@ private:
         Done = 4,
     };
 
+    Precharge(
+        DigitalOut& main_en,
+        DigitalOut& precharge_en,
+        AnalogIn& contactor12_voltage,
+        AnalogIn& hal_effect_voltage);
+
+    void run(uint16_t pack_voltage, bool other_fault);
+    State stage() const;
+    uint8_t stage_uint() const;
+    uint16_t threshold() const;
+    uint16_t hal_effect_millivolts() const;
+    bool cont12_high() const;
+    bool cont12_fault() const;
+    
+private:
     void fault_trap();
     void run_wait_for_hv_state();
     void run_wait_for_enable_state();
@@ -51,7 +52,6 @@ private:
     uint16_t hal_effect_millivolts_ = 0;
     bool cont12_high_ = false;
     bool cont12_fault_ = false;
-    bool local_cont12_fault_ = false;
     bool other_fault_ = false;
     bool fault_logged_ = false;
     bool timing_threshold_ = false;

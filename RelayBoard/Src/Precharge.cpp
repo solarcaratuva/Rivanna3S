@@ -13,8 +13,6 @@ constexpr uint32_t HAL_EFFECT_BELOW_THRESHOLD_TIME_MS = 50;
 constexpr uint32_t MAIN_RELAY_SETTLE_TIME_MS = 250;
 constexpr uint32_t SAFETY_ENABLE_DELAY_MS = 3000;
 
-DigitalOut safety_hv_enable(SAFETY_HV_EN);
-DigitalOut safety_mtr_enable(SAFETY_MTR_EN);
 
 Precharge::Precharge(
     DigitalOut &main_en,
@@ -30,47 +28,52 @@ Precharge::Precharge(
     main_en_.write(false);
     precharge_en_.write(true);
     state_entry_time_ms_ = Clock::get_current_time();
-    safety_hv_enable.write(false);
-    safety_mtr_enable.write(false);
 }
 
-void Precharge::run(uint16_t pack_voltage, bool cont12_fault, bool other_fault)
+void Precharge::run(uint16_t pack_voltage, bool other_fault)
 {
     cont12_high_ = contactor12_voltage_.read_voltage() > CONT12_HIGH_THRESHOLD_V;
     pack_voltage_ = pack_voltage;
-    cont12_fault_ = cont12_fault || local_cont12_fault_;
     other_fault_ = other_fault;
     threshold_millivolts_ = calculate_hal_effect_threshold_millivolts();
     hal_effect_millivolts_ = static_cast<uint16_t>(hal_effect_voltage_.read_voltage() * 1000.0f);
 
+    // check for faults, and return early if there is a fault
     fault_trap();
     if (cont12_fault_ || other_fault_)
     {
         return;
     }
+
+    // run code for the current state
     if (state_ == State::WaitForHV)
     {
         run_wait_for_hv_state();
     }
-    else if (state_ == State::WaitForEnable)
+    if (state_ == State::WaitForEnable)
     {
         run_wait_for_enable_state();
     }
-    else if (state_ == State::WaitForThreshold)
+    if (state_ == State::WaitForThreshold)
     {
         run_wait_for_threshold_state();
     }
-    else if (state_ == State::WaitForMainRelay)
+    if (state_ == State::WaitForMainRelay)
     {
         run_wait_for_main_relay_state();
     }
-    else
+    if (state_ == State::Done)
     {
         run_done_state();
     }
 }
 
-uint8_t Precharge::stage() const
+Precharge::State Precharge::stage() const
+{
+    return state_;
+}
+
+uint8_t Precharge::stage_uint() const
 {
     return static_cast<uint8_t>(state_);
 }
@@ -89,33 +92,34 @@ bool Precharge::cont12_high() const
 {
     return cont12_high_;
 }
-
-bool Precharge::local_cont12_fault() const
+bool Precharge::cont12_fault() const
 {
-    return local_cont12_fault_;
+    return cont12_fault_;
 }
+
 
 void Precharge::fault_trap()
 {
+    // checks if Contactor 12 went low (but was high at some point previously)
     if (!cont12_high_ && state_ != State::WaitForHV && state_ != State::WaitForEnable)
     {
-        local_cont12_fault_ = true;
         cont12_fault_ = true;
     }
 
+     // if there are no faults, do nothing and return
     if (!cont12_fault_ && !other_fault_)
     {
         fault_logged_ = false;
         return;
     }
 
+    // if we get here, there is a fault
+
     main_en_.write(false);
     precharge_en_.write(false);
     timing_threshold_ = false;
     state_ = State::WaitForHV;
     state_entry_time_ms_ = Clock::get_current_time();
-    safety_hv_enable.write(false);
-    safety_mtr_enable.write(false);
 
     if (!fault_logged_)
     {
@@ -128,14 +132,10 @@ void Precharge::run_wait_for_hv_state()
 {
     main_en_.write(false);
     precharge_en_.write(true);
-    safety_hv_enable.write(false);
-    safety_mtr_enable.write(false);
 
     const uint32_t time_in_state_ms = Clock::get_current_time() - state_entry_time_ms_;
     if (time_in_state_ms >= SAFETY_ENABLE_DELAY_MS)
     {
-        safety_mtr_enable.write(true);
-        safety_hv_enable.write(true);
         state_ = State::WaitForEnable;
         state_entry_time_ms_ = Clock::get_current_time();
     }
