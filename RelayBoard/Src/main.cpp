@@ -65,7 +65,7 @@ void handle_bps_status(const SerializedCanMessage &msg)
 {
     BpsStatus status{};
     status.deserialize(&msg);
-    pack_voltage = status.pack_voltage;
+    pack_voltage = status.pack_voltage / 10; // scaling (BMS units is 10th of a volt)
 }
 
 void handle_bps_fault(const SerializedCanMessage &msg)
