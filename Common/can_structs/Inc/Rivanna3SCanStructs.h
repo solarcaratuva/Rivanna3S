@@ -217,7 +217,7 @@ typedef struct UpdateControl : CanMessage, rivanna3_s_update_control_t {
         message->id = RIVANNA3_S_UPDATE_CONTROL_FRAME_ID;
     }
 
-    void deserialize(const SerializedCanMessage *message) {
+    void deserialize(SerializedCanMessage *message) {
         rivanna3_s_update_control_unpack(this, message->data,
             RIVANNA3_S_UPDATE_CONTROL_LENGTH);
     }
@@ -246,7 +246,7 @@ typedef struct UpdateData : CanMessage, rivanna3_s_update_data_t {
         message->id = RIVANNA3_S_UPDATE_DATA_FRAME_ID;
     }
 
-    void deserialize(const SerializedCanMessage *message) {
+    void deserialize(SerializedCanMessage *message) {
         rivanna3_s_update_data_unpack(this, message->data,
             RIVANNA3_S_UPDATE_DATA_LENGTH);
     }

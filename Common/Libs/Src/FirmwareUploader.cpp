@@ -16,9 +16,6 @@ FirmwareUploader::FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue
       queue_(queue_depth, FW_BLOCK_SIZE),
       current_board_(current_board)
 {
-    s_instance_ = this; // Set static instance pointer for callback access
-    can_.register_callback(UpdateControl::get_message_ID(), [](const SerializedCanMessage &msg){ s_instance_->receive_update_control(msg); });
-    can_.register_callback(UpdateData::get_message_ID(), [](const SerializedCanMessage &msg){ s_instance_->receive_update_data(msg); });
 }
 
 void FirmwareUploader::start()
@@ -35,6 +32,8 @@ void FirmwareUploader::start()
     static FirmwareUploader* s_instance = this;
     consumer_thread_.start([]{ s_instance->consumer_task(s_instance); });
     UART_listener_thread_.start([]{ s_instance->uart_listener_task(s_instance); });
+    can_.register_callback(UpdateControl::get_message_ID(), [](SerializedCanMessage &msg){ s_instance_->receive_update_control(msg); });
+    can_.register_callback(UpdateData::get_message_ID(), [](SerializedCanMessage &msg){ s_instance_->receive_update_data(msg); });
 }
 
 // ---------------------------------------------------------------------------
@@ -252,7 +251,7 @@ void FirmwareUploader::set_flash_bank(uint8_t bank)
 // Flash writing logic (STM32H7 example)
 // ---------------------------------------------------------------------------
 
-bool FirmwareUploader::write_flash(uint32_t address, const uint8_t *data, size_t len)
+bool FirmwareUploader::write_flash(uint32_t address, uint8_t *data, size_t len)
 {
     if (len % 32 != 0)
     {
@@ -322,7 +321,7 @@ uint16_t FirmwareUploader::crc16_hqx(const uint8_t* data, uint16_t len, uint16_t
 // Target board CAN handlers
 // ---------------------------------------------------------------------------
 
-void FirmwareUploader::receive_update_control(const SerializedCanMessage &msg) {
+void FirmwareUploader::receive_update_control(SerializedCanMessage &msg) {
     UpdateControl control{};
     control.deserialize(&msg);
 
@@ -368,7 +367,7 @@ void FirmwareUploader::receive_update_control(const SerializedCanMessage &msg) {
     }
 }
 
-void FirmwareUploader::receive_update_data(const SerializedCanMessage &msg) {
+void FirmwareUploader::receive_update_data(SerializedCanMessage &msg) {
     // No need to deserialize into a struct since it's just raw data blocks. Just forward to flash write.
     if (target_state_ == TargetUpdateState::RECEIVING_DATA) {
         // Update the running CRC with the new block of data
@@ -423,14 +422,38 @@ bool FirmwareUploader::mass_erase() {
         return false;
     }
 
-    if (HAL_FLASH_Unlock() != HAL_OK) {
-        return false;
+    #if defined (FLASH_OPTR_DBANK)
+    if (READ_BIT(FLASH->OPTR, FLASH_OPTR_DBANK) != 0U)
+    #endif
+    {
+        /* Check the parameters */
+        assert_param(IS_FLASH_BANK(bank));
+
+        /* Set the Mass Erase Bit for the bank 1 if requested */
+        if ((bank & FLASH_BANK_1) != 0U)
+        {
+        SET_BIT(FLASH->CR, FLASH_CR_MER1);
+        }
+
+    #if defined (FLASH_OPTR_DBANK)
+        /* Set the Mass Erase Bit for the bank 2 if requested */
+        if ((bank & FLASH_BANK_2) != 0U)
+        {
+        SET_BIT(FLASH->CR, FLASH_CR_MER2);
+        }
+    #endif
     }
+    #if defined (FLASH_OPTR_DBANK)
+    else
+    {
+        SET_BIT(FLASH->CR, (FLASH_CR_MER1 | FLASH_CR_MER2));
+    }
+    #endif
 
-    FLASH_MassErase(bank);
-
-    HAL_FLASH_Lock();
+    /* Proceed to erase all sectors */
+    SET_BIT(FLASH->CR, FLASH_CR_STRT);
     return true;
+    #endif
 
 }
 
