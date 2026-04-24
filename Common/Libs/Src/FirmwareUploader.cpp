@@ -19,8 +19,9 @@ FirmwareUploader::FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue
       queue_(queue_depth, FW_BLOCK_SIZE),
       current_board_(current_board)
 {
-    can_.register_callback(UpdateControl::get_message_id(), receive_update_control);
-    can_.register_callback(UpdateData::get_message_id(), receive_update_data);
+    s_instance_ = this; // Set static instance pointer for callback access
+    can_.register_callback(UpdateControl::get_message_ID(), [](const SerializedCanMessage &msg){ s_instance_->receive_update_control(msg); });
+    can_.register_callback(UpdateData::get_message_ID(), [](const SerializedCanMessage &msg){ s_instance_->receive_update_data(msg); });
 }
 
 void FirmwareUploader::start()
@@ -229,7 +230,7 @@ void FirmwareUploader::uart_listener_task(void* arg) {
             UpdateControl update_msg{};
             update_msg.target_board = board_id;
             update_msg.setup = 1; // signal sender is ready to send data
-            can_.write(&update_msg);
+            self->can_.write(&update_msg);
 
             while(self->host_board_state_ != HostBoardState::SETUP){
                 // Wait for target to acknowledge setup and be ready for data
