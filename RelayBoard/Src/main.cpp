@@ -134,6 +134,7 @@ void run_precharge()
         status.hal_effect_mppt = mppt_precharge.hal_effect_millivolts();
         main_can.write(&status);
 
+        // sleep until the next loop iteration
         precharge_clock.sleep_since(PRECHARGE_CONTROL_PERIOD_MS);
     }
 }

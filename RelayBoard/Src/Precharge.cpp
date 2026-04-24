@@ -197,11 +197,15 @@ void Precharge::run_done_state()
 {
     main_en_.write(true);
     precharge_en_.write(false);
-    log_info("reached done state");
 }
 
 uint16_t Precharge::calculate_hal_effect_threshold_millivolts() const
 {
+    if (pack_voltage_ == 0)
+    {
+        return 0xFFFF; // return max threshold if pack voltage is 0 to avoid false triggering
+    }
+
     float threshold =
         (((pack_voltage_ - pack_voltage_ * PACK_VOLT_PCT) / PRECHARGE_RESISTANCE) * HAL_EFFECT_SENSITIVITY
         + (VCC * 0.1f)) * (3.28f / VCC);
