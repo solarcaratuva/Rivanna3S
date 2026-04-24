@@ -5,6 +5,7 @@
 #include "stm32_hal.h"
 #include "pinmap.h"
 #include "peripheralmap.h"
+#include "lock.h"
 
 
 class AnalogIn {
@@ -46,6 +47,7 @@ private:
     uint32_t adc_get_rank(const ADC_Peripheral* peripheral);
     ADC_Peripheral* findADCPin(Pin pin);
     ADC_HandleTypeDef* hadc_;
+    static Lock lock_;
 };
 
 #endif
