@@ -18,12 +18,14 @@ Precharge::Precharge(
     DigitalOut &main_en,
     DigitalOut &precharge_en,
     AnalogIn &contactor12_voltage,
-    AnalogIn &hal_effect_voltage)
+    AnalogIn &hal_effect_voltage,
+    bool include_dcdc_offset_in_threshold)
     : main_en_(main_en),
       precharge_en_(precharge_en),
       contactor12_voltage_(contactor12_voltage),
       hal_effect_voltage_(hal_effect_voltage),
-      state_(State::WaitForHV)
+      state_(State::WaitForHV),
+      include_dcdc_offset_in_threshold_(include_dcdc_offset_in_threshold)
 {
     main_en_.write(false);
     precharge_en_.write(true);
@@ -203,6 +205,11 @@ uint16_t Precharge::calculate_hal_effect_threshold_millivolts() const
     float threshold =
         (((pack_voltage_ - pack_voltage_ * PACK_VOLT_PCT) / PRECHARGE_RESISTANCE) * HAL_EFFECT_SENSITIVITY
         + (VCC * 0.1f)) * (3.28f / VCC);
+
+    if (include_dcdc_offset_in_threshold_)
+    {
+        threshold += (12.0f / pack_voltage_ * 3 * 0.8f + 0.5f) * 3.28f / 5.0f;
+    }
 
     return static_cast<uint16_t>(threshold * 1000.0f);
 }

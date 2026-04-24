@@ -22,7 +22,8 @@ public:
         DigitalOut& main_en,
         DigitalOut& precharge_en,
         AnalogIn& contactor12_voltage,
-        AnalogIn& hal_effect_voltage);
+        AnalogIn& hal_effect_voltage,
+        bool include_dcdc_offset_in_threshold = false);
 
     void run(uint16_t pack_voltage, bool other_fault);
     State stage() const;
@@ -31,7 +32,7 @@ public:
     uint16_t hal_effect_millivolts() const;
     bool cont12_high() const;
     bool cont12_fault() const;
-    
+
 private:
     void fault_trap();
     void run_wait_for_hv_state();
@@ -55,6 +56,7 @@ private:
     bool other_fault_ = false;
     bool fault_logged_ = false;
     bool timing_threshold_ = false;
+    bool include_dcdc_offset_in_threshold_ = false;
     uint32_t threshold_start_time_ms_ = 0;
     uint32_t state_entry_time_ms_ = 0;
 };

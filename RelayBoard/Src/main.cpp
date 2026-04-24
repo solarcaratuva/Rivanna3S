@@ -58,7 +58,7 @@ CanInterface main_can(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
 Thread precharge_thread;
 Thread auxbattery_thread;
 
-Precharge motor_precharge(motor_main_en, motor_precharge_en, cont12_voltage, motor_hal_effect_voltage);
+Precharge motor_precharge(motor_main_en, motor_precharge_en, cont12_voltage, motor_hal_effect_voltage, true);
 Precharge mppt_precharge(mppt_main_en, mppt_precharge_en, cont12_voltage, mppt_hal_effect_voltage);
 
 void handle_bps_status(const SerializedCanMessage &msg)
