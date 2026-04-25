@@ -266,4 +266,33 @@ typedef struct UpdateData : CanMessage, rivanna3_s_update_data_t {
     }
 } UpdateData;
 
+
+typedef struct OdometryData : CanMessage, rivanna3_s_odometry_data_t {
+    void serialize(SerializedCanMessage *message) {
+        rivanna3_s_odometry_data_pack(message->data, this,
+            RIVANNA3_S_ODOMETRY_DATA_LENGTH);
+        message->len = RIVANNA3_S_ODOMETRY_DATA_LENGTH;
+        message->id = RIVANNA3_S_ODOMETRY_DATA_FRAME_ID;
+    }
+
+    void deserialize(const SerializedCanMessage *message) {
+        rivanna3_s_odometry_data_unpack(this, message->data,
+            RIVANNA3_S_ODOMETRY_DATA_LENGTH);
+    }
+
+    static uint16_t get_message_ID() { return RIVANNA3_S_ODOMETRY_DATA_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_ODOMETRY_DATA_FRAME_ID; }
+
+    void log_msg(LogLevel level) const {
+        log(level, __FILE__, __LINE__,
+            "OdometryData: distance %u",
+            distance);
+    }
+
+    bool has_active_fault() {
+        return 0; // this message has no fault signals
+    }
+} OdometryData;
+
 #endif

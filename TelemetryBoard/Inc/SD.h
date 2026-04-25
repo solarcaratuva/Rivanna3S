@@ -45,6 +45,7 @@ class SdCard {
         char _USERPath[4];
         FATFS _USERFatFS;
         FIL _USERFile;
+        FIL _OdometryFile;
         Thread _flush_thread;
         bool _ready;
         MessageQueue _mq;
@@ -97,6 +98,9 @@ class SdCard {
          * forwarded into the SD card write queue when the card is ready.
          */
         void attach_to_log();
+
+        bool write_odometry_data(uint32_t value);
+        uint32_t read_odometry_data_file();
 };
 
         #endif // SD_H

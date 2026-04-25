@@ -23,11 +23,17 @@
 #include "Timeout.h"
 #include "lock.h"
 #include "UartCobs.h"
+#include "MotorControllerCanStructs.h"
+#include "Odometry.h"
 
 
-#define LOG_LEVEL INFO_LVL
+#define LOG_LEVEL DEBUG_LVL
+#define ODOMETRY_LOG_INTERVAL_MS 10000
 
 CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
+uint16_t rmp = 0;
+Thread odometry_thread;
+Lock odometry_lock;
 static SdCard* global_sd_card = nullptr;
 
 static UART radio_uart(RADIO_TX, RADIO_RX, 9600);
@@ -68,8 +74,32 @@ void handle_all_messages(const SerializedCanMessage &msg) {
     // SD card is handled automatically through the log system
 }
 
+void handle_motor_controller_power_status(const SerializedCanMessage &msg) {
+    MotorControllerPowerStatus status{};
+    status.deserialize(&msg);
+    odometry_lock.lock();
+    rmp = status.motor_rpm;
+    odometry_lock.unlock();
+}
+
 void missed_heartbeat_callback() {
     log_fault("missed heartbeat callback func xxxx");
+}
+
+void log_odometry() {
+    Odometry odometry(global_sd_card);
+
+    Clock clock;
+    while (true) {
+        odometry_lock.lock();
+        odometry.update(rmp);
+        odometry_lock.unlock();
+
+        OdometryData msg{};
+        msg.distance = odometry.get_distance();
+        main_can.write(&msg);
+        clock.sleep_since(ODOMETRY_LOG_INTERVAL_MS);
+    }
 }
 
 void app_main() {
@@ -82,9 +112,11 @@ void app_main() {
     static SdCard sd_card(&sd_spi);
     global_sd_card = &sd_card;
     sd_card.attach_to_log();
-    sd_card.attach_to_log();
+
+    odometry_thread.start(log_odometry);
     
     main_can.register_always_callback(handle_all_messages);
+    main_can.register_callback(MotorControllerPowerStatus::get_message_ID(), handle_motor_controller_power_status);
 
     Clock::sleep_forever();
 }
