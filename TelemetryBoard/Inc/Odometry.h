@@ -8,6 +8,6 @@ class Odometry {
         uint32_t get_distance();
     private:
         SdCard* _sd_card;
-        uint32_t distance_;
+        float distance_;
         uint32_t time_;
 };
