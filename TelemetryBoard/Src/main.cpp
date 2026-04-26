@@ -28,7 +28,7 @@
 
 
 #define LOG_LEVEL DEBUG_LVL
-#define ODOMETRY_LOG_INTERVAL_MS 10000
+#define ODOMETRY_LOG_INTERVAL_MS 5000
 
 CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
 uint16_t rpm = 0;
@@ -92,7 +92,7 @@ void log_odometry() {
     Clock clock;
     while (true) {
         odometry_lock.lock();
-        odometry.update(rmp);
+        odometry.update(rpm);
         odometry_lock.unlock();
 
         OdometryData msg{};
