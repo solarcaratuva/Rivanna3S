@@ -31,7 +31,7 @@
 #define ODOMETRY_LOG_INTERVAL_MS 10000
 
 CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
-uint16_t rmp = 0;
+uint16_t rpm = 0;
 Thread odometry_thread;
 Lock odometry_lock;
 static SdCard* global_sd_card = nullptr;
@@ -78,7 +78,7 @@ void handle_motor_controller_power_status(const SerializedCanMessage &msg) {
     MotorControllerPowerStatus status{};
     status.deserialize(&msg);
     odometry_lock.lock();
-    rmp = status.motor_rpm;
+    rpm = status.motor_rpm;
     odometry_lock.unlock();
 }
 
