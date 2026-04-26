@@ -25,7 +25,7 @@
 #include "UartCobs.h"
 
 
-#define LOG_LEVEL INFO_LVL
+#define LOG_LEVEL DEBUG_LVL
 
 CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
 static SdCard* global_sd_card = nullptr;

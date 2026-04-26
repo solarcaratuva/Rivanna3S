@@ -42,14 +42,16 @@ uint16_t throttle = 0;
 bool brake = false;
 
 #define MOTOR_CONTROL_PERIOD 100
+#define MOTOR_REQUEST_PERIOD 1000
 
 I2C motor_control_serial_bus(MTR_SDA, MTR_SCL, I2C::STANDARD);
 MotorInterface motor_interface(&motor_control_serial_bus);
 
 CanInterface main_can(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
-CanInterface motor_can(MOTOR_CAN_TX, MOTOR_CAN_RX, MOTOR_CAN_STANDBY, 250000, CanNetwork::Motor);
+CanInterface motor_can(MOTOR_CAN_TX, MOTOR_CAN_RX, MOTOR_CAN_STANDBY, 125000, CanNetwork::Motor);
 
 Thread motor_control_thread;
+Thread motor_request_thread;
 
 void handle_bpsfault_messages(const SerializedCanMessage &msg)
 {
@@ -171,12 +173,26 @@ void forward_motor_can_message(const SerializedCanMessage &msg)
     main_can.write(&forwarded_msg);
 }
 
+void call_motor_can(){
+
+    Clock motor_request_clock;
+    MotorControllerFrameRequest request;
+    request.power_status_frame = true;
+    request.drive_status_frame = true;
+    request.error_frame = true;
+    while(true){
+        motor_can.write(&request);
+        motor_request_clock.sleep_since(MOTOR_REQUEST_PERIOD);
+    }
+}
+
 void app_main()
 {
-    log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
+    log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Motor Board starting up...");
 
     motor_control_thread.start(set_motor_status);
+    motor_request_thread.start(call_motor_can);
 
     main_can.register_callback(BpsError::get_message_ID(), handle_bpsfault_messages);
     main_can.register_callback(DashboardCommands::get_message_ID(), handle_dashboard_commands);
