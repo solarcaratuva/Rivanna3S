@@ -35,6 +35,11 @@ UART::UART(Pin tx, Pin rx, uint32_t baud)
     HAL_UART_MspInit_custom(uart_periph->handle, rx, rx_af);
     
     huart = UART_init(uart_periph->handle, baud);
+    if (huart == nullptr) {
+        initialized = false;
+        log_warn("UART init failed: HAL handle is null");
+        return;
+    }
 
     // Clear any startup glitches/errors once
     __HAL_UART_CLEAR_IT(huart, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF);
@@ -124,7 +129,22 @@ int UART::write(uint8_t* buffer, uint16_t length) {
             return -1;
         }
 
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        // Bound wait time so a missed TX-complete interrupt cannot deadlock the caller.
+        uint32_t tx_timeout_ms = (uint32_t)(((uint64_t)length * 12000ULL) / (uint64_t)baud_) + 20U;
+        if (tx_timeout_ms < 20U) {
+            tx_timeout_ms = 20U;
+        }
+        TickType_t tx_timeout_ticks = pdMS_TO_TICKS(tx_timeout_ms);
+        uint32_t notified = ulTaskNotifyTake(pdTRUE, tx_timeout_ticks == 0 ? 1 : tx_timeout_ticks);
+
+        if (notified == 0) {
+            HAL_UART_Abort_IT(huart);
+            __HAL_UART_CLEAR_IT(huart, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF);
+            txTask = nullptr;
+            xSemaphoreGive(mutex);
+            return -2;
+        }
+
         xSemaphoreGive(mutex);
 
         return last_error;
@@ -209,6 +229,7 @@ extern "C"{
 
         // Capture HAL error flags
         uart->last_error = HAL_UART_GetError(huart);
+        __HAL_UART_CLEAR_IT(huart, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF);
 
         BaseType_t woken = pdFALSE;
 
