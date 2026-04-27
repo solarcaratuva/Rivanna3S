@@ -1,7 +1,7 @@
 #include "heartbeat.h"
 #include "Rivanna3SCanStructs.h"
 #include "thread.h"
-#include "clock.h"
+#include "Clock.h"
 #include "log.h"
 
 // --- Static member definitions ---

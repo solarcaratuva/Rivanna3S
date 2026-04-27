@@ -5,8 +5,8 @@
 #include "peripheralmap.h"
 #include "lock.h"
 #include "fdcan.h"
-#include "clock.h"
-#include "DigitalOut.h";
+#include "Clock.h"
+#include "DigitalOut.h"
 
 // extern "C" void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef* fdcanHandle, Pin pin, uint8_t af);
 // extern "C" FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* fdcan, uint32_t baudrate);
