@@ -1,0 +1,53 @@
+name: Compile Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull compile environment
+        run: docker pull ghcr.io/solarcaratuva/rivanna3s_compile_env
+
+      - name: Configure and compile
+        run: |
+          docker run --rm \
+            --platform linux/amd64 \
+            -v "${{ github.workspace }}:/root/code" \
+            ghcr.io/solarcaratuva/rivanna3s_compile_env \
+            /bin/bash -c "
+              set -e
+              cd /root/code
+
+              cmake \
+                -S . \
+                -B build \
+                -G Ninja \
+                -DCMAKE_TOOLCHAIN_FILE=cmake/arm-gcc.cmake \
+                -DCMAKE_BUILD_TYPE=Debug \
+                -DBOARD=STM32G474RET6
+
+              cmake --build build
+            "
