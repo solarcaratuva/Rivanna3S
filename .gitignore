@@ -15,3 +15,6 @@ build
 build*
 Drivers/code_generation/test_dst/
 Drivers/code_generation/test_src/
+
+# macOS Finder metadata
+**/.DS_Store

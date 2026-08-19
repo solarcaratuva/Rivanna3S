@@ -426,20 +426,33 @@ void HAL_ADC_MspInit_custom(const ADC_TypeDef* adcHandle, Pin pin) // <-- This l
 /* USER CODE END 1 */
 
 ADC_HandleTypeDef* ADC_init(ADC_TypeDef* inst, uint32_t channel, bool first_use) {
+
     if (inst == ADC1) {
         MX_ADC1_Init(channel, first_use);
+        if (first_use) {
+            HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
+        }
         return &hadc1;
     }
     else if (inst == ADC2) {
         MX_ADC2_Init(channel, first_use);
+        if (first_use) {
+            HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
+        }
         return &hadc2;
     }
     else if (inst == ADC3) {
         MX_ADC3_Init(channel, first_use);
+        if (first_use) {
+            HAL_ADCEx_Calibration_Start(&hadc3, ADC_SINGLE_ENDED);
+        }
         return &hadc3;
     }
     else if (inst == ADC4) {
         MX_ADC4_Init(channel, first_use);
+        if (first_use) {
+            HAL_ADCEx_Calibration_Start(&hadc4, ADC_SINGLE_ENDED);
+        }
         return &hadc4;
     }
     else {
