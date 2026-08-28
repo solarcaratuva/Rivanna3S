@@ -15,3 +15,4 @@ build
 build*
 Drivers/code_generation/test_dst/
 Drivers/code_generation/test_src/
+.DS_Store
