@@ -4,6 +4,7 @@
 #include <cstdint>
 #include "pindef.h"
 #include "peripheralmap.h"
+#include "UART.h"
 
 struct VN200AngularRate {
     float gyro_x;       // rad/s
@@ -42,6 +43,7 @@ struct VN200Status {
 //define the VN200 class
 class VN200 {
 public:
+    VN200(Pin tx, Pin rx, uint32_t baud);
     bool init();
     const VN200AngularRate& get_latest_sample_angular_rate();
     const VN200Acceleration& get_latest_sample_acceleration();
@@ -57,6 +59,12 @@ private:
     void decode_payload(const uint8_t *payload);
     uint16_t compute_crc16(const uint8_t *data, uint16_t length);
     UART serial;
+    uint32_t crc_error;
+    VN200AngularRate ang_rate;
+    VN200Acceleration accel;
+    VN200Position pos;
+    VN200Velocity vel;
+    VN200Status status;
 };
 
 
