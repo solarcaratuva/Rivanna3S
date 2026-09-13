@@ -8,8 +8,50 @@
 VN200::VN200(Pin tx, Pin rx, uint32_t baud)
     : serial(tx, rx, baud)
 {
+    crc_error = 0;
 
+    //initialize memory to 0
+    memset(&ang_rate, 0, sizeof(ang_rate));
+    memset(&accel, 0, sizeof(accel));
+    memset(&pos, 0, sizeof(pos));
+    memset(&vel, 0, sizeof(vel));
+    memset(&status, 0, sizeof(status));
 
+}
+
+// Calculates the 16-bit CRC checksum for the given byte sequence .
+VN200:: uint16_t compute_crc16 ( const uint8_t data [], const uint16_t length){
+    unsigned int i;
+    unsigned short crc = 0;
+    for(i=0; i<length; i++){
+        crc = ( unsigned char)(crc >> 8) | (crc << 8);
+        crc ^= data[i];
+        crc ^= ( unsigned char)(crc & 0xff) >> 4;
+        crc ^= crc << 12;
+        crc ^= (crc & 0x00ff) << 5;
+    }
+    return crc;
+}
+
+VN200:: const uint32_t get_crc_error_count(){
+    return crc_error;
+}
+
+bool VN200:: poll(){
+     //read bytes need to define if want to be blocking or passive checking
+    uint8_t byte;
+    int result = serial.read(&byte, 1, 10);
+
+    //blocking for 10 ms
+    if (result == 0){
+        //byte received do something with it
+
+        return true;
+    }
+    else{
+        //otherwise
+        return false;
+    }
 }
 
 bool VN200::init()
@@ -56,4 +98,25 @@ bool VN200::send_ascii_command(const char *cmd){
         return false; // error if VN200 returns VNERR
     }
     return true;
+}
+
+//getters
+const VN200AngularRate& VN200::get_latest_sample_angular_rate(){
+    return ang_rate;
+}
+
+const VN200Acceleration& VN200::get_latest_sample_acceleration(){
+    return accel;
+}
+
+const VN200Position& VN200::get_latest_sample_position(){
+    return pos;
+}
+
+const VN200Velocity& VN200::get_latest_sample_velocity(){
+    return vel;
+}  
+
+const VN200Status& VN200::get_latest_sample_status(){
+    return status;
 }
