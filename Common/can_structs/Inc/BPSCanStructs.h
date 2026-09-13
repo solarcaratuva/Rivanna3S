@@ -25,7 +25,7 @@ typedef struct BpsStatus : CanMessage, bps_bps_status_t {
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "BpsStatus: pack_voltage %u, pack_current %u, pack_soc %u, discharge_relay_status %u, charge_relay_status %u, charger_safety %u, charge_power_signal %u, balancing_active %u",
+            "BpsStatus: pack_voltage %u, pack_current %d, pack_soc %u, discharge_relay_status %u, charge_relay_status %u, charger_safety %u, charge_power_signal %u, balancing_active %u",
             pack_voltage, pack_current, pack_soc, discharge_relay_status, charge_relay_status, charger_safety, charge_power_signal, balancing_active);
     }
 
