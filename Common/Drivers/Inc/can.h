@@ -175,6 +175,7 @@ public:
      * @note This method is thread-safe and NON-BLOCKING.
      */
     int try_read(SerializedCanMessage* msg);
+    TaskHandle_t rxTask = nullptr; /**< RX direct to task handle. */
 
 private:
     FDCAN_HandleTypeDef* hfdcan;        ///< Handle to the STM32 HAL FDCAN peripheral

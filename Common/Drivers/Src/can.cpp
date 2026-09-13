@@ -7,6 +7,12 @@
 #include "fdcan.h"
 #include "Clock.h"
 #include "DigitalOut.h"
+#include "stm32_hal.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "thread.h"
+#include "log.h"
+#include "semphr.h"
 
 // extern "C" void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef* fdcanHandle, Pin pin, uint8_t af);
 // extern "C" FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* fdcan, uint32_t baudrate);
@@ -95,14 +101,25 @@ int CAN::read(SerializedCanMessage *msg)
 
     // Wait for at least one frame without holding the shared CAN lock.
     // Holding the lock here can block writers indefinitely on a quiet bus.
-    uint32_t pending = 0;
-    while (pending == 0) {
-        Clock::sleep_for(1);
-        pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
+    // Fast-path check: if FIFO is empty, block until the ISR notifies us
+    while (HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0) == 0) {
+        rxTask = Thread::get_task_handle();
+
+        // Double check fill level before blocking to prevent race conditions
+        if (HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0) > 0) {
+            rxTask = nullptr;
+            break;
+        }
+
+        // Block until notified by HAL_FDCAN_RxFifo0Callback
+        // Optional: replace portMAX_DELAY with a timeout like pdMS_TO_TICKS(1000)
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        rxTask = nullptr;
     }
 
     instance_lock.lock();
 
+    uint32_t pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
     // Check if the RX queue is full (field name differs across STM32 families).
 #if defined(STM32G474xx)
     if (pending > 2) {
