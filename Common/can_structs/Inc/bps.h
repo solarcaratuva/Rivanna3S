@@ -33,7 +33,8 @@
 #define BPS_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <stdint.h>
@@ -41,7 +42,7 @@ extern "C" {
 #include <stddef.h>
 
 #ifndef EINVAL
-#    define EINVAL 22
+#define EINVAL 22
 #endif
 
 /* Frame ids. */
@@ -58,9 +59,7 @@ extern "C" {
 
 /* Frame cycle times in milliseconds. */
 
-
 /* Signal choices. */
-
 
 /* Frame Names. */
 #define BPS_BPS_STATUS_NAME "BpsStatus"
@@ -99,1595 +98,1596 @@ extern "C" {
 #define BPS_BPS_ERROR_REDUCED_VOLTAGE_FAILSAFE_NAME "reduced_voltage_failsafe"
 #define BPS_BPS_ERROR_REDUCED_COMMS_FAILSAFE_NAME "reduced_comms_failsafe"
 
-/**
- * Signals in message BpsStatus.
- *
- * This ID Transmits at 8 ms.
- *
- * All signal values are as on the CAN bus.
- */
-struct bps_bps_status_t {
     /**
-     * Range: -
-     * Scale: 0.1
-     * Offset: 0
-     */
-    uint16_t pack_voltage;
-
-    /**
-     * Range: -
-     * Scale: 0.1
-     * Offset: 0
-     */
-    int16_t pack_current;
-
-    /**
-     * Range: -
-     * Scale: 0.5
-     * Offset: 0
-     */
-    uint8_t pack_soc;
-
-    /**
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
-     */
-    uint8_t discharge_relay_status;
-
-    /**
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
-     */
-    uint8_t charge_relay_status;
-
-    /**
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
-     */
-    uint8_t charger_safety;
-
-    /**
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
-     */
-    uint8_t charge_power_signal;
-
-    /**
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
-     */
-    uint8_t balancing_active;
-};
-
-/**
- * Signals in message BpsError.
- *
- * This ID Transmits at 8 ms.
- *
- * All signal values are as on the CAN bus.
- */
-struct bps_bps_error_t {
-    /**
-     * fault
+     * Signals in message BpsStatus.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
-     */
-    uint8_t internal_cell_communication_fault;
-
-    /**
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
-     */
-    uint8_t weak_cell_fault;
-
-    /**
-     * fault
+     * This ID Transmits at 8 ms.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
+     * All signal values are as on the CAN bus.
      */
-    uint8_t low_cell_voltage_fault;
+    struct bps_bps_status_t
+    {
+        /**
+         * Range: -
+         * Scale: 0.1
+         * Offset: 0
+         */
+        uint16_t pack_voltage;
+
+        /**
+         * Range: -
+         * Scale: 0.1
+         * Offset: 0
+         */
+        int16_t pack_current;
+
+        /**
+         * Range: -
+         * Scale: 0.5
+         * Offset: 0
+         */
+        uint8_t pack_soc;
+
+        /**
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t discharge_relay_status;
+
+        /**
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t charge_relay_status;
+
+        /**
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t charger_safety;
+
+        /**
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t charge_power_signal;
+
+        /**
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t balancing_active;
+    };
 
     /**
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
-     */
-    uint8_t cell_open_wiring_fault;
-
-    /**
-     * fault
+     * Signals in message BpsError.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
-     */
-    uint8_t thermistor_fault;
-
-    /**
-     * fault
+     * This ID Transmits at 8 ms.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
+     * All signal values are as on the CAN bus.
      */
-    uint8_t current_sensor_fault;
+    struct bps_bps_error_t
+    {
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t internal_cell_communication_fault;
+
+        /**
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t weak_cell_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t low_cell_voltage_fault;
+
+        /**
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t cell_open_wiring_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t thermistor_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t current_sensor_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t weak_pack_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t can_communication_fault;
+
+        /**
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t redundant_power_supply_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t high_voltage_isolation_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t charge_enable_relay_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t discharge_enable_relay_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t internal_conversion_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t internal_memory_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t internal_thermistor_fault;
+
+        /**
+         * fault
+         *
+         * Range: 0..1 (0..1 -)
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t internal_logic_fault;
+
+        /**
+         * fault
+         *
+         * Range: -
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t reduced_low_soc;
+
+        /**
+         * fault
+         *
+         * Range: -
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t reduced_high_cell_resistance;
+
+        /**
+         * fault
+         *
+         * Range: -
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t reduced_high_temp;
+
+        /**
+         * fault
+         *
+         * Range: -
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t reduced_low_cell_voltage;
+
+        /**
+         * faults
+         *
+         * Range: -
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t reduced_low_pack_voltage;
+
+        /**
+         * fault
+         *
+         * Range: -
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t reduced_voltage_failsafe;
+
+        /**
+         * fault
+         *
+         * Range: -
+         * Scale: 1
+         * Offset: 0
+         */
+        uint8_t reduced_comms_failsafe;
+    };
 
     /**
-     * fault
+     * Pack message BpsStatus.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
-     */
-    uint8_t weak_pack_fault;
-
-    /**
-     * fault
+     * @param[out] dst_p Buffer to pack the message into.
+     * @param[in] src_p Data to pack.
+     * @param[in] size Size of dst_p.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
+     * @return Size of packed data, or negative error code.
      */
-    uint8_t can_communication_fault;
+    int bps_bps_status_pack(
+        uint8_t *dst_p,
+        const struct bps_bps_status_t *src_p,
+        size_t size);
 
     /**
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
-     */
-    uint8_t redundant_power_supply_fault;
-
-    /**
-     * fault
+     * Unpack message BpsStatus.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
+     * @param[out] dst_p Object to unpack the message into.
+     * @param[in] src_p Message to unpack.
+     * @param[in] size Size of src_p.
+     *
+     * @return zero(0) or negative error code.
      */
-    uint8_t high_voltage_isolation_fault;
+    int bps_bps_status_unpack(
+        struct bps_bps_status_t *dst_p,
+        const uint8_t *src_p,
+        size_t size);
 
     /**
-     * fault
+     * Init message fields to default values from BpsStatus.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
+     * @param[in] msg_p Message to init.
+     *
+     * @return zero(0) on success or (-1) in case of nullptr argument.
      */
-    uint8_t charge_enable_relay_fault;
+    int bps_bps_status_init(struct bps_bps_status_t *msg_p);
 
     /**
-     * fault
+     * Encode given signal by applying scaling and offset.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
      */
-    uint8_t discharge_enable_relay_fault;
+    uint16_t bps_bps_status_pack_voltage_encode(double value);
 
     /**
-     * fault
+     * Decode given signal by applying scaling and offset.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
      */
-    uint8_t internal_conversion_fault;
+    double bps_bps_status_pack_voltage_decode(uint16_t value);
 
     /**
-     * fault
+     * Check that given signal is in allowed range.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
      */
-    uint8_t internal_memory_fault;
+    bool bps_bps_status_pack_voltage_is_in_range(uint16_t value);
 
     /**
-     * fault
+     * Check that given physical value is in allowed range before encoding.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
      */
-    uint8_t internal_thermistor_fault;
+    bool bps_bps_status_pack_voltage_is_in_phys_range(double value);
 
     /**
-     * fault
+     * Encode given signal by applying scaling and offset.
      *
-     * Range: 0..1 (0..1 -)
-     * Scale: 1
-     * Offset: 0
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
      */
-    uint8_t internal_logic_fault;
+    int16_t bps_bps_status_pack_current_encode(double value);
 
     /**
-     * fault
+     * Decode given signal by applying scaling and offset.
      *
-     * Range: -
-     * Scale: 1
-     * Offset: 0
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
      */
-    uint8_t reduced_low_soc;
+    double bps_bps_status_pack_current_decode(int16_t value);
 
     /**
-     * fault
+     * Check that given signal is in allowed range.
      *
-     * Range: -
-     * Scale: 1
-     * Offset: 0
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
      */
-    uint8_t reduced_high_cell_resistance;
+    bool bps_bps_status_pack_current_is_in_range(int16_t value);
 
     /**
-     * fault
+     * Check that given physical value is in allowed range before encoding.
      *
-     * Range: -
-     * Scale: 1
-     * Offset: 0
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
      */
-    uint8_t reduced_high_temp;
+    bool bps_bps_status_pack_current_is_in_phys_range(double value);
 
     /**
-     * fault
+     * Encode given signal by applying scaling and offset.
      *
-     * Range: -
-     * Scale: 1
-     * Offset: 0
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
      */
-    uint8_t reduced_low_cell_voltage;
+    uint8_t bps_bps_status_pack_soc_encode(double value);
 
     /**
-     * faults
+     * Decode given signal by applying scaling and offset.
      *
-     * Range: -
-     * Scale: 1
-     * Offset: 0
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
      */
-    uint8_t reduced_low_pack_voltage;
+    double bps_bps_status_pack_soc_decode(uint8_t value);
 
     /**
-     * fault
+     * Check that given signal is in allowed range.
      *
-     * Range: -
-     * Scale: 1
-     * Offset: 0
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
      */
-    uint8_t reduced_voltage_failsafe;
+    bool bps_bps_status_pack_soc_is_in_range(uint8_t value);
 
     /**
-     * fault
+     * Check that given physical value is in allowed range before encoding.
      *
-     * Range: -
-     * Scale: 1
-     * Offset: 0
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
      */
-    uint8_t reduced_comms_failsafe;
-};
-
-/**
- * Pack message BpsStatus.
- *
- * @param[out] dst_p Buffer to pack the message into.
- * @param[in] src_p Data to pack.
- * @param[in] size Size of dst_p.
- *
- * @return Size of packed data, or negative error code.
- */
-int bps_bps_status_pack(
-    uint8_t *dst_p,
-    const struct bps_bps_status_t *src_p,
-    size_t size);
-
-/**
- * Unpack message BpsStatus.
- *
- * @param[out] dst_p Object to unpack the message into.
- * @param[in] src_p Message to unpack.
- * @param[in] size Size of src_p.
- *
- * @return zero(0) or negative error code.
- */
-int bps_bps_status_unpack(
-    struct bps_bps_status_t *dst_p,
-    const uint8_t *src_p,
-    size_t size);
-
-/**
- * Init message fields to default values from BpsStatus.
- *
- * @param[in] msg_p Message to init.
- *
- * @return zero(0) on success or (-1) in case of nullptr argument.
- */
-int bps_bps_status_init(struct bps_bps_status_t *msg_p);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint16_t bps_bps_status_pack_voltage_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_status_pack_voltage_decode(uint16_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_pack_voltage_is_in_range(uint16_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_pack_voltage_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-int16_t bps_bps_status_pack_current_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_status_pack_current_decode(int16_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_pack_current_is_in_range(int16_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_pack_current_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_status_pack_soc_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_status_pack_soc_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_pack_soc_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_pack_soc_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_status_discharge_relay_status_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_status_discharge_relay_status_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_discharge_relay_status_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_discharge_relay_status_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_status_charge_relay_status_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_status_charge_relay_status_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_charge_relay_status_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_charge_relay_status_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_status_charger_safety_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_status_charger_safety_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_charger_safety_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_charger_safety_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_status_charge_power_signal_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_status_charge_power_signal_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_charge_power_signal_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_charge_power_signal_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_status_balancing_active_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_status_balancing_active_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_balancing_active_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_status_balancing_active_is_in_phys_range(double value);
-
-/**
- * Pack message BpsError.
- *
- * @param[out] dst_p Buffer to pack the message into.
- * @param[in] src_p Data to pack.
- * @param[in] size Size of dst_p.
- *
- * @return Size of packed data, or negative error code.
- */
-int bps_bps_error_pack(
-    uint8_t *dst_p,
-    const struct bps_bps_error_t *src_p,
-    size_t size);
-
-/**
- * Unpack message BpsError.
- *
- * @param[out] dst_p Object to unpack the message into.
- * @param[in] src_p Message to unpack.
- * @param[in] size Size of src_p.
- *
- * @return zero(0) or negative error code.
- */
-int bps_bps_error_unpack(
-    struct bps_bps_error_t *dst_p,
-    const uint8_t *src_p,
-    size_t size);
-
-/**
- * Init message fields to default values from BpsError.
- *
- * @param[in] msg_p Message to init.
- *
- * @return zero(0) on success or (-1) in case of nullptr argument.
- */
-int bps_bps_error_init(struct bps_bps_error_t *msg_p);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_internal_cell_communication_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_internal_cell_communication_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_internal_cell_communication_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_internal_cell_communication_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_weak_cell_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_weak_cell_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_weak_cell_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_weak_cell_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_low_cell_voltage_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_low_cell_voltage_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_low_cell_voltage_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_low_cell_voltage_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_cell_open_wiring_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_cell_open_wiring_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_cell_open_wiring_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_cell_open_wiring_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_thermistor_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_thermistor_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_thermistor_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_thermistor_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_current_sensor_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_current_sensor_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_current_sensor_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_current_sensor_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_weak_pack_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_weak_pack_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_weak_pack_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_weak_pack_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_can_communication_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_can_communication_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_can_communication_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_can_communication_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_redundant_power_supply_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_redundant_power_supply_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_redundant_power_supply_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_redundant_power_supply_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_high_voltage_isolation_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_high_voltage_isolation_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_high_voltage_isolation_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_high_voltage_isolation_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_charge_enable_relay_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_charge_enable_relay_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_charge_enable_relay_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_charge_enable_relay_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_discharge_enable_relay_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_discharge_enable_relay_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_discharge_enable_relay_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_discharge_enable_relay_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_internal_conversion_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_internal_conversion_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_internal_conversion_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_internal_conversion_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_internal_memory_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_internal_memory_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_internal_memory_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_internal_memory_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_internal_thermistor_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_internal_thermistor_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_internal_thermistor_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_internal_thermistor_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_internal_logic_fault_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_internal_logic_fault_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_internal_logic_fault_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_internal_logic_fault_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_reduced_low_soc_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_reduced_low_soc_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_low_soc_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_low_soc_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_reduced_high_cell_resistance_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_reduced_high_cell_resistance_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_high_cell_resistance_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_high_cell_resistance_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_reduced_high_temp_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_reduced_high_temp_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_high_temp_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_high_temp_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_reduced_low_cell_voltage_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_reduced_low_cell_voltage_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_low_cell_voltage_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_low_cell_voltage_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_reduced_low_pack_voltage_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_reduced_low_pack_voltage_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_low_pack_voltage_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_low_pack_voltage_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_reduced_voltage_failsafe_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_reduced_voltage_failsafe_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_voltage_failsafe_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_voltage_failsafe_is_in_phys_range(double value);
-
-/**
- * Encode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to encode.
- *
- * @return Encoded signal.
- */
-uint8_t bps_bps_error_reduced_comms_failsafe_encode(double value);
-
-/**
- * Decode given signal by applying scaling and offset.
- *
- * @param[in] value Signal to decode.
- *
- * @return Decoded signal.
- */
-double bps_bps_error_reduced_comms_failsafe_decode(uint8_t value);
-
-/**
- * Check that given signal is in allowed range.
- *
- * @param[in] value Signal to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_comms_failsafe_is_in_range(uint8_t value);
-
-/**
- * Check that given physical value is in allowed range before encoding.
- *
- * Use this BEFORE calling _encode() to avoid silent integer overflow:
- *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
- *   is_in_phys_range(-1.0) correctly returns false.
- *
- * @param[in] value Physical signal value to check.
- *
- * @return true if in range, false otherwise.
- */
-bool bps_bps_error_reduced_comms_failsafe_is_in_phys_range(double value);
-
+    bool bps_bps_status_pack_soc_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_status_discharge_relay_status_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_status_discharge_relay_status_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_status_discharge_relay_status_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_status_discharge_relay_status_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_status_charge_relay_status_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_status_charge_relay_status_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_status_charge_relay_status_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_status_charge_relay_status_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_status_charger_safety_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_status_charger_safety_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_status_charger_safety_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_status_charger_safety_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_status_charge_power_signal_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_status_charge_power_signal_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_status_charge_power_signal_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_status_charge_power_signal_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_status_balancing_active_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_status_balancing_active_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_status_balancing_active_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_status_balancing_active_is_in_phys_range(double value);
+
+    /**
+     * Pack message BpsError.
+     *
+     * @param[out] dst_p Buffer to pack the message into.
+     * @param[in] src_p Data to pack.
+     * @param[in] size Size of dst_p.
+     *
+     * @return Size of packed data, or negative error code.
+     */
+    int bps_bps_error_pack(
+        uint8_t *dst_p,
+        const struct bps_bps_error_t *src_p,
+        size_t size);
+
+    /**
+     * Unpack message BpsError.
+     *
+     * @param[out] dst_p Object to unpack the message into.
+     * @param[in] src_p Message to unpack.
+     * @param[in] size Size of src_p.
+     *
+     * @return zero(0) or negative error code.
+     */
+    int bps_bps_error_unpack(
+        struct bps_bps_error_t *dst_p,
+        const uint8_t *src_p,
+        size_t size);
+
+    /**
+     * Init message fields to default values from BpsError.
+     *
+     * @param[in] msg_p Message to init.
+     *
+     * @return zero(0) on success or (-1) in case of nullptr argument.
+     */
+    int bps_bps_error_init(struct bps_bps_error_t *msg_p);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_internal_cell_communication_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_internal_cell_communication_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_internal_cell_communication_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_internal_cell_communication_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_weak_cell_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_weak_cell_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_weak_cell_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_weak_cell_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_low_cell_voltage_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_low_cell_voltage_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_low_cell_voltage_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_low_cell_voltage_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_cell_open_wiring_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_cell_open_wiring_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_cell_open_wiring_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_cell_open_wiring_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_thermistor_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_thermistor_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_thermistor_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_thermistor_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_current_sensor_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_current_sensor_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_current_sensor_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_current_sensor_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_weak_pack_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_weak_pack_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_weak_pack_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_weak_pack_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_can_communication_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_can_communication_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_can_communication_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_can_communication_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_redundant_power_supply_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_redundant_power_supply_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_redundant_power_supply_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_redundant_power_supply_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_high_voltage_isolation_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_high_voltage_isolation_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_high_voltage_isolation_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_high_voltage_isolation_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_charge_enable_relay_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_charge_enable_relay_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_charge_enable_relay_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_charge_enable_relay_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_discharge_enable_relay_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_discharge_enable_relay_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_discharge_enable_relay_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_discharge_enable_relay_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_internal_conversion_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_internal_conversion_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_internal_conversion_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_internal_conversion_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_internal_memory_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_internal_memory_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_internal_memory_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_internal_memory_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_internal_thermistor_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_internal_thermistor_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_internal_thermistor_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_internal_thermistor_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_internal_logic_fault_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_internal_logic_fault_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_internal_logic_fault_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_internal_logic_fault_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_reduced_low_soc_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_reduced_low_soc_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_low_soc_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_low_soc_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_reduced_high_cell_resistance_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_reduced_high_cell_resistance_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_high_cell_resistance_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_high_cell_resistance_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_reduced_high_temp_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_reduced_high_temp_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_high_temp_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_high_temp_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_reduced_low_cell_voltage_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_reduced_low_cell_voltage_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_low_cell_voltage_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_low_cell_voltage_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_reduced_low_pack_voltage_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_reduced_low_pack_voltage_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_low_pack_voltage_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_low_pack_voltage_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_reduced_voltage_failsafe_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_reduced_voltage_failsafe_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_voltage_failsafe_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_voltage_failsafe_is_in_phys_range(double value);
+
+    /**
+     * Encode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to encode.
+     *
+     * @return Encoded signal.
+     */
+    uint8_t bps_bps_error_reduced_comms_failsafe_encode(double value);
+
+    /**
+     * Decode given signal by applying scaling and offset.
+     *
+     * @param[in] value Signal to decode.
+     *
+     * @return Decoded signal.
+     */
+    double bps_bps_error_reduced_comms_failsafe_decode(uint8_t value);
+
+    /**
+     * Check that given signal is in allowed range.
+     *
+     * @param[in] value Signal to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_comms_failsafe_is_in_range(uint8_t value);
+
+    /**
+     * Check that given physical value is in allowed range before encoding.
+     *
+     * Use this BEFORE calling _encode() to avoid silent integer overflow:
+     *   encode(-1.0) on a [0,100] signal wraps to 255 and passes is_in_range().
+     *   is_in_phys_range(-1.0) correctly returns false.
+     *
+     * @param[in] value Physical signal value to check.
+     *
+     * @return true if in range, false otherwise.
+     */
+    bool bps_bps_error_reduced_comms_failsafe_is_in_phys_range(double value);
 
 #ifdef __cplusplus
 }

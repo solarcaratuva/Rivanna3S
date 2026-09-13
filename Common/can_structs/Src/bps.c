@@ -88,7 +88,8 @@ int bps_bps_status_pack(
 {
     uint16_t pack_current;
 
-    if (size < 6u) {
+    if (size < 6u)
+    {
         return (-EINVAL);
     }
 
@@ -116,7 +117,8 @@ int bps_bps_status_unpack(
 {
     uint16_t pack_current;
 
-    if (size < 6u) {
+    if (size < 6u)
+    {
         return (-EINVAL);
     }
 
@@ -137,7 +139,8 @@ int bps_bps_status_unpack(
 
 int bps_bps_status_init(struct bps_bps_status_t *msg_p)
 {
-    if (msg_p == NULL) return -1;
+    if (msg_p == NULL)
+        return -1;
 
     memset(msg_p, 0, sizeof(struct bps_bps_status_t));
 
@@ -321,7 +324,8 @@ int bps_bps_error_pack(
     const struct bps_bps_error_t *src_p,
     size_t size)
 {
-    if (size < 4u) {
+    if (size < 4u)
+    {
         return (-EINVAL);
     }
 
@@ -359,7 +363,8 @@ int bps_bps_error_unpack(
     const uint8_t *src_p,
     size_t size)
 {
-    if (size < 4u) {
+    if (size < 4u)
+    {
         return (-EINVAL);
     }
 
@@ -392,7 +397,8 @@ int bps_bps_error_unpack(
 
 int bps_bps_error_init(struct bps_bps_error_t *msg_p)
 {
-    if (msg_p == NULL) return -1;
+    if (msg_p == NULL)
+        return -1;
 
     memset(msg_p, 0, sizeof(struct bps_bps_error_t));
 
