@@ -33,13 +33,13 @@
 #include "pindef.h"
 #include "thread.h"
 #include "ScaledAnalogIn.h"
+#include "FaultHandler.h"
 /* USER CODE END Includes */
 
 uint32_t PRECHARGE_CONTROL_PERIOD_MS = 100;
 uint32_t AUXBATTERY_CONTROL_PERIOD_MS = 10000;
 
 
-bool has_other_fault = false;
 bool has_cont12_fault = false;
 uint16_t pack_voltage = 0;
 DigitalOut motor_main_en(MAIN_EN);
@@ -68,36 +68,13 @@ void handle_bps_status(const SerializedCanMessage &msg)
     pack_voltage = status.pack_voltage / 10; // scaling (BMS units is 10th of a volt)
 }
 
-void handle_bps_fault(const SerializedCanMessage &msg)
-{
-    BpsError status{};
-    status.deserialize(&msg);
-
-    if (status.has_active_fault())
-    {
-        has_other_fault = true;
-        log_fault("BPS fault detected!");
-    }
-}
-
-void handle_motor_fault(const SerializedCanMessage &msg)
-{
-    MotorControllerError status{};
-    status.deserialize(&msg);
-
-    if (status.has_active_fault())
-    {
-        has_other_fault = true;
-        log_fault("Motor controller fault detected!");
-    }
-}
-
 void run_precharge()
 {
     Clock precharge_clock;
 
     while (true)
     {
+        const bool has_other_fault = FaultHandler::has_any_fault();
         // run the precharge finite state machines
         motor_precharge.run(pack_voltage, has_other_fault);
         mppt_precharge.run(pack_voltage, has_other_fault);
@@ -159,9 +136,7 @@ void app_main()
     log_info("Relay Board starting up...");
 
     main_can.register_callback(BpsStatus::get_message_ID(), handle_bps_status);
-    main_can.register_callback(BpsError::get_message_ID(), handle_bps_fault);
-    main_can.register_callback(MotorControllerError::get_message_ID(), handle_motor_fault);
-
+    main_can.register_always_callback(FaultHandler::check_for_any_faults);
     precharge_thread.start(run_precharge);
     auxbattery_thread.start(monitor_auxbattery);
 

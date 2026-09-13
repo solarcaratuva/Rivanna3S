@@ -35,8 +35,8 @@
 #include "log.h"
 #include "pindef.h"
 #include "thread.h"
+#include "FaultHandler.h"
 
-bool has_faulted = false;
 bool regen_enabled = false;
 uint16_t throttle = 0;
 bool brake = false;
@@ -50,29 +50,6 @@ CanInterface main_can(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
 CanInterface motor_can(MOTOR_CAN_TX, MOTOR_CAN_RX, MOTOR_CAN_STANDBY, 250000, CanNetwork::Motor);
 
 Thread motor_control_thread;
-
-void handle_bpsfault_messages(const SerializedCanMessage &msg)
-{
-    BpsError status{};
-    status.deserialize(&msg);
-    if (status.has_active_fault())
-    {
-        has_faulted = true;
-        log_fault("BPS fault detected!");
-    }
-}
-
-void handle_contactor_fault(const SerializedCanMessage &msg)
-{
-    Contactor12Error status{};
-    status.deserialize(&msg);
-
-    if (status.has_active_fault())
-    {
-        has_faulted = true;
-        log_fault("Contactor fault detected!");
-    }
-}
 
 void handle_dashboard_commands(const SerializedCanMessage &msg)
 {
@@ -121,7 +98,7 @@ void set_motor_status()
         uint16_t regen = 0;
         motor_can_struct = MotorCommands();
 
-        if (has_faulted)
+        if (FaultHandler::has_any_fault())
         {
             current_throttle = 0;
             regen = 0;
@@ -154,19 +131,10 @@ void set_motor_status()
     }
 }
 
-void handle_motor_faults(const SerializedCanMessage &msg)
-{
-    MotorControllerError status{};
-    status.deserialize(&msg);
-    if (status.has_active_fault())
-    {
-        has_faulted = true;
-        log_fault("Motor controller fault detected!");
-    }
-}
-
 void forward_motor_can_message(const SerializedCanMessage &msg)
 {
+    FaultHandler::check_for_any_faults(msg);
+
     SerializedCanMessage forwarded_msg = msg;
     main_can.write(&forwarded_msg);
 }
@@ -178,12 +146,10 @@ void app_main()
 
     motor_control_thread.start(set_motor_status);
 
-    main_can.register_callback(BpsError::get_message_ID(), handle_bpsfault_messages);
     main_can.register_callback(DashboardCommands::get_message_ID(), handle_dashboard_commands);
     main_can.register_callback(PedalStatus::get_message_ID(), handle_pedal_status);
-    main_can.register_callback(Contactor12Error::get_message_ID(), handle_contactor_fault);
     motor_can.register_always_callback(forward_motor_can_message);
-    motor_can.register_callback(MotorControllerError::get_message_ID(), handle_motor_faults);
+    main_can.register_always_callback(FaultHandler::check_for_any_faults);
 
     log_info("Motor Board initialized");
     Clock::sleep_forever();

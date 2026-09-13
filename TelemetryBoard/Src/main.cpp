@@ -23,6 +23,7 @@
 #include "Timeout.h"
 #include "lock.h"
 #include "UartCobs.h"
+#include "FaultHandler.h"
 
 
 #define LOG_LEVEL INFO_LVL
@@ -62,6 +63,7 @@ void radio_send(const SerializedCanMessage &msg)
 
 void handle_all_messages(const SerializedCanMessage &msg) {
     // 1. send message over radio
+    FaultHandler::check_for_any_faults(msg);
     radio_send(msg);
     // 2. send message over LTE
 
