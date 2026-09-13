@@ -20,7 +20,7 @@ VN200::VN200(Pin tx, Pin rx, uint32_t baud)
 }
 
 // Calculates the 16-bit CRC checksum for the given byte sequence .
-VN200:: uint16_t compute_crc16 ( const uint8_t data [], const uint16_t length){
+uint16_t VN200:: compute_crc16 ( const uint8_t data [], const uint16_t length){
     unsigned int i;
     unsigned short crc = 0;
     for(i=0; i<length; i++){
@@ -33,11 +33,11 @@ VN200:: uint16_t compute_crc16 ( const uint8_t data [], const uint16_t length){
     return crc;
 }
 
-VN200:: const uint32_t get_crc_error_count(){
+const uint32_t VN200::get_crc_error_count(){
     return crc_error;
 }
 
-bool VN200:: poll(){
+bool VN200::poll(){
      //read bytes need to define if want to be blocking or passive checking
     uint8_t byte;
     int result = serial.read(&byte, 1, 10);
