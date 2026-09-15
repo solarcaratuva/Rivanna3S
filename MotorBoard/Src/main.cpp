@@ -133,7 +133,7 @@ void set_motor_status()
 
 void forward_motor_can_message(const SerializedCanMessage &msg)
 {
-    FaultHandler::check_for_any_faults(msg);
+    FaultHandler::check_for_any_faults(msg); //can't see the fowarding messages in the maincan callback
 
     SerializedCanMessage forwarded_msg = msg;
     main_can.write(&forwarded_msg);
