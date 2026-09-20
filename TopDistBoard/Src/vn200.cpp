@@ -4,11 +4,52 @@
 #include "Clock.h"
 #include "string.h"
 
+/* ---- Binary packet parser constants ----------------------------------------
+ *
+ * Packet layout (from VN-200 binary output protocol):
+ *   idx 0      0xFA sync byte
+ *   idx 1      group mask byte (0x0B = Common + Time + GNSS)
+ *   idx 2-3    Common field mask, little-endian (0x11EA)
+ *   idx 4-5    Time field mask,   little-endian (0x0200)
+ *   idx 6-7    GNSS field mask,   little-endian (0x0018)
+ *   idx 8-92   payload (85 bytes)
+ *   idx 93-94  CRC16 (little-endian)
+ *
+ * Payload field map (ascending bit order, offsets relative to payload start):
+ *   ip 0-7     TimeGps      (uint64)
+ *   ip 8-19    Ypr          (3 floats)
+ *   ip 20-31   AngularRate  (3 floats)
+ *   ip 32-55   PosLla       (3 doubles: lat, lon, alt)
+ *   ip 56-67   VelNed       (3 floats)
+ *   ip 68-79   Accel        (3 floats)
+ *   ip 80-81   InsStatus    (uint16)
+ *   ip 82      TimeStatus   (uint8)
+ *   ip 83      NumSats      (uint8)
+ *   ip 84      GnssFix      (uint8)
+ *
+ * Dropped from GNSS group (mask 0x0018 instead of full 0x0618):
+ *   PosU  (GNSS bit 9, 12 B, 3 floats) -> would occupy ip 85-96, rx_buffer idx 93-104
+ *   VelU  (GNSS bit 10, 4 B,  1 float) -> would occupy ip 97-100, rx_buffer idx 105-108
+ *   CRC would then move to idx 109-110, packet length -> 111
+ *
+ * To re-enable: change GNSS mask 0x0018 -> 0x0618 in init(), update the three
+ * constants below, AND raise the baud rate ($VNWRG,5,921600 in init() plus the
+ * constructor baud argument in main.cpp) since 111 B @ 100 Hz is ~96% of
+ * 115200 (unsafe) vs ~42% at 921600. rx_buffer is already sized for 111 so
+ * re-enabling requires no memory changes.
+ --------------------------------------------------------------------------- */
+#define HEADER_END   8    // sync + groups + 3 field masks
+#define PAYLOAD_END  93   // HEADER_END + 85 payload bytes
+#define PACKET_LEN   95   // HEADER_END + payload (85) + CRC (2)
+
 
 VN200::VN200(Pin tx, Pin rx, uint32_t baud)
     : serial(tx, rx, baud)
 {
     crc_error = 0;
+    header_error = 0;
+    parser_state = WAIT_SYNC;
+    rx_index = 0;
 
     //initialize memory to 0
     memset(&ang_rate, 0, sizeof(ang_rate));
@@ -52,6 +93,9 @@ bool VN200::poll(){
         //otherwise
         return false;
     }
+}
+void VN200::handle_byte(uint8_t byte){
+    
 }
 
 bool VN200::init()
