@@ -74,7 +74,7 @@ void run_precharge()
 
     while (true)
     {
-        const bool has_other_fault = FaultHandler::has_any_fault();
+        const bool has_other_fault = FaultHandler::has_bps_fault() || FaultHandler::has_motor_controller_fault();
         // run the precharge finite state machines
         motor_precharge.run(pack_voltage, has_other_fault);
         mppt_precharge.run(pack_voltage, has_other_fault);
