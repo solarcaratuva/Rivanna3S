@@ -51,13 +51,13 @@ public:
     const VN200Velocity& get_latest_sample_velocity();
     const VN200Status& get_latest_sample_status();
     const uint32_t get_crc_error_count();
-    const uint32_t get_header_error_count();
+    const uint32_t get_header_error_count();    
+    bool poll();
 
 private:
-    bool poll();
     bool send_ascii_command(const char *cmd);
-    void handle_byte(uint8_t byte);
     void decode_payload(const uint8_t *payload);
+    bool validate_packet(const uint8_t *packet);
     uint16_t compute_crc16(const uint8_t *data, uint16_t length);
     UART serial;
     uint32_t crc_error;
@@ -71,8 +71,9 @@ private:
     // ---- Binary packet parser state ----
     enum ParserState { WAIT_SYNC, READ_HEADER, READ_PAYLOAD, READ_CRC };
     ParserState parser_state;
-    uint8_t  rx_buffer[111];   // sized for if PosU+VelU are reenabled = 111 B packet)
+    uint8_t  rx_buffer[111];   // one full packet (see PACKET_LEN in vn200.cpp)
     uint16_t rx_index;         // running offset into rx_buffer
+    uint8_t sequence;
 };
 
 
