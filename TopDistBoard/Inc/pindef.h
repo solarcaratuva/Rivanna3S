@@ -11,6 +11,8 @@
 #define LOG_TX PC_12
 #define LOG_RX PD_2
 
+#define VN200_UART_TX NC
+#define VN200_UART_RX NC
 
 // #define LEFT_TURN_EN NC
 // #define RIGHT_TURN_EN NC
