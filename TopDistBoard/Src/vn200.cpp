@@ -140,7 +140,39 @@ bool VN200::validate_packet(const uint8_t *packet)
     //    Caller: crc_error++.
 
     // 5. True only if every check passed.
-    return false; // TODO
+    if (packet[0] != 0xFA)
+    {
+        header_error++;
+        return false;
+    }
+    if (packet[1] != 0x0B)
+    {
+        header_error++;
+        return false;
+    }
+
+    if ((packet[2] | (packet[3] << 8)) != 0x11EA)
+    {
+        header_error++;
+        return false;
+    }
+    if ((packet[4] | (packet[5] << 8)) != 0x0200)
+    {
+        header_error++;
+        return false;
+    }
+    if ((packet[6] | (packet[7] << 8)) != 0x0618)
+    {
+        header_error++;
+        return false;
+    }
+    if (compute_crc16(packet + 1, PACKET_LEN - 1) != 0)
+    {
+        crc_error++;
+        return false;
+    }
+
+    return true; // TODO
 }
 
 /*
