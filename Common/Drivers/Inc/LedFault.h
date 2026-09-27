@@ -11,7 +11,16 @@ enum LedFault_Faults {
     // TODO: ummm... add the actual errors
 };
 
-void LedFault_fault_signal_blink(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t pattern);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+void LedFault_fault_signal_blink(2
+    GPIO_TypeDef *GPIOx,
+    uint16_t GPIO_Pin,
+    uint8_t pattern
+);
 
+#ifdef __cplusplus
+}
 #endif
