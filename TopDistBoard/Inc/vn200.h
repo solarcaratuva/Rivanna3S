@@ -23,6 +23,7 @@ struct VN200Acceleration {
 struct VN200Position {
     double latitude;    // degrees
     double longitude;   // degrees
+    uint8_t sequence;
 };
 
 struct VN200Velocity {
@@ -31,6 +32,7 @@ struct VN200Velocity {
     float vel_d;        // m/s
     uint8_t num_sats;
     uint8_t gnss_fix;
+    uint8_t sequence;
 };
 
 struct VN200Status {

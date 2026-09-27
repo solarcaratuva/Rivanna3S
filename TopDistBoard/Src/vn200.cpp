@@ -210,6 +210,40 @@ void VN200::decode_payload(const uint8_t *payload)
     // Stamp every struct decoded from this packet with the same `sequence`
     // value, so consumers can tell which CAN messages came from one sample.
     // Increment once per accepted packet and let it wrap.
+
+    memcpy(&ang_rate.gyro_x, payload + 20, sizeof(float));
+    memcpy(&ang_rate.gyro_y, payload + 24, sizeof(float));
+    memcpy(&ang_rate.gyro_z, payload + 28, sizeof(float));
+
+    memcpy(&pos.latitude, payload + 32, sizeof(double));
+    memcpy(&pos.longitude, payload + 40, sizeof(double));
+
+    // Read in alt as double, cast to float
+    double altitude;
+    memcpy(&altitude, payload + 48, sizeof(double));
+    status.altitude = static_cast<float>(altitude);
+
+    memcpy(&vel.vel_n, payload + 56, sizeof(float));
+    memcpy(&vel.vel_e, payload + 60, sizeof(float));
+    memcpy(&vel.vel_d, payload + 64, sizeof(float));
+
+    memcpy(&accel.accel_x, payload + 68, sizeof(float));
+    memcpy(&accel.accel_y, payload + 72, sizeof(float));
+    memcpy(&accel.accel_z, payload + 76, sizeof(float));
+
+    memcpy(&status.ins_status, payload + 80, sizeof(uint16_t));
+
+    memcpy(&status.time_status, payload + 82, sizeof(uint8_t));
+
+    memcpy(&vel.num_sats, payload + 83, sizeof(uint8_t));
+    memcpy(&vel.gnss_fix, payload + 84, sizeof(uint8_t));
+
+    ang_rate.sequence = sequence;
+    accel.sequence = sequence;
+    status.sequence = sequence;
+    pos.sequence = sequence; 
+    vel.sequence = sequence;
+    sequence++;
 }
 
 // Calculates the 16-bit CRC checksum for the given byte sequence .
