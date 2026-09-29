@@ -31,6 +31,7 @@
 #include "log.h"
 #include "pindef.h"
 #include "thread.h"
+#include "vn200.h"
 
 DigitalOut left_turn_signal(LEFT_TURN_EN);
 DigitalOut right_turn_signal(RIGHT_TURN_EN);
@@ -52,6 +53,11 @@ CanInterface main_can(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
 
 Thread signal_thread;
 Thread fault_thread;
+Thread vn200_poll;
+
+
+
+VN200 vn200(VN200_UART_TX, VN200_UART_RX, 921600);
 
 void handle_dashboard_commands(const SerializedCanMessage &msg)
 {
@@ -155,6 +161,17 @@ void bms_strobe_handler() {
     }
 }
 
+void vn200_poll_handler() {
+    Clock vn200_poll_clock;
+
+    while (true){
+        if (vn200.poll()){
+            log_info("Acceleration: %f", vn200.get_latest_sample_acceleration().accel_x);
+        }
+        vn200_poll_clock.sleep_since(10);
+    }
+}
+
 void app_main()
 {
     log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
@@ -162,6 +179,7 @@ void app_main()
 
     signal_thread.start(signal_flash_handler);
     fault_thread.start(bms_strobe_handler);
+    vn200_poll.start(vn200_poll_handler);
 
     main_can.register_callback(DashboardCommands::get_message_ID(), handle_dashboard_commands);
     main_can.register_callback(PedalStatus::get_message_ID(), handle_pedal_status);
