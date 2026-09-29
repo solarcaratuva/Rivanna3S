@@ -295,4 +295,19 @@ uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_cl
     uint32_t time_quanta = 1 + hfdcan->Init.NominalTimeSeg1 + hfdcan->Init.NominalTimeSeg2;
     return peripheral_clock / (baudrate * time_quanta);
 }
-    
+
+// FIFO0 notifications are routed to interrupt line 0 by CAN.
+void FDCAN1_IT0_IRQHandler(void)
+{
+    HAL_FDCAN_IRQHandler(&hfdcan1);
+}
+
+void FDCAN2_IT0_IRQHandler(void)
+{
+    HAL_FDCAN_IRQHandler(&hfdcan2);
+}
+
+void FDCAN3_IT0_IRQHandler(void)
+{
+    HAL_FDCAN_IRQHandler(&hfdcan3);
+}

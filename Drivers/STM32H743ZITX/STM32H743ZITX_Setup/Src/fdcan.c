@@ -132,3 +132,9 @@ void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
+
+// FIFO0 notifications are routed to interrupt line 0 by CAN.
+void FDCAN1_IT0_IRQHandler(void)
+{
+    HAL_FDCAN_IRQHandler(&hfdcan1);
+}

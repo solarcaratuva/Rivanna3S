@@ -5,6 +5,7 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "lock.h"
+#include "task.h"
 #include "log.h"
 
 /**
@@ -146,7 +147,7 @@ public:
     /**
      * @brief Read a raw CAN message from the receive FIFO
      * 
-     * Polls the FDCAN RX FIFO0 for incoming messages. This method will block
+     * Waits for an FDCAN RX FIFO0 interrupt when empty. This method will block
      * until a message is available.
      * 
      * @param[out] msg Pointer to SerializedCanMessage to populate with received data
@@ -170,19 +171,23 @@ public:
      *         - 0: Message successfully received
      *         - 1: CAN peripheral not initialized
      *         - 2: HAL reception error
-     *         - 3: No message available
+     *         - 3: No message available or another reader owns reception
      *
      * @note This method is thread-safe and NON-BLOCKING.
      */
     int try_read(SerializedCanMessage* msg);
-    TaskHandle_t rxTask = nullptr; /**< RX direct to task handle. */
+    // HAL callback routing; notify_rx_from_isr() must only be called in an ISR.
+    static CAN* find_from_handle(FDCAN_HandleTypeDef* handle);
+    void notify_rx_from_isr();
 
 private:
-    FDCAN_HandleTypeDef* hfdcan;        ///< Handle to the STM32 HAL FDCAN peripheral
+    TaskHandle_t rxTask = nullptr;       ///< Accessed with RX interrupts masked in task context
+    Lock rx_lock;                       ///< Serializes read() and try_read()
+    FDCAN_HandleTypeDef* hfdcan = nullptr;        ///< Handle to the STM32 HAL FDCAN peripheral
     Lock                 instance_lock;  ///< Mutex for thread-safe access
     FDCAN_TxHeaderTypeDef txHeader;     ///< Transmit header (reused for efficiency)
     FDCAN_RxHeaderTypeDef rxHeader;     ///< Receive header (reused for efficiency)
-    bool initialized;                    ///< Initialization status flag
+    bool initialized = false;                    ///< Initialization status flag
 
     FDCAN_Peripheral* fdcan_periph;     ///< Pointer to the claimed FDCAN peripheral descriptor
 
