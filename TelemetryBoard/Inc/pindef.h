@@ -31,8 +31,38 @@
 #define DEBUG_LED_2     PB_9
 #define BRAKE_PRESSURE  PC_4
 
+#elif defined(TARGET_STM32H743ZITX)
+
+#define DEBUG_LED_1     NC
+#define RADIO_DTR       NC
+#define RADIO_TX        NC
+#define RADIO_RX        NC
+#define DEBUG_BTN       NC
+#define SD_SELECT       NC
+#define SPI2_SCK        NC
+#define SPI2_MISO       NC
+#define SPI2_MOSI       NC
+#define EEPROM_SELECT   NC
+#define EEPROM_WRITE    NC
+#define EEPROM_HOLD     NC
+#define IMU_SDA         NC
+#define IMU_SCL         NC
+#define CAN_STBY        NC
+#define CAN_RX          NC
+#define CAN_TX          NC
+#define LOG_TX          PD_8 // ST-LINK virtual COM port (USART3)
+#define LOG_RX          PD_9
+#define GPS_TX          NC
+#define GPS_RX          NC
+#define SWO             NC
+#define LTE_DTR         NC
+#define LTE_TX          NC
+#define LTE_RX          NC
+#define DEBUG_LED_2     NC
+#define BRAKE_PRESSURE  NC
+
 #else
-#error "TelemetryBoard has no pin definitions for this target; expected TARGET_STM32G474RET6."
+#error "TelemetryBoard has no pin definitions for this target; expected TARGET_STM32G474RET6 or TARGET_STM32H743ZITX."
 #endif
 
 #endif /* TELEMETRYBOARD_PINDEF_H */
