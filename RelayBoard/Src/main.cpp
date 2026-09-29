@@ -129,6 +129,44 @@ void monitor_auxbattery(){
     }
 }
 
+void send_bps_test_fault()
+{
+Clock::sleep_for(2000);
+Clock test_clock;
+
+while (true) {
+    BpsError fault{};
+    fault.high_voltage_isolation_fault = 1;
+    main_can.write(&fault);
+    test_clock.sleep_since(1000);
+}
+}
+
+void send_contactor_test_fault()
+{
+Clock::sleep_for(2000);
+Clock test_clock;
+
+while (true) {
+    Contactor12Error fault{};
+    fault.cont12_went_low = 1;
+    main_can.write(&fault);
+    test_clock.sleep_since(1000);
+}
+}
+
+void send_motor_controller_test_fault()
+{
+Clock::sleep_for(2000);
+Clock test_clock;
+
+while (true) {
+    MotorControllerError fault{};
+    fault.overcurrent_err = 1;
+    main_can.write(&fault);
+    test_clock.sleep_since(1000);
+}
+}
 
 void app_main()
 {
@@ -137,6 +175,14 @@ void app_main()
 
     main_can.register_callback(BpsStatus::get_message_ID(), handle_bps_status);
     main_can.register_always_callback(FaultHandler::check_for_any_faults);
+
+static Thread fault_test_thread;
+
+// Enable exactly one per test:
+fault_test_thread.start(send_bps_test_fault);
+// fault_test_thread.start(send_contactor_test_fault);
+// fault_test_thread.start(send_motor_controller_test_fault);
+
     precharge_thread.start(run_precharge);
     auxbattery_thread.start(monitor_auxbattery);
 

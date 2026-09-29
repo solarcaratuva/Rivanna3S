@@ -10,6 +10,7 @@
 Drivers/code_generation/peripheralmap.cpp
 Drivers/code_generation/pinmap.h
 **/__pycache__
+.venv/
 Drivers/code_generation/input
 build
 build*
