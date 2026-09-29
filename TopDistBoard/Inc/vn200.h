@@ -70,11 +70,11 @@ private:
     VN200Velocity vel;
     VN200Status status;
 
-    // ---- Binary packet parser state ----
-    enum ParserState { WAIT_SYNC, READ_HEADER, READ_PAYLOAD, READ_CRC };
-    ParserState parser_state;
-    uint8_t  rx_buffer[111];   // one full packet (see PACKET_LEN in vn200.cpp)
-    uint16_t rx_index;         // running offset into rx_buffer
+    // ---- Binary packet state ----
+    // One full packet. poll() hunts VN200_SYNC_BYTE, bulk-reads the remainder
+    // into here, and validates; a frame that fails is dropped and the next call
+    // hunts the wire again, so nothing tracks a resync position across calls.
+    uint8_t  rx_buffer[111];   // one full packet (PACKET_LEN in vn200.cpp)
     uint8_t sequence;
 };
 

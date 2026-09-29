@@ -39,17 +39,21 @@
  * BIG-endian at idx 109-110, unlike the field masks above, which are little-
  * endian.
  --------------------------------------------------------------------------- */
-#define HEADER_END 8    // sync + groups + 3 field masks
-#define PAYLOAD_END 109 // HEADER_END + 101 payload bytes
-#define PACKET_LEN 111  // HEADER_END + payload (101) + CRC (2)
+#define VN200_SYNC_BYTE 0xFA // packet start marker
+#define HEADER_END 8         // sync + groups + 3 field masks
+#define PAYLOAD_END 109      // HEADER_END + 101 payload bytes
+#define PACKET_LEN 111       // HEADER_END + payload (101) + CRC (2)
+
+// Output is configured for 100 Hz (see $VNWRG,75 divisor in init()), so a frame
+// period is 10 ms. Both timeouts are sized to ride out one full inter-frame gap.
+#define SYNC_TIMEOUT_MS 20
+#define FRAME_TIMEOUT_MS 20
 
 VN200::VN200(Pin tx, Pin rx, uint32_t baud)
     : serial(tx, rx, baud)
 {
     crc_error = 0;
     header_error = 0;
-    parser_state = WAIT_SYNC;
-    rx_index = 0;
     sequence = 0;
 
     // initialize memory to 0
@@ -94,22 +98,45 @@ bool VN200::init()
 
 bool VN200::poll()
 {
-    // read bytes need to define if want to be blocking or passive checking
     uint8_t byte;
-    int result = serial.read(&byte, 1, 10);
-
-    // blocking for 10 ms
-    if (result == 0)
+    bool found = false;
+    while (serial.read(&byte, 1, SYNC_TIMEOUT_MS) == 0)
     {
-        // byte received do something with it
-
-        return true;
+        if (byte != VN200_SYNC_BYTE)
+        {
+            continue;
+        }
+        rx_buffer[0] = byte;
+        found = true;
+        break;
     }
-    else
+    if (!found)
     {
-        // otherwise
+        return false; // link idle, nothing buffered
+    }
+
+    // Bulk-read the rest of the frame. The bytes already sitting in the UART
+    // shift register are consumed either way, so a failure here means the frame
+    // is incomplete and there is nothing left to resync against.
+    if (serial.read(rx_buffer + 1, PACKET_LEN - 1, FRAME_TIMEOUT_MS) != 0)
+    {
         return false;
     }
+
+    // Group byte and field masks, then the CRC. validate_packet owns the error
+    // counters, so a bad frame is already counted by the time it returns false.
+    if (!validate_packet(rx_buffer))
+    {
+        // Either a header mismatch or a bad CRC, which in practice means we
+        // latched onto a VN200_SYNC_BYTE inside a payload. Drop the frame and
+        // hunt the wire again on the next call: the next sync byte on the
+        // stream is the start of the following frame, so this costs at most one
+        // sample rather than losing sync.
+        return false;
+    }
+
+    decode_payload(rx_buffer + HEADER_END);
+    return true;
 }
 /*
  * Confirms that a candidate buffer really is a VN-200 binary packet.
@@ -117,8 +144,9 @@ bool VN200::poll()
  * Takes the WHOLE packet (rx_buffer), not just the payload: the header bytes
  * live at idx 1-7 and the CRC covers idx 1-110, both outside the payload.
  *
- * Returns false without side effects; poll() owns the error counters and the
- * decision to resync.
+ * Returns false on the first failed check. This function owns the error
+ * counters -- header_error for a bad group byte or field mask, crc_error for
+ * a bad CRC -- but leaves the decision to resync to poll().
  */
 bool VN200::validate_packet(const uint8_t *packet)
 {
@@ -140,7 +168,7 @@ bool VN200::validate_packet(const uint8_t *packet)
     //    Caller: crc_error++.
 
     // 5. True only if every check passed.
-    if (packet[0] != 0xFA)
+    if (packet[0] != VN200_SYNC_BYTE)
     {
         header_error++;
         return false;
@@ -172,7 +200,7 @@ bool VN200::validate_packet(const uint8_t *packet)
         return false;
     }
 
-    return true; // TODO
+    return true;
 }
 
 /*
@@ -317,4 +345,9 @@ const VN200Status &VN200::get_latest_sample_status()
 const uint32_t VN200::get_crc_error_count()
 {
     return crc_error;
+}
+
+const uint32_t VN200::get_header_error_count()
+{
+    return header_error;
 }
