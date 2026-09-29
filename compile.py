@@ -35,9 +35,15 @@ arg_parser.add_argument("-s", "--silent", action="store_true", help="Suppress ou
 arg_parser.add_argument("--install", action="store_true", help="Create the Docker container for the first time.")
 args = arg_parser.parse_args()
 
-testing_mode = "testing" in args.args
-args.args = [arg for arg in args.args if arg != "testing"]
-mcu = TESTING_MCU if testing_mode else DEFAULT_MCU
+
+if "hil" in args.args:
+    mcu = HIL_MCU
+elif "testing" in args.args:
+    mcu = TESTING_MCU
+else:
+    mcu = DEFAULT_MCU
+
+args.args = [arg for arg in args.args if arg not in ["hil", "testing"]]
 build_dir = "build"
 
 if args.install:
