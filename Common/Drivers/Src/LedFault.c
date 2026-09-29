@@ -1,7 +1,7 @@
 //
 // Created by Charlotte on 9/29/26.
 //
-#include "LedFault.h"
+#include "../Inc/LedFault.h"
 void LedFault_fault_signal_blink(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t pattern){
     const uint8_t slow_blinks = pattern & 0x0FU;
     const uint8_t fast_blinks = (pattern >> 4U) & 0x0FU;
@@ -19,5 +19,11 @@ void LedFault_fault_signal_blink(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t
         HAL_Delay(FAST_BLINK_TIME);
         HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
         HAL_Delay(FAST_BLINK_TIME);
+    }
+}
+
+void vApplicationMallocFailedHook( void ) {
+    for (;;) {
+        LedFault_fault_signal_blink( GPIOC, 1, SegmentationFault );
     }
 }

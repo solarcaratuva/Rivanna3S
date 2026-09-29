@@ -8,6 +8,7 @@
 // Bits 4 through 7 will indicate how many blinks the "fast" LED should do
 enum LedFault_Faults {
     RTOSAssert     = 0b00010001, // blink slow led once then fast led once
+    SegmentationFault = 0b00010000, // only fast blinking
     // TODO: ummm... add the actual errors
 };
 
