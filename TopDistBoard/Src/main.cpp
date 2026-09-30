@@ -31,6 +31,7 @@
 #include "log.h"
 #include "pindef.h"
 #include "thread.h"
+#include "FaultHandler.h"
 
 DigitalOut left_turn_signal(LEFT_TURN_EN);
 DigitalOut right_turn_signal(RIGHT_TURN_EN);
@@ -40,10 +41,8 @@ DigitalOut brake_light(BRAKE_EN);
 bool flashLeftTurnSignal = false;
 bool flashRightTurnSignal = false;
 bool flashHazards = false;
-bool has_faulted = false;
 bool brake_from_pedal = false;
 bool brake_from_motor = false;
-bool bms_fault_active = false;
 
 #define SIGNAL_FLASH_PERIOD 500
 #define SIGNAL_FAULT_PERIOD 250
@@ -81,50 +80,13 @@ void handle_motor_commands(const SerializedCanMessage &msg)
     brake_light.write(brake_from_pedal || brake_from_motor);
 }
 
-void handle_bpsfault_messages(const SerializedCanMessage &msg)
-{
-    BpsError status{};
-    status.deserialize(&msg);
-    if (status.has_active_fault())
-    {
-        has_faulted = true;
-        bms_fault_active = true;
-        log_fault("BPS fault detected!");
-    }
-}
-
-void handle_contactor_fault(const SerializedCanMessage &msg)
-{
-    Contactor12Error status{};
-    status.deserialize(&msg);
-
-    if (status.has_active_fault())
-    {
-        has_faulted = true;
-        bms_fault_active = true;
-        log_fault("Contactor fault detected!");
-    }
-}
-
-void handle_motor_controller_fault(const SerializedCanMessage &msg)
-{
-    MotorControllerError status{};
-    status.deserialize(&msg);
-
-    if (status.has_active_fault())
-    {
-        has_faulted = true;
-        log_fault("Motor controller fault detected!");
-    }
-}
-
 void signal_flash_handler()
 {
     Clock signal_flash_clock;
 
     while (true) {
 
-        if (flashHazards || has_faulted) {
+        if (flashHazards || FaultHandler::has_any_fault()) {
             left_turn_signal.write(!left_turn_signal.read());
             right_turn_signal.write(left_turn_signal.read());
         } else if (flashLeftTurnSignal) {
@@ -146,7 +108,7 @@ void bms_strobe_handler() {
     Clock signal_fault_clock;
 
     while (true){
-        if (bms_fault_active) {
+        if (FaultHandler::has_bps_fault() || FaultHandler::has_contactor_fault()) {
             bps_strobe.write(!bps_strobe.read());
         } else {
             bps_strobe.write(PIN_OFF);
@@ -166,10 +128,7 @@ void app_main()
     main_can.register_callback(DashboardCommands::get_message_ID(), handle_dashboard_commands);
     main_can.register_callback(PedalStatus::get_message_ID(), handle_pedal_status);
     main_can.register_callback(MotorCommands::get_message_ID(), handle_motor_commands);
-    main_can.register_callback(BpsError::get_message_ID(), handle_bpsfault_messages);
-    main_can.register_callback(Contactor12Error::get_message_ID(), handle_contactor_fault);
-    main_can.register_callback(MotorControllerError::get_message_ID(), handle_motor_controller_fault);
-
+    main_can.register_always_callback(FaultHandler::check_for_any_faults);
     log_info("Top Dist Board initialized");
     Clock::sleep_forever();
 }
