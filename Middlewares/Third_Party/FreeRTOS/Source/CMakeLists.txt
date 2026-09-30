@@ -15,6 +15,7 @@ add_library(freertos_kernel STATIC
     timers.c
     CMSIS_RTOS_V2/cmsis_os2.c
     portable/MemMang/heap_4.c
+        ../../../../Common/Drivers/Src/LedFault.c
 )
 
 # --- MCU port selection ---
