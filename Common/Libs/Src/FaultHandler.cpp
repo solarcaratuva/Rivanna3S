@@ -21,7 +21,7 @@ namespace
         std::size_t expected_length,
         std::atomic<bool> *specific_flag = nullptr)
     {
-        if (msg.len != expected_length)
+        if (msg.len < expected_length)
         {
             log_warn("Unexpected length for CAN ID 0x%X: got %u, expected %zu",
                      msg.id, msg.len, expected_length);
