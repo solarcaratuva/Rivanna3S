@@ -1,5 +1,7 @@
-#ifndef PINDEF_H
-#define PINDEF_H
+#ifndef MOTORBOARD_PINDEF_H
+#define MOTORBOARD_PINDEF_H
+
+#ifdef TARGET_STM32G474RET6
 
 #define USB_TX          PC_12
 #define USB_RX          PD_2
@@ -29,33 +31,38 @@
 #define MOTOR_CAN_TX    MTR_CAN_TX
 #define MOTOR_CAN_STANDBY NC
 
+#elif defined(TARGET_STM32H743ZITX)
 
-// #define USB_TX          NC
-// #define USB_RX          NC
+#define USB_TX          NC
+#define USB_RX          NC
 
-// #define MAIN_CAN_STBY   NC
-// #define MAIN_CAN_RX     NC
-// #define MAIN_CAN_TX     NC
+#define MAIN_CAN_STBY   NC
+#define MAIN_CAN_RX     NC
+#define MAIN_CAN_TX     NC
 
-// #define DEBUG_IN        NC
-// #define DEBUG_OUT       NC
+#define DEBUG_IN        NC
+#define DEBUG_OUT       NC
 
-// #define ID              NC
+#define ID              NC
 
-// #define MTR_SDA         NC
-// #define MTR_SCL         NC
-// #define MTR_CAN_RX      NC
-// #define MTR_CAN_TX      NC
+#define MTR_SDA         NC
+#define MTR_SCL         NC
+#define MTR_CAN_RX      NC
+#define MTR_CAN_TX      NC
 
-// #define LOG_TX          NC
-// #define LOG_RX          NC
+#define LOG_TX          PD_8 // ST-LINK virtual COM port (USART3)
+#define LOG_RX          PD_9
 
-// #define CAN_STANDBY     NC
-// #define CAN_RX          NC
-// #define CAN_TX          NC
+#define CAN_STANDBY     NC
+#define CAN_RX          NC
+#define CAN_TX          NC
 
-// #define MOTOR_CAN_RX    NC
-// #define MOTOR_CAN_TX    NC
-// #define MOTOR_CAN_STANDBY NC
+#define MOTOR_CAN_RX    NC
+#define MOTOR_CAN_TX    NC
+#define MOTOR_CAN_STANDBY NC
 
+#else
+#error "MotorBoard has no pin definitions for this target; expected TARGET_STM32G474RET6 or TARGET_STM32H743ZITX."
 #endif
+
+#endif /* MOTORBOARD_PINDEF_H */
