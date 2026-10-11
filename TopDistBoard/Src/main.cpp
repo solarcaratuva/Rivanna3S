@@ -54,7 +54,7 @@ CanInterface main_can(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
 Thread signal_thread;
 Thread fault_thread;
 Thread vn200_poll;
-
+Thread vn200_can_write;
 
 
 VN200 vn200(VN200_UART_TX, VN200_UART_RX, 921600);
@@ -164,15 +164,53 @@ void bms_strobe_handler() {
 void vn200_poll_handler() {
     Clock vn200_poll_clock;
 
-    vn200.init();
-
     while (true){
         if (vn200.poll()){
-            // log_info("Acceleration: %f", vn200.get_latest_sample_acceleration().accel_x);
-
-            
+            log_info("Acceleration: %f", vn200.get_latest_sample_acceleration().accel_x);
         }
         vn200_poll_clock.sleep_since(10);
+    }
+}
+
+void vn200_can_handler() {
+    // TODO: Encode all the sample values to CAN structs
+
+    Clock vn200_can_clock;
+
+    const auto ang_rate_sample = vn200.get_latest_sample_angular_rate();
+    const auto accel_sample = vn200.get_latest_sample_acceleration();
+    const auto pos_sample = vn200.get_latest_sample_position();
+    const auto status_sample = vn200.get_latest_sample_status();
+
+    while (true) {
+        VN200AngularRate ang_rate{};
+        ang_rate.gyro_x = ang_rate_sample.gyro_x;
+        ang_rate.gyro_y = ang_rate_sample.gyro_y;
+        ang_rate.gyro_z = ang_rate_sample.gyro_z;
+        ang_rate.sequence = ang_rate_sample.sequence;
+
+        VN200Acceleration accel{};
+        accel.accel_x = accel_sample.accel_x;
+        accel.accel_y = accel_sample.accel_y;
+        accel.accel_z = accel_sample.accel_z;
+        accel.sequence = accel_sample.sequence;
+
+        VN200Position pos{};
+        pos.latitude = pos_sample.latitude;
+        pos.longitude = pos_sample.longitude;
+
+        VN200Status status{};
+        status.altitude = status_sample.altitude;
+        status.ins_status = status_sample.ins_status;
+        status.time_status = status_sample.time_status;
+        status.sequence = status_sample.sequence;
+
+        main_can.write(&ang_rate);
+        main_can.write(&accel);
+        main_can.write(&pos);
+        main_can.write(&status);
+
+        vn200_can_clock.sleep_since(500);
     }
 }
 
@@ -184,6 +222,7 @@ void app_main()
     signal_thread.start(signal_flash_handler);
     fault_thread.start(bms_strobe_handler);
     vn200_poll.start(vn200_poll_handler);
+    vn200_can_write.start(vn200_can_handler);
 
     main_can.register_callback(DashboardCommands::get_message_ID(), handle_dashboard_commands);
     main_can.register_callback(PedalStatus::get_message_ID(), handle_pedal_status);
