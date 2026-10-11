@@ -1,7 +1,7 @@
 #ifndef MOTORBOARD_PINDEF_H
 #define MOTORBOARD_PINDEF_H
 
-#ifdef TARGET_STM32G474RET6
+#ifdef STM32G474xx
 
 #define USB_TX          PC_12
 #define USB_RX          PD_2
@@ -31,7 +31,7 @@
 #define MOTOR_CAN_TX    MTR_CAN_TX
 #define MOTOR_CAN_STANDBY NC
 
-#elif defined(TARGET_STM32H743ZITX)
+#elif defined(STM32H743xx)
 
 #define USB_TX          NC
 #define USB_RX          NC
@@ -62,7 +62,7 @@
 #define MOTOR_CAN_STANDBY NC
 
 #else
-#error "MotorBoard has no pin definitions for this target; expected TARGET_STM32G474RET6 or TARGET_STM32H743ZITX."
+#error "MotorBoard has no pin definitions for this target."
 #endif
 
 #endif /* MOTORBOARD_PINDEF_H */

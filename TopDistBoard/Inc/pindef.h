@@ -1,7 +1,7 @@
 #ifndef TOPDISTBOARD_PINDEF_H
 #define TOPDISTBOARD_PINDEF_H
 
-#ifdef TARGET_STM32G474RET6
+#ifdef STM32G474xx
 
 #define LEFT_TURN_EN PA_1
 #define RIGHT_TURN_EN PA_0
@@ -16,7 +16,7 @@
 #define LOG_TX PC_12
 #define LOG_RX PD_2
 
-#elif defined(TARGET_STM32H743ZITX)
+#elif defined(STM32H743xx)
 
 #define LEFT_TURN_EN NC
 #define RIGHT_TURN_EN NC
@@ -32,7 +32,7 @@
 #define LOG_RX PD_9
 
 #else
-#error "TopDistBoard has no pin definitions for this target; expected TARGET_STM32G474RET6 or TARGET_STM32H743ZITX."
+#error "TopDistBoard has no pin definitions for this target."
 #endif
 
 #endif /* TOPDISTBOARD_PINDEF_H */

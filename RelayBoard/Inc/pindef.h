@@ -1,7 +1,7 @@
 #ifndef RELAYBOARD_PINDEF_H
 #define RELAYBOARD_PINDEF_H
 
-#ifdef TARGET_STM32G474RET6
+#ifdef STM32G474xx
 
 #define LOG_TX             PC_12
 #define LOG_RX             PD_2
@@ -19,7 +19,7 @@
 #define MPPT_PWR_ON        PC_7
 #define PRECHARGE_MPPT_EN  PC_8
 
-#elif defined(TARGET_STM32H743ZITX)
+#elif defined(STM32H743xx)
 
 #define LOG_TX             PD_8 // ST-LINK virtual COM port (USART3)
 #define LOG_RX             PD_9
@@ -38,7 +38,7 @@
 #define PRECHARGE_MPPT_EN  NC
 
 #else
-#error "RelayBoard has no pin definitions for this target; expected TARGET_STM32G474RET6 or TARGET_STM32H743ZITX."
+#error "RelayBoard has no pin definitions for this target."
 #endif
 
 #endif /* RELAYBOARD_PINDEF_H */

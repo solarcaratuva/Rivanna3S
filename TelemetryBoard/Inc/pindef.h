@@ -1,7 +1,7 @@
 #ifndef TELEMETRYBOARD_PINDEF_H
 #define TELEMETRYBOARD_PINDEF_H
 
-#ifdef TARGET_STM32G474RET6
+#ifdef STM32G474xx
 
 #define DEBUG_LED_1     PC_13
 #define RADIO_DTR       PA_1
@@ -31,7 +31,7 @@
 #define DEBUG_LED_2     PB_9
 #define BRAKE_PRESSURE  PC_4
 
-#elif defined(TARGET_STM32H743ZITX)
+#elif defined(STM32H743xx)
 
 #define DEBUG_LED_1     NC
 #define RADIO_DTR       NC
@@ -62,7 +62,7 @@
 #define BRAKE_PRESSURE  NC
 
 #else
-#error "TelemetryBoard has no pin definitions for this target; expected TARGET_STM32G474RET6 or TARGET_STM32H743ZITX."
+#error "TelemetryBoard has no pin definitions for this target."
 #endif
 
 #endif /* TELEMETRYBOARD_PINDEF_H */
