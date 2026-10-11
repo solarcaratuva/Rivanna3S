@@ -63,13 +63,17 @@ jobs:
             exit 0
           fi
 
-          age_hours=$(( ( $(date -u +%s) - $(date -u -d "$last" +%s) ) / 3600 ))
-          if [ "$age_hours" -lt "$COOLDOWN_HOURS" ]; then
+          # Compare in seconds via awk so COOLDOWN_HOURS can be fractional (0.5)
+          elapsed=$(( $(date -u +%s) - $(date -u -d "$last" +%s) ))
+          cooldown=$(awk -v h="$COOLDOWN_HOURS" 'BEGIN { printf "%d", h * 3600 }')
+          elapsed_min=$(( elapsed / 60 ))
+
+          if [ "$elapsed" -lt "$cooldown" ]; then
             echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "Skipped: last review was ${age_hours}h ago (cooldown ${COOLDOWN_HOURS}h). Close/reopen the PR or re-run this workflow to force one." >> "$GITHUB_STEP_SUMMARY"
+            echo "Skipped: last review was ${elapsed_min}m ago (cooldown ${COOLDOWN_HOURS}h). Close/reopen the PR or re-run this workflow to force one." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
-            echo "Last review ${age_hours}h ago, past the ${COOLDOWN_HOURS}h cooldown." >> "$GITHUB_STEP_SUMMARY"
+            echo "Last review ${elapsed_min}m ago, past the ${COOLDOWN_HOURS}h cooldown." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - if: steps.cooldown.outputs.run == 'true'
@@ -81,6 +85,9 @@ jobs:
           # For API billing instead, swap the line above for:
           # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           use_sticky_comment: true
+          # Uncomment to see Claude's full output in the run log when debugging
+          # a failure. Note: this repo is public, so the log is public too.
+          # show_full_output: true
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
