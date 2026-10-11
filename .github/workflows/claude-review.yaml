@@ -1,0 +1,209 @@
+name: Claude Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    # Don't spend a review on docs, CI, or build-script-only changes
+    paths:
+      - "**/*.c"
+      - "**/*.cpp"
+      - "**/*.h"
+      - "**/*.hpp"
+      - "**/*.py"
+
+# A new push supersedes the review in flight, so a burst of three commits
+# costs one review instead of three
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Skip drafts so WIP pushes don't spend usage
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+    env:
+      # Minimum hours between reviews of the same PR. Raise this if reviews are
+      # eating the usage window; set to 0 to review every push.
+      COOLDOWN_HOURS: 0.5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Rate-limit per PR: if we already reviewed this PR within COOLDOWN_HOURS,
+      # skip. `opened`, `reopened`, and `ready_for_review` always get a review.
+      - name: Cooldown check
+        id: cooldown
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event.action }}" != "synchronize" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "First review for this event (${{ github.event.action }})." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          last=$(gh api \
+            "repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments" \
+            --paginate \
+            --jq '[.[] | select(.user.login == "claude[bot]" or .user.login == "github-actions[bot]") | .updated_at] | max // empty')
+
+          if [ -z "$last" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "No previous review found." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          age_hours=$(( ( $(date -u +%s) - $(date -u -d "$last" +%s) ) / 3600 ))
+          if [ "$age_hours" -lt "$COOLDOWN_HOURS" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipped: last review was ${age_hours}h ago (cooldown ${COOLDOWN_HOURS}h). Close/reopen the PR or re-run this workflow to force one." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "Last review ${age_hours}h ago, past the ${COOLDOWN_HOURS}h cooldown." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - if: steps.cooldown.outputs.run == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          # Draws on a Claude Pro/Max subscription, not pay-per-token API billing.
+          # Generate with `claude setup-token` and store as a repo secret.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # For API billing instead, swap the line above for:
+          # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          use_sticky_comment: true
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            You are reviewing a pull request against Rivanna3S, the embedded C++
+            firmware for UVA Solar Car (STM32, HAL + FreeRTOS, several board targets).
+            The PR branch is already checked out.
+
+            THE TEST FOR EVERY FINDING: readability. This is a student team with
+            yearly turnover - the people who maintain this code are new members
+            reading it for the first time, often while debugging a car that is not
+            working. So the only question that matters is whether a new team member
+            can read this code and understand what the hardware is doing. Before you
+            raise anything, ask: does my suggestion make it easier to read, or just
+            different? If it is only different, say nothing. Shorter is not the goal,
+            clever is not the goal, and neither is my own preference.
+
+            THE STANDARD FOR READABLE: the rest of this repository. Consistent code
+            is readable code, because someone who has read one board can read the
+            next one. Before you raise anything, go read the existing code around it -
+            the other files in that board's Src/Inc, the helpers in Common/Libs, a
+            sibling board that already does the same job. If the new code looks like
+            the code already in the repo, it is correct, even if you would personally
+            write it another way. If it does not, that is the finding, and you cite
+            the existing file and line that shows the house style. Never cite an
+            external style guide, a generic best practice, or your own taste. Ignore
+            vendor and generated code as a style reference: Drivers/, Middlewares/,
+            Common/STM_Libs/, Common/Libs/Inc/FreeRTOSConfig.h, and anything with a
+            CubeMX header are not the team's style.
+
+            Both failure modes below hurt readability, which is why they are both
+            findings: slop buries the logic in noise, and overcorrection compresses
+            it until you have to decode it. Aim at the middle - plain, obvious code
+            that matches its neighbors.
+
+            Step 1 - Scope check. Read the PR with `gh pr view` and the diff with
+            `gh pr diff`. If the PR body or title references an issue, read it with
+            `gh issue view <number>`. Judge whether the diff actually solves that
+            issue, and call out anything in the diff that is outside its scope.
+
+            Step 2 - Consistency with the repo. Match the conventions already in use,
+            which you confirm by grepping rather than assuming. Known ones:
+            - Infinite loops are `while (true)`, not `while (1)` and not `for (;;)`.
+            - Follow the indentation, brace placement, spacing, and line-breaking of
+              the file being edited. There is no .clang-format in this repo, so the
+              surrounding file is the only authority - do not reformat a file to a
+              different style, and do not flag existing style as wrong.
+            - Naming, header guards, include order, `Inc/` vs `Src/` placement, and
+              CAN struct and logging patterns should look like their neighbors.
+            - Prefer an existing helper in Common/ over a new local one. Grep before
+              claiming something is or is not already available.
+
+            Step 3 - Slop and unnecessary complexity. Flag, with the simpler version
+            written out:
+            - Comments that restate the code, section-divider comment banners, or
+              docstring blocks on self-evident static helpers.
+            - Defensive code for conditions that cannot happen here: null checks on
+              addresses of statics, re-validating an enum the caller already bounded,
+              error paths for calls that cannot fail on this MCU.
+            - Abstraction nobody asked for: a wrapper, struct, class, or typedef used
+              once, a config flag with one value, a helper called from one place that
+              is shorter inlined.
+            - Code that could be a lookup table, a bit mask, or an existing Common/
+              helper, but was written as a long if/else or switch chain.
+            - Verbose logging, dead code, commented-out code, unused variables.
+            - Formatting or renaming churn unrelated to the issue.
+
+            Step 3b - Readability problems in their own right. These are findings even
+            when the code is neither sloppy nor over-compressed:
+            - A magic number, raw register value, pin, timeout, or CAN id with no name
+              and no comment saying where it came from. Say what it should be called
+              or what the comment should reference.
+            - A name that does not say what the thing is: single letters outside a
+              short loop, abbreviations a new member would have to guess at, a unit
+              left ambiguous where the repo names it (`timeout_ms`, not `timeout`).
+            - A function long enough or nested deep enough that the hardware sequence
+              it performs is no longer visible. Name the split you would make.
+            - A condition whose meaning is not obvious at a glance, where a named
+              boolean or a short comment would make the intent clear.
+            - Non-obvious hardware behavior with no comment: why a delay is that
+              length, why a register is written twice, why an order matters. Missing
+              *why* comments are a finding; redundant *what* comments are the slop
+              above.
+
+            Step 4 - Do not overcorrect. Terse is not automatically better. Do NOT
+            ask for:
+            - Clever one-liners, nested ternaries, chained assignments, or bit tricks
+              in place of a plain readable if/else or loop.
+            - Removal of a comment that explains why something is done, a hardware
+              quirk, a magic register value, a datasheet reference, or a unit.
+            - Removal of a named constant in favor of a literal, or collapsing a
+              clearly named intermediate variable into a longer expression.
+            - Golfing line count. If the shorter version is harder for a new team
+              member to read, the current version is correct.
+            - Compressing code that matches the repo's existing level of verbosity.
+
+            Step 5 - Correctness, briefly. Only report bugs you can state concretely
+            (specific input or state -> wrong behavior). Embedded specifics worth
+            checking: ISR safety and `volatile` on shared state, blocking calls in
+            interrupt or time-critical paths, FreeRTOS task and mutex misuse,
+            fixed-point and integer overflow, unit-scaling errors, buffer sizes,
+            CAN message packing and endianness.
+
+            Rules for your output:
+            - Be terse. No praise, no summary of what the PR does, no restating the
+              diff back to the author.
+            - Report at most 8 findings, most important first. Do not pad with
+              nitpicks to look thorough.
+            - Every finding must name the file and line, say what to do instead, and
+              where it is a style or consistency point, cite the existing file and
+              line in this repo that establishes the convention.
+            - Anything that does not make the code more readable, fix a bug, or bring
+              the diff in line with the existing repo is not a finding. "Reduces line
+              count" is not on that list.
+            - If the PR is clean, say so in one line and stop.
+
+            Post top-level feedback with `gh pr comment`. Use
+            `mcp__github_inline_comment__create_inline_comment` (with
+            `confirmed: true`) for findings tied to a specific line. Only post
+            GitHub comments - do not return the review as a chat message.
+
+          claude_args: |
+            --model sonnet
+            --effort low
+            --max-turns 30
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh issue view:*),Bash(grep:*),Bash(rg:*),Bash(find:*),Bash(ls:*),Bash(cat:*),Bash(sed:*),Read,Glob,Grep"
