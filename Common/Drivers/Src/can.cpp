@@ -75,7 +75,6 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
             break;
         }
     }
-    HAL_NVIC_SetPriority(rx_irq, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
     HAL_NVIC_ClearPendingIRQ(rx_irq);
     if (HAL_FDCAN_ActivateNotification(hfdcan, rx_notifications, 0) != HAL_OK) {
         HAL_FDCAN_Stop(hfdcan);
@@ -145,7 +144,7 @@ int CAN::read(SerializedCanMessage *msg)
 
     // Only one reader may own the FIFO/waiter; writers use a separate lock.
     rx_lock.lock();
-    for (;;) {
+    while (true) {
         taskENTER_CRITICAL();
         if (HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0) != 0) {
             rxTask = nullptr;
