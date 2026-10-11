@@ -1,5 +1,25 @@
-#ifndef PINDEF_H
-#define PINDEF_H
+#ifndef MOTORBOARD_PINDEF_H
+#define MOTORBOARD_PINDEF_H
+
+// Issue #204's pinout comment identifies PC1 as Debug_OUT on every STM board.
+#define DEBUG_OUT PC_1
+#define FAULT_LED_1_PORT GPIOC
+#define FAULT_LED_1_PIN GPIO_PIN_1
+#define FAULT_LED_1_ACTIVE_HIGH 1
+// Active-high development-board defaults; verify the fitted LED wiring.
+#if defined(STM32G474xx)
+#define FAULT_LED_2_PORT GPIOA
+#define FAULT_LED_2_PIN GPIO_PIN_5
+#elif defined(STM32H743xx)
+#define FAULT_LED_2_PORT GPIOB
+#define FAULT_LED_2_PIN GPIO_PIN_0
+#elif defined(STM32U5A9xx)
+#define FAULT_LED_2_PORT GPIOE
+#define FAULT_LED_2_PIN GPIO_PIN_0
+#endif
+#define FAULT_LED_2_ACTIVE_HIGH 1
+
+#ifdef STM32G474xx
 
 #define USB_TX          PC_12
 #define USB_RX          PD_2
@@ -9,25 +29,6 @@
 #define MAIN_CAN_TX     PB_6
 
 #define DEBUG_IN        PC_13
-#define DEBUG_OUT       PC_1
-
-// PC1 is confirmed by issue #204's board pinout comment. PC13 is Debug_IN.
-#define FAULT_LED_1_PORT GPIOC
-#define FAULT_LED_1_PIN GPIO_PIN_1
-#define FAULT_LED_1_ACTIVE_HIGH 1
-// Best-guess active-high LED defaults from the matching development boards.
-// Verify or change these outputs for the fitted car-board hardware.
-#if defined(STM32H743xx)
-#define FAULT_LED_2_PORT GPIOB
-#define FAULT_LED_2_PIN GPIO_PIN_0
-#elif defined(STM32U5A9xx)
-#define FAULT_LED_2_PORT GPIOE
-#define FAULT_LED_2_PIN GPIO_PIN_0
-#else
-#define FAULT_LED_2_PORT GPIOA
-#define FAULT_LED_2_PIN GPIO_PIN_5
-#endif
-#define FAULT_LED_2_ACTIVE_HIGH 1
 
 #define ID              PC_5
 
@@ -47,33 +48,40 @@
 #define MOTOR_CAN_TX    MTR_CAN_TX
 #define MOTOR_CAN_STANDBY NC
 
+#elif defined(STM32H743xx)
 
-// #define USB_TX          NC
-// #define USB_RX          NC
+#define USB_TX          NC
+#define USB_RX          NC
 
-// #define MAIN_CAN_STBY   NC
-// #define MAIN_CAN_RX     NC
-// #define MAIN_CAN_TX     NC
+#define MAIN_CAN_STBY   NC
+#define MAIN_CAN_RX     NC
+#define MAIN_CAN_TX     NC
 
-// #define DEBUG_IN        NC
-// #define DEBUG_OUT       NC
+#define DEBUG_IN        NC
 
-// #define ID              NC
+#define ID              NC
 
-// #define MTR_SDA         NC
-// #define MTR_SCL         NC
-// #define MTR_CAN_RX      NC
-// #define MTR_CAN_TX      NC
+#define MTR_SDA         NC
+#define MTR_SCL         NC
+#define MTR_CAN_RX      NC
+#define MTR_CAN_TX      NC
 
-// #define LOG_TX          NC
-// #define LOG_RX          NC
+#define LOG_TX          PD_8 // ST-LINK virtual COM port (USART3)
+#define LOG_RX          PD_9
 
-// #define CAN_STANDBY     NC
-// #define CAN_RX          NC
-// #define CAN_TX          NC
+#define CAN_STANDBY     NC
+#define CAN_RX          NC
+#define CAN_TX          NC
 
-// #define MOTOR_CAN_RX    NC
-// #define MOTOR_CAN_TX    NC
-// #define MOTOR_CAN_STANDBY NC
+#define MOTOR_CAN_RX    NC
+#define MOTOR_CAN_TX    NC
+#define MOTOR_CAN_STANDBY NC
 
+#elif defined(STM32U5A9xx)
+// Only fault LED outputs are mapped; other U5 application pins are undefined.
+
+#else
+#error "MotorBoard has no pin definitions for this target."
 #endif
+
+#endif /* MOTORBOARD_PINDEF_H */

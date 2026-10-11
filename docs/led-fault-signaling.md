@@ -37,9 +37,9 @@ Select the fitted hardware separately from the MCU with `LED_FAULT_HARDWARE`:
 | Configuration | First output | Second output |
 | --- | --- | --- |
 | `BOARD`, Motor/Relay/BottomDist/TopDist, G4 | PC1 Debug_OUT | PA5 (G474 Nucleo default) |
-| `BOARD`, Motor/Relay/BottomDist/TopDist, H7 | PC1 Debug_OUT | PB0 (H743 Nucleo default) |
-| `BOARD`, Motor/Relay/BottomDist/TopDist, U5 | PC1 Debug_OUT | PE0 (U5x9J-DK default) |
-| `BOARD`, Telemetry | PC1 Debug_OUT | Existing PB9 DEBUG_LED_2 |
+| `BOARD`, any application, H7 | PC1 Debug_OUT | PB0 (H743 Nucleo default) |
+| `BOARD`, any application, U5 | PC1 Debug_OUT | PE0 (U5x9J-DK default) |
+| `BOARD`, Telemetry, G4 | PC1 Debug_OUT | Existing PB9 DEBUG_LED_2 |
 | `NUCLEO_G474`, any application | PC1 external/carrier debug LED | PA5 onboard LD2 |
 
 The configured outputs currently use active-high polarity. Each board's
@@ -99,9 +99,9 @@ hooks, the unchanged normal tick, interrupt-free fault timing, preservation
 of neighboring pins, and the stopped-timer fallback.
 These checks do not establish that LEDs are physically fitted.
 
-The G4 configuration builds all five board targets. H7 has existing application
-pinmap and FATFS include failures; U5 lacks generated `pinmap.h` and
-`peripheralmap.cpp`, and its FreeRTOS port is absent. Changed fault sources can
+The G4 configuration builds all five board targets. H7 has existing FATFS
+include failures on non-Telemetry targets; U5 lacks generated `pinmap.h` and
+`peripheralmap.cpp`, application pin mappings, and its FreeRTOS port. Changed fault sources can
 be compiled independently against each family's actual HAL/CMSIS headers, but
 that does not certify complete H7/U5 firmware.
 

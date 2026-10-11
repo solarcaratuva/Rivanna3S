@@ -1,24 +1,25 @@
 #ifndef RELAYBOARD_PINDEF_H
 #define RELAYBOARD_PINDEF_H
 
-#define DEBUG_OUT          PC_1
-
+// Issue #204's pinout comment identifies PC1 as Debug_OUT on every STM board.
+#define DEBUG_OUT PC_1
 #define FAULT_LED_1_PORT GPIOC
 #define FAULT_LED_1_PIN GPIO_PIN_1
 #define FAULT_LED_1_ACTIVE_HIGH 1
-// Best-guess active-high LED defaults from the matching development boards.
-// Verify or change these outputs for the fitted car-board hardware.
-#if defined(STM32H743xx)
+// Active-high development-board defaults; verify the fitted LED wiring.
+#if defined(STM32G474xx)
+#define FAULT_LED_2_PORT GPIOA
+#define FAULT_LED_2_PIN GPIO_PIN_5
+#elif defined(STM32H743xx)
 #define FAULT_LED_2_PORT GPIOB
 #define FAULT_LED_2_PIN GPIO_PIN_0
 #elif defined(STM32U5A9xx)
 #define FAULT_LED_2_PORT GPIOE
 #define FAULT_LED_2_PIN GPIO_PIN_0
-#else
-#define FAULT_LED_2_PORT GPIOA
-#define FAULT_LED_2_PIN GPIO_PIN_5
 #endif
 #define FAULT_LED_2_ACTIVE_HIGH 1
+
+#ifdef STM32G474xx
 
 #define LOG_TX             PC_12
 #define LOG_RX             PD_2
@@ -36,20 +37,29 @@
 #define MPPT_PWR_ON        PC_7
 #define PRECHARGE_MPPT_EN  PC_8
 
-// #define LOG_TX             NC
-// #define LOG_RX             NC
-// #define CAN_STANDBY        NC
-// #define CAN_RX             NC
-// #define CAN_TX             NC
-// #define SAFETY_HV_EN       NC
-// #define SAFETY_MTR_EN      NC
-// #define AUX_PLUS           NC
-// #define CONT12_VOLTAGE     NC
-// #define HAL_EFFECT_MPPT    NC
-// #define HAL_EFFECT_VOLTAGE NC
-// #define MAIN_EN            NC
-// #define PRECHARGE_EN       NC
-// #define MPPT_PWR_ON        NC
-// #define PRECHARGE_MPPT_EN  NC
+#elif defined(STM32H743xx)
 
+#define LOG_TX             PD_8 // ST-LINK virtual COM port (USART3)
+#define LOG_RX             PD_9
+#define CAN_STANDBY        NC
+#define CAN_RX             NC
+#define CAN_TX             NC
+#define SAFETY_HV_EN       NC
+#define SAFETY_MTR_EN      NC
+#define AUX_PLUS           NC
+#define CONT12_VOLTAGE     NC
+#define HAL_EFFECT_MPPT    NC
+#define HAL_EFFECT_VOLTAGE NC
+#define MAIN_EN            NC
+#define PRECHARGE_EN       NC
+#define MPPT_PWR_ON        NC
+#define PRECHARGE_MPPT_EN  NC
+
+#elif defined(STM32U5A9xx)
+// Only fault LED outputs are mapped; other U5 application pins are undefined.
+
+#else
+#error "RelayBoard has no pin definitions for this target."
 #endif
+
+#endif /* RELAYBOARD_PINDEF_H */

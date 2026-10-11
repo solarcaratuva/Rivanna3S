@@ -277,7 +277,8 @@ class LedFaultTest(unittest.TestCase):
                 wirings = [("active-low", PINDEF_SHIM, [], "GPIOB", "0x200U", 0)]
                 for app in ("MotorBoard", "RelayBoard", "BottomDistBoard",
                             "TopDistBoard", "TelemetryBoard"):
-                    port, pin = ("GPIOB", "0x200U") if app == "TelemetryBoard" else default_second
+                    port, pin = (("GPIOB", "0x200U")
+                                 if app == "TelemetryBoard" and family == "g4" else default_second)
                     mapping = (ROOT / app / "Inc/pindef.h").read_text()
                     wirings.append((app, mapping, [], port, pin, 1))
                 if family == "g4":
@@ -306,7 +307,7 @@ class LedFaultTest(unittest.TestCase):
                                  "nmi", "secure", "assert", "stopped", "clockzero"):
                         with self.subTest(device=device, wiring=wiring, case=case):
                             subprocess.run([str(binary), case], check=True, timeout=5)
-                print(f"{device}: HAL_Delay, board/Nucleo mappings, hooks, and stopped timer passed")
+                print(f"{device}: HAL_Delay, LED mappings, hooks, and stopped timer passed")
 
 
 if __name__ == "__main__":
