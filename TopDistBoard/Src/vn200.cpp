@@ -317,27 +317,27 @@ bool VN200::send_ascii_command(const char *cmd)
 }
 
 // getters
-const VN200AngularRate &VN200::get_latest_sample_angular_rate()
+const VN200AngularRateSample &VN200::get_latest_sample_angular_rate()
 {
     return ang_rate;
 }
 
-const VN200Acceleration &VN200::get_latest_sample_acceleration()
+const VN200AccelerationSample &VN200::get_latest_sample_acceleration()
 {
     return accel;
 }
 
-const VN200Position &VN200::get_latest_sample_position()
+const VN200PositionSample &VN200::get_latest_sample_position()
 {
     return pos;
 }
 
-const VN200Velocity &VN200::get_latest_sample_velocity()
+const VN200VelocitySample &VN200::get_latest_sample_velocity()
 {
     return vel;
 }
 
-const VN200Status &VN200::get_latest_sample_status()
+const VN200StatusSample &VN200::get_latest_sample_status()
 {
     return status;
 }

@@ -164,9 +164,13 @@ void bms_strobe_handler() {
 void vn200_poll_handler() {
     Clock vn200_poll_clock;
 
+    vn200.init();
+
     while (true){
         if (vn200.poll()){
-            log_info("Acceleration: %f", vn200.get_latest_sample_acceleration().accel_x);
+            // log_info("Acceleration: %f", vn200.get_latest_sample_acceleration().accel_x);
+
+            
         }
         vn200_poll_clock.sleep_since(10);
     }
