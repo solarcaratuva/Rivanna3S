@@ -109,7 +109,9 @@ void LedFault_halt(enum LedFault_Faults fault)
     for (const FaultLed &led : fault_leds) { configure_led(led); }
     __DSB(); // make both ON before timer setup or the first HAL_Delay
     start_fault_tick();
-    for (;;) { blink_pattern(fault_leds, fault_led_count, static_cast<uint8_t>(fault)); }
+    while (true) {
+        blink_pattern(fault_leds, fault_led_count, static_cast<uint8_t>(fault));
+    }
 }
 
 extern "C" void vApplicationMallocFailedHook(void)

@@ -23,7 +23,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "LedFault.h"
-#include "fatfs_sd.h"
+/* Telemetry supplies the SD timer; other boards do not use FATFS. */
+__attribute__((weak)) void SD_TimerProc(void) {}
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
