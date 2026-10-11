@@ -146,7 +146,10 @@ function(add_board BOARD_NAME)
   endif()
 
   set(BOARD_LIB_TARGET ${BOARD_NAME}_app)
-  add_library(${BOARD_LIB_TARGET} OBJECT ${BOARD_SOURCES})
+  add_library(${BOARD_LIB_TARGET} OBJECT
+    ${BOARD_SOURCES}
+    ${CMAKE_SOURCE_DIR}/Common/Drivers/Src/LedFault.cpp
+  )
   target_include_directories(${BOARD_LIB_TARGET} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc

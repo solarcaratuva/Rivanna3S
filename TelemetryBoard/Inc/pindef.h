@@ -1,6 +1,23 @@
 #ifndef TELEMETRYBOARD_PINDEF_H
 #define TELEMETRYBOARD_PINDEF_H
 
+#define DEBUG_OUT PC_1
+#define FAULT_LED_1_PORT GPIOC
+#define FAULT_LED_1_PIN GPIO_PIN_1
+#define FAULT_LED_1_ACTIVE_HIGH 1
+// Active-high LED defaults; confirm the board wiring.
+#if defined(STM32G474xx)
+#define FAULT_LED_2_PORT GPIOB
+#define FAULT_LED_2_PIN GPIO_PIN_9
+#elif defined(STM32H743xx)
+#define FAULT_LED_2_PORT GPIOB
+#define FAULT_LED_2_PIN GPIO_PIN_0
+#elif defined(STM32U5A9xx)
+#define FAULT_LED_2_PORT GPIOE
+#define FAULT_LED_2_PIN GPIO_PIN_0
+#endif
+#define FAULT_LED_2_ACTIVE_HIGH 1
+
 #ifdef STM32G474xx
 
 #define DEBUG_LED_1     PC_13
@@ -60,6 +77,9 @@
 #define LTE_RX          NC
 #define DEBUG_LED_2     NC
 #define BRAKE_PRESSURE  NC
+
+#elif defined(STM32U5A9xx)
+// Only fault LED outputs are mapped; other U5 application pins are undefined.
 
 #else
 #error "TelemetryBoard has no pin definitions for this target."
