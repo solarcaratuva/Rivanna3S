@@ -1,6 +1,16 @@
 #ifndef PINDEF_H
 #define PINDEF_H
 
+#define DEBUG_OUT       PC_1
+
+#define FAULT_LED_1_PORT GPIOC
+#define FAULT_LED_1_PIN GPIO_PIN_1
+#define FAULT_LED_1_ACTIVE_HIGH 1
+// Use the existing DEBUG_LED_2 output alongside the common PC1 Debug_OUT.
+#define FAULT_LED_2_PORT GPIOB
+#define FAULT_LED_2_PIN GPIO_PIN_9
+#define FAULT_LED_2_ACTIVE_HIGH 1
+
 #define DEBUG_LED_1     PC_13
 #define RADIO_DTR       PA_1
 #define RADIO_TX        PA_2

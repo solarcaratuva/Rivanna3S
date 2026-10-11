@@ -15,7 +15,6 @@ add_library(freertos_kernel STATIC
     timers.c
     CMSIS_RTOS_V2/cmsis_os2.c
     portable/MemMang/heap_4.c
-        ../../../../Common/Drivers/Src/LedFault.c
 )
 
 # --- MCU port selection ---
@@ -39,6 +38,7 @@ target_include_directories(freertos_kernel PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include                    # FreeRTOS kernel headers
     ${FREERTOS_PORT_DIR}                                   # Port headers
     ${CMAKE_SOURCE_DIR}/Common/Libs/Inc                    # FreeRTOSConfig.h
+    ${CMAKE_SOURCE_DIR}/Common/Drivers/Inc                 # Application fault hooks
     ${BOARD_SETUP_INC}                                     # stm32*_hal_conf.h
     ${CMAKE_SOURCE_DIR}/Core/Inc                           # main.h for Error_Handler
     ${BOARD_CMSIS_INC}                                     # CMSIS compiler/ARM headers
