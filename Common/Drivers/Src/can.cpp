@@ -142,6 +142,7 @@ int CAN::read(SerializedCanMessage *msg)
         return 1;
     }
 
+    //change how this function works (look at the comments in the issue)
     // Only one reader may own the FIFO/waiter; writers use a separate lock.
     rx_lock.lock();
     while (true) {
