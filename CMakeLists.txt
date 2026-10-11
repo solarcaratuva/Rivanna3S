@@ -11,23 +11,6 @@ project(stm32h743_freertos C CXX ASM)
 # Select target board; board.cmake maps this to include paths, defines, and flags.
 set(BOARD "STM32H743ZITX" CACHE STRING "Target board name (Drivers/<board>)")
 
-# An MCU name alone does not establish the LEDs fitted to its PCB.
-set(LED_FAULT_HARDWARE "BOARD" CACHE STRING "Fault LED wiring: BOARD or NUCLEO_G474")
-set_property(CACHE LED_FAULT_HARDWARE PROPERTY STRINGS BOARD NUCLEO_G474)
-if(NOT LED_FAULT_HARDWARE MATCHES "^(BOARD|NUCLEO_G474)$")
-  message(FATAL_ERROR "LED_FAULT_HARDWARE must be BOARD or NUCLEO_G474")
-endif()
-if(LED_FAULT_HARDWARE STREQUAL "NUCLEO_G474" AND NOT BOARD STREQUAL "STM32G474RET6")
-  message(FATAL_ERROR "NUCLEO_G474 LED wiring requires BOARD=STM32G474RET6")
-endif()
-
-# Fault injection replaces app_main only in explicitly selected bench builds.
-set(LED_FAULT_BENCH_TEST "OFF" CACHE STRING "Fault injection: OFF, HARDFAULT, STACKOVERFLOW")
-set_property(CACHE LED_FAULT_BENCH_TEST PROPERTY STRINGS OFF HARDFAULT STACKOVERFLOW)
-if(NOT LED_FAULT_BENCH_TEST MATCHES "^(OFF|HARDFAULT|STACKOVERFLOW)$")
-  message(FATAL_ERROR "LED_FAULT_BENCH_TEST must be OFF, HARDFAULT, or STACKOVERFLOW")
-endif()
-
 # Shared compile option groups consumed by child targets.
 set(OPT_FLAGS -O0 -g3 -ffunction-sections -fdata-sections -fno-common)
 set(WARN_FLAGS -Wall -Wextra -Wformat=2 -Wshadow -Wno-missing-field-initializers)

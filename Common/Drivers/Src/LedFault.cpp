@@ -10,17 +10,10 @@ struct FaultLed {
     bool active_high;
 };
 
-// Compile this file per board so these constants live in flash and can differ
-// between boards. The fault path does not depend on runtime LED objects.
+// Board-specific constants live in flash.
 const FaultLed fault_leds[] = {
     {FAULT_LED_1_PORT, FAULT_LED_1_PIN, FAULT_LED_1_ACTIVE_HIGH},
-#if defined(LED_FAULT_NUCLEO_G474)
-    // ST UM2505 section 7.6.1: LD2 is PA5, active high (SB6 closed).
-    // PC1 needs the car carrier's Debug_OUT LED or an external bench LED.
-    {GPIOA, GPIO_PIN_5, true},
-#else
     {FAULT_LED_2_PORT, FAULT_LED_2_PIN, FAULT_LED_2_ACTIVE_HIGH},
-#endif
 };
 constexpr unsigned fault_led_count = sizeof(fault_leds) / sizeof(fault_leds[0]);
 static_assert(fault_led_count == 2U, "Every board must configure two fault LEDs");
@@ -40,29 +33,8 @@ void enable_gpio_clock(GPIO_TypeDef *port)
     if (port == GPIOA) { __HAL_RCC_GPIOA_CLK_ENABLE(); }
     else if (port == GPIOB) { __HAL_RCC_GPIOB_CLK_ENABLE(); }
     else if (port == GPIOC) { __HAL_RCC_GPIOC_CLK_ENABLE(); }
-#if defined(GPIOD)
-    else if (port == GPIOD) { __HAL_RCC_GPIOD_CLK_ENABLE(); }
-#endif
 #if defined(GPIOE)
     else if (port == GPIOE) { __HAL_RCC_GPIOE_CLK_ENABLE(); }
-#endif
-#if defined(GPIOF)
-    else if (port == GPIOF) { __HAL_RCC_GPIOF_CLK_ENABLE(); }
-#endif
-#if defined(GPIOG)
-    else if (port == GPIOG) { __HAL_RCC_GPIOG_CLK_ENABLE(); }
-#endif
-#if defined(GPIOH)
-    else if (port == GPIOH) { __HAL_RCC_GPIOH_CLK_ENABLE(); }
-#endif
-#if defined(GPIOI)
-    else if (port == GPIOI) { __HAL_RCC_GPIOI_CLK_ENABLE(); }
-#endif
-#if defined(GPIOJ)
-    else if (port == GPIOJ) { __HAL_RCC_GPIOJ_CLK_ENABLE(); }
-#endif
-#if defined(GPIOK)
-    else if (port == GPIOK) { __HAL_RCC_GPIOK_CLK_ENABLE(); }
 #endif
 }
 
