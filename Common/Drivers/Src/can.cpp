@@ -7,16 +7,23 @@
 #include "fdcan.h"
 #include "Clock.h"
 #include "DigitalOut.h"
+#include "stm32_hal.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 // extern "C" void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef* fdcanHandle, Pin pin, uint8_t af);
 // extern "C" FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* fdcan, uint32_t baudrate);
 
 DigitalOut light(PC_1);
 
+// The supported STM32 families expose at most three FDCAN peripherals.
+static CAN* can_instance_map[3] = {};
+
 
 CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
    
 {
+    configASSERT(FDCAN_PERIPHERAL_COUNT <= 3);
     fdcan_periph = findCANPin(tx, rx);
     if (fdcan_periph == nullptr) {
         initialized = false;
@@ -35,7 +42,49 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     HAL_FDCAN_MspInit_custom(fdcan_periph->handle, rx, rx_af);
 
     hfdcan = FDCAN_init(fdcan_periph->handle, baudrate);
-    HAL_FDCAN_Start(hfdcan);
+    if (!hfdcan || hfdcan->Instance != fdcan_periph->handle ||
+        HAL_FDCAN_GetState(hfdcan) != HAL_FDCAN_STATE_READY) {
+        log_warn("CAN init failed: HAL initialization failed");
+        return;
+    }
+
+    IRQn_Type rx_irq = FDCAN1_IT0_IRQn;
+#if defined(FDCAN2)
+    if (hfdcan->Instance == FDCAN2) rx_irq = FDCAN2_IT0_IRQn;
+#endif
+#if defined(FDCAN3)
+    if (hfdcan->Instance == FDCAN3) rx_irq = FDCAN3_IT0_IRQn;
+#endif
+    const uint32_t rx_notifications = FDCAN_IT_RX_FIFO0_NEW_MESSAGE |
+                                      FDCAN_IT_RX_FIFO0_FULL |
+                                      FDCAN_IT_RX_FIFO0_MESSAGE_LOST;
+#if defined(STM32H743xx)
+    const uint32_t rx_interrupts = rx_notifications;
+#else
+    const uint32_t rx_interrupts = FDCAN_IT_GROUP_RX_FIFO0;
+#endif
+    if (HAL_FDCAN_ConfigInterruptLines(hfdcan, rx_interrupts, FDCAN_INTERRUPT_LINE0) != HAL_OK ||
+        HAL_FDCAN_Start(hfdcan) != HAL_OK) {
+        log_warn("CAN init failed: interrupt routing or start failed");
+        return;
+    }
+
+    for (size_t i = 0; i < FDCAN_PERIPHERAL_COUNT; ++i) {
+        if (FDCAN_Peripherals[i].handle == hfdcan->Instance) {
+            can_instance_map[i] = this;
+            break;
+        }
+    }
+    HAL_NVIC_ClearPendingIRQ(rx_irq);
+    if (HAL_FDCAN_ActivateNotification(hfdcan, rx_notifications, 0) != HAL_OK) {
+        HAL_FDCAN_Stop(hfdcan);
+        for (size_t i = 0; i < FDCAN_PERIPHERAL_COUNT; ++i) {
+            if (can_instance_map[i] == this) can_instance_map[i] = nullptr;
+        }
+        log_warn("CAN init failed: RX notification setup failed");
+        return;
+    }
+    HAL_NVIC_EnableIRQ(rx_irq);
 
     // Default Tx header setup; fields that change per-frame will be set in write().
     txHeader.IdType = FDCAN_STANDARD_ID;
@@ -93,29 +142,28 @@ int CAN::read(SerializedCanMessage *msg)
         return 1;
     }
 
-    // Wait for at least one frame without holding the shared CAN lock.
-    // Holding the lock here can block writers indefinitely on a quiet bus.
-    uint32_t pending = 0;
-    while (pending == 0) {
-        Clock::sleep_for(1);
-        pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
+    //change how this function works (look at the comments in the issue)
+    // Only one reader may own the FIFO/waiter; writers use a separate lock.
+    rx_lock.lock();
+    while (true) {
+        taskENTER_CRITICAL();
+        if (HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0) != 0) {
+            rxTask = nullptr;
+            taskEXIT_CRITICAL();
+            break;
+        }
+        rxTask = xTaskGetCurrentTaskHandle();
+        taskEXIT_CRITICAL();
+
+        // A notification arriving before this call is retained by FreeRTOS.
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        taskENTER_CRITICAL();
+        rxTask = nullptr;
+        taskEXIT_CRITICAL();
     }
 
     instance_lock.lock();
 
-    // Check if the RX queue is full (field name differs across STM32 families).
-#if defined(STM32G474xx)
-    if (pending > 2) {
-        // G4 HAL does not expose FIFO element count in the init struct.
-       log_warn("CAN RX pending=%lu; monitor for dropped frames", pending);
-       //light.write(!light.read());
-    }
-#else
-    if (pending == hfdcan->Init.RxFifo0ElmtsNbr) {
-        log_warn("CAN RX FIFO0 full; messages were likely dropped");
-    }
-#endif
-    
     uint8_t rxData[8] = {0};
 
     HAL_StatusTypeDef status =
@@ -125,14 +173,25 @@ int CAN::read(SerializedCanMessage *msg)
     {
         log_warn("CAN read failed: status %d, error code %lx", status, hfdcan->ErrorCode);
         instance_lock.unlock();
+        rx_lock.unlock();
         return 2;
     }
 
     msg->id = static_cast<uint16_t>(rxHeader.Identifier);
     msg->len = dlcToBytes(rxHeader.DataLength);
     memcpy(msg->data, rxData, msg->len);
-
     instance_lock.unlock();
+    rx_lock.unlock();
+
+    bool message_lost;
+    taskENTER_CRITICAL();
+    message_lost = rx_message_lost;
+    rx_message_lost = false;
+    taskEXIT_CRITICAL();
+
+    if (message_lost) {
+        log_warn("CAN RX FIFO0 message lost");
+    }
 
     return 0;
 }
@@ -144,8 +203,13 @@ int CAN::try_read(SerializedCanMessage *msg)
         return 1;
     }
 
+    if (!rx_lock.try_lock()) {
+        return 3;
+    }
+
     uint32_t pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
     if (pending == 0) {
+        rx_lock.unlock();
         return 3;
     }
 
@@ -160,6 +224,7 @@ int CAN::try_read(SerializedCanMessage *msg)
     {
         log_warn("CAN read failed: status %d, error code %lx", status, hfdcan->ErrorCode);
         instance_lock.unlock();
+        rx_lock.unlock();
         return 2;
     }
 
@@ -168,6 +233,7 @@ int CAN::try_read(SerializedCanMessage *msg)
     memcpy(msg->data, rxData, msg->len);
 
     instance_lock.unlock();
+    rx_lock.unlock();
 
     return 0;
 }
@@ -229,4 +295,39 @@ FDCAN_Peripheral *CAN::findCANPin(Pin tx, Pin rx)
         }
     }
     return nullptr; // No matching ADC peripheral found
+}
+
+CAN* CAN::find_from_handle(FDCAN_HandleTypeDef* handle)
+{
+    if (!handle) return nullptr;
+    for (size_t i = 0; i < FDCAN_PERIPHERAL_COUNT; ++i) {
+        if (FDCAN_Peripherals[i].handle == handle->Instance) {
+            return can_instance_map[i];
+        }
+    }
+    return nullptr;
+}
+
+void CAN::notify_rx_from_isr(uint32_t interrupts)
+{
+    BaseType_t woken = pdFALSE;
+    if (interrupts & FDCAN_IT_RX_FIFO0_MESSAGE_LOST) {
+        rx_message_lost = true;
+    }
+    if (rxTask) {
+        vTaskNotifyGiveFromISR(rxTask, &woken);
+        rxTask = nullptr;
+    }
+    portYIELD_FROM_ISR(woken);
+}
+
+extern "C" void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef* handle, uint32_t interrupts)
+{
+    const uint32_t rx_interrupts = FDCAN_IT_RX_FIFO0_NEW_MESSAGE |
+                                   FDCAN_IT_RX_FIFO0_FULL |
+                                   FDCAN_IT_RX_FIFO0_MESSAGE_LOST;
+    if (interrupts & rx_interrupts) {
+        CAN* can = CAN::find_from_handle(handle);
+        if (can) can->notify_rx_from_isr(interrupts);
+    }
 }
