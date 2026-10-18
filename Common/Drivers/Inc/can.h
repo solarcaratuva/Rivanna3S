@@ -178,11 +178,10 @@ public:
     int try_read(SerializedCanMessage* msg);
     // HAL callback routing; notify_rx_from_isr() must only be called in an ISR.
     static CAN* find_from_handle(FDCAN_HandleTypeDef* handle);
-    void notify_rx_from_isr(uint32_t interrupts);
+    void notify_rx_from_isr();
 
 private:
-    TaskHandle_t rxTask = nullptr;       ///< Accessed with RX interrupts masked in task context
-    volatile bool rx_message_lost = false; ///< Latched by ISR, cleared by the reader task
+    TaskHandle_t rxTask = nullptr;       ///< Task waiting for an RX FIFO notification
     Lock rx_lock;                       ///< Serializes read() and try_read()
     FDCAN_HandleTypeDef* hfdcan = nullptr;        ///< Handle to the STM32 HAL FDCAN peripheral
     Lock                 instance_lock;  ///< Mutex for thread-safe access

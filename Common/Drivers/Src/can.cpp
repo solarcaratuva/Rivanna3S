@@ -55,11 +55,8 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
 #if defined(FDCAN3)
     if (hfdcan->Instance == FDCAN3) rx_irq = FDCAN3_IT0_IRQn;
 #endif
-    const uint32_t rx_notifications = FDCAN_IT_RX_FIFO0_NEW_MESSAGE |
-                                      FDCAN_IT_RX_FIFO0_FULL |
-                                      FDCAN_IT_RX_FIFO0_MESSAGE_LOST;
 #if defined(STM32H743xx)
-    const uint32_t rx_interrupts = rx_notifications;
+    const uint32_t rx_interrupts = FDCAN_IT_RX_FIFO0_NEW_MESSAGE;
 #else
     const uint32_t rx_interrupts = FDCAN_IT_GROUP_RX_FIFO0;
 #endif
@@ -76,7 +73,7 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
         }
     }
     HAL_NVIC_ClearPendingIRQ(rx_irq);
-    if (HAL_FDCAN_ActivateNotification(hfdcan, rx_notifications, 0) != HAL_OK) {
+    if (HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
         HAL_FDCAN_Stop(hfdcan);
         for (size_t i = 0; i < FDCAN_PERIPHERAL_COUNT; ++i) {
             if (can_instance_map[i] == this) can_instance_map[i] = nullptr;
@@ -142,27 +139,32 @@ int CAN::read(SerializedCanMessage *msg)
         return 1;
     }
 
-    //change how this function works (look at the comments in the issue)
     // Only one reader may own the FIFO/waiter; writers use a separate lock.
     rx_lock.lock();
     while (true) {
-        taskENTER_CRITICAL();
+        rxTask = xTaskGetCurrentTaskHandle();
         if (HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0) != 0) {
-            rxTask = nullptr;
-            taskEXIT_CRITICAL();
             break;
         }
-        rxTask = xTaskGetCurrentTaskHandle();
-        taskEXIT_CRITICAL();
-
-        // A notification arriving before this call is retained by FreeRTOS.
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-        taskENTER_CRITICAL();
-        rxTask = nullptr;
-        taskEXIT_CRITICAL();
     }
+    rxTask = nullptr;
 
     instance_lock.lock();
+
+    uint32_t pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
+    // Check if the RX queue is full (field name differs across STM32 families).
+#if defined(STM32G474xx)
+    if (pending > 2) {
+        // G4 HAL does not expose FIFO element count in the init struct.
+        log_warn("CAN RX pending=%lu; monitor for dropped frames", pending);
+        //light.write(!light.read());
+    }
+#else
+    if (pending == hfdcan->Init.RxFifo0ElmtsNbr) {
+        log_warn("CAN RX FIFO0 full; messages were likely dropped");
+    }
+#endif
 
     uint8_t rxData[8] = {0};
 
@@ -182,16 +184,6 @@ int CAN::read(SerializedCanMessage *msg)
     memcpy(msg->data, rxData, msg->len);
     instance_lock.unlock();
     rx_lock.unlock();
-
-    bool message_lost;
-    taskENTER_CRITICAL();
-    message_lost = rx_message_lost;
-    rx_message_lost = false;
-    taskEXIT_CRITICAL();
-
-    if (message_lost) {
-        log_warn("CAN RX FIFO0 message lost");
-    }
 
     return 0;
 }
@@ -308,12 +300,9 @@ CAN* CAN::find_from_handle(FDCAN_HandleTypeDef* handle)
     return nullptr;
 }
 
-void CAN::notify_rx_from_isr(uint32_t interrupts)
+void CAN::notify_rx_from_isr()
 {
     BaseType_t woken = pdFALSE;
-    if (interrupts & FDCAN_IT_RX_FIFO0_MESSAGE_LOST) {
-        rx_message_lost = true;
-    }
     if (rxTask) {
         vTaskNotifyGiveFromISR(rxTask, &woken);
         rxTask = nullptr;
@@ -323,11 +312,8 @@ void CAN::notify_rx_from_isr(uint32_t interrupts)
 
 extern "C" void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef* handle, uint32_t interrupts)
 {
-    const uint32_t rx_interrupts = FDCAN_IT_RX_FIFO0_NEW_MESSAGE |
-                                   FDCAN_IT_RX_FIFO0_FULL |
-                                   FDCAN_IT_RX_FIFO0_MESSAGE_LOST;
-    if (interrupts & rx_interrupts) {
+    if (interrupts & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
         CAN* can = CAN::find_from_handle(handle);
-        if (can) can->notify_rx_from_isr(interrupts);
+        if (can) can->notify_rx_from_isr();
     }
 }
