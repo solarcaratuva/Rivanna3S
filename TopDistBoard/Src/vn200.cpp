@@ -127,11 +127,26 @@ bool VN200::poll()
     // counters, so a bad frame is already counted by the time it returns false.
     if (!validate_packet(rx_buffer))
     {
-        // Either a header mismatch or a bad CRC, which in practice means we
-        // latched onto a VN200_SYNC_BYTE inside a payload. Drop the frame and
-        // hunt the wire again on the next call: the next sync byte on the
-        // stream is the start of the following frame, so this costs at most one
-        // sample rather than losing sync.
+        // An embedded sync byte may be the start of the next frame. Rebuild a
+        // candidate from each suffix and the remaining bytes from the wire.
+        for (int i = 1; i < PACKET_LEN; i++)
+        {
+            if (rx_buffer[i] == VN200_SYNC_BYTE)
+            {
+                memmove(rx_buffer, rx_buffer + i, PACKET_LEN - i);
+                if (serial.read(rx_buffer + PACKET_LEN - i, i, SYNC_TIMEOUT_MS) != 0)
+                {
+                    return false;
+                }
+                i = 0; // rewind to the new candidate's first byte
+                if(validate_packet(rx_buffer)){
+                    decode_payload(rx_buffer + HEADER_END);
+                    return true;
+                }
+            }
+        }
+
+
         return false;
     }
 

@@ -71,9 +71,9 @@ private:
     VN200StatusSample status;
 
     // ---- Binary packet state ----
-    // One full packet. poll() hunts VN200_SYNC_BYTE, bulk-reads the remainder
-    // into here, and validates; a frame that fails is dropped and the next call
-    // hunts the wire again, so nothing tracks a resync position across calls.
+    // One full packet. poll() hunts VN200_SYNC_BYTE, bulk-reads the remainder,
+    // and validates it. A failed frame may be reconstructed from a later sync
+    // byte before poll() resumes searching on a later call.
     uint8_t  rx_buffer[111];   // one full packet (PACKET_LEN in vn200.cpp)
     uint8_t sequence;
 };
