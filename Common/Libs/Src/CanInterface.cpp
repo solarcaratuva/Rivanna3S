@@ -53,7 +53,7 @@ int CanInterface::write(SerializedCanMessage *msg) {
 
     int status = my_can.write(msg);
     if (status == 0) {
-        char data_hex[17]; // 16 bytes + null terminator
+        char data_hex[129]; // 64 bytes as hex plus null terminator
         bytes_to_hex(msg->data, msg->len, data_hex, sizeof(data_hex));
         log_debug("CanInterface: Sent CAN message with ID %d Length %d Data 0x%s", msg->id, msg->len, data_hex);
     }
@@ -186,7 +186,7 @@ void CanInterface::handle()
         return;
     }
 
-    char data_hex[17]; // 16 bytes + null terminator
+    char data_hex[129]; // 64 bytes as hex plus null terminator
     bytes_to_hex(msg.data, msg.len, data_hex, sizeof(data_hex));
     log_debug("CanInterface: Received CAN message with ID %d Length %d Data 0x%s", msg.id, msg.len, data_hex);
 
