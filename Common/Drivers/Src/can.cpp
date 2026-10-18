@@ -102,15 +102,25 @@ int CAN::write(const SerializedCanMessage *msg)
         log_warn("CAN write failed: CAN not initialized");
         return 1;
     }
+    if (msg->len > 64) {
+        log_warn("CAN write failed: payload length %u exceeds 64 bytes",
+                 static_cast<unsigned>(msg->len));
+        return 3;
+    }
+
+    // CAN FD has discrete DLC sizes; zero-fill bytes added by DLC rounding.
+    uint8_t txData[64] = {0};
+    memcpy(txData, msg->data, msg->len);
 
     instance_lock.lock();
     txHeader.Identifier = msg->id;
     txHeader.DataLength = bytesToDlc(msg->len);
+    txHeader.FDFormat = (msg->len > 8) ? FDCAN_FD_CAN : FDCAN_CLASSIC_CAN;
+    txHeader.BitRateSwitch = FDCAN_BRS_OFF;
 
-    // HAL expects a uint8_t* to data
     HAL_StatusTypeDef status =
         HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, &txHeader,
-                                      const_cast<uint8_t *>(msg->data));
+                                      txData);
 
     if (status != HAL_OK) {
         log_warn("CAN write failed: status %d, error code %lx", status, hfdcan->ErrorCode);
@@ -166,7 +176,7 @@ int CAN::read(SerializedCanMessage *msg)
     }
 #endif
 
-    uint8_t rxData[8] = {0};
+    uint8_t rxData[64] = {0};
 
     HAL_StatusTypeDef status =
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rxData);
@@ -207,7 +217,7 @@ int CAN::try_read(SerializedCanMessage *msg)
 
     instance_lock.lock();
 
-    uint8_t rxData[8] = {0};
+    uint8_t rxData[64] = {0};
 
     HAL_StatusTypeDef status =
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rxData);
@@ -235,11 +245,6 @@ int CAN::try_read(SerializedCanMessage *msg)
 
 uint32_t CAN::bytesToDlc(uint8_t len) const
 {
-    // Clamp to 8 bytes; extend if you move to CAN FD later.
-    if (len > 8) {
-        len = 8;
-    }
-
     switch (len) {
     case 0: return FDCAN_DLC_BYTES_0;
     case 1: return FDCAN_DLC_BYTES_1;
@@ -250,8 +255,16 @@ uint32_t CAN::bytesToDlc(uint8_t len) const
     case 6: return FDCAN_DLC_BYTES_6;
     case 7: return FDCAN_DLC_BYTES_7;
     case 8: return FDCAN_DLC_BYTES_8;
-    default: return FDCAN_DLC_BYTES_8;
+    default: break;
     }
+
+    if (len <= 12) return FDCAN_DLC_BYTES_12;
+    if (len <= 16) return FDCAN_DLC_BYTES_16;
+    if (len <= 20) return FDCAN_DLC_BYTES_20;
+    if (len <= 24) return FDCAN_DLC_BYTES_24;
+    if (len <= 32) return FDCAN_DLC_BYTES_32;
+    if (len <= 48) return FDCAN_DLC_BYTES_48;
+    return FDCAN_DLC_BYTES_64;
 }
 
 uint8_t CAN::dlcToBytes(uint32_t dlc) const
@@ -266,6 +279,13 @@ uint8_t CAN::dlcToBytes(uint32_t dlc) const
     case FDCAN_DLC_BYTES_6: return 6;
     case FDCAN_DLC_BYTES_7: return 7;
     case FDCAN_DLC_BYTES_8: return 8;
+    case FDCAN_DLC_BYTES_12: return 12;
+    case FDCAN_DLC_BYTES_16: return 16;
+    case FDCAN_DLC_BYTES_20: return 20;
+    case FDCAN_DLC_BYTES_24: return 24;
+    case FDCAN_DLC_BYTES_32: return 32;
+    case FDCAN_DLC_BYTES_48: return 48;
+    case FDCAN_DLC_BYTES_64: return 64;
     default: return 8; // conservative fallback
     }
 }

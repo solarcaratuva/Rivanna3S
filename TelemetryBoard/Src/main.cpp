@@ -38,7 +38,7 @@ static UartCobs radio(&radio_uart);
  *
  * Packet format:
  *   [0..1]  Message ID  (2 bytes, big-endian)
- *   [2..N]  Message data (1-8 bytes, copied from the CAN frame)
+ *   [2..N]  Message data (0-64 bytes, copied from the CAN frame)
  *
  * Registered as the CanInterface "always" callback so every message
  * received on the bus is transparently forwarded to the radio.
@@ -47,17 +47,16 @@ static UartCobs radio(&radio_uart);
  */
 void radio_send(const SerializedCanMessage &msg)
 {
-    uint8_t buf[10];
+    uint8_t buf[66];
 
     buf[0] = static_cast<uint8_t>(msg.id >> 8);
     buf[1] = static_cast<uint8_t>(msg.id & 0xFF);
 
-    uint8_t data_len = (msg.len <= 8) ? msg.len : 8;
-    for (uint8_t i = 0; i < data_len; i++) {
+    for (uint8_t i = 0; i < msg.len; i++) {
         buf[2 + i] = msg.data[i];
     }
 
-    radio.write(buf, 2 + data_len);
+    radio.write(buf, 2 + msg.len);
 }
 
 void handle_all_messages(const SerializedCanMessage &msg) {
