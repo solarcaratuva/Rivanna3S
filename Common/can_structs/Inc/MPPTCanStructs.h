@@ -29,6 +29,18 @@ typedef struct MG0Status : CanMessage, mppt_mg0_status_t {
             );
     }
 
+    double get_mg0_input_current() const { return mppt_mg0_status_mg0_input_current_decode(mg0_input_current); }
+
+    void set_mg0_input_current(double value) { mg0_input_current = mppt_mg0_status_mg0_input_current_encode(value); }
+
+    bool mg0_input_current_in_range() const { return mppt_mg0_status_mg0_input_current_is_in_range(mg0_input_current); }
+
+    double get_mg0_input_voltage() const { return mppt_mg0_status_mg0_input_voltage_decode(mg0_input_voltage); }
+
+    void set_mg0_input_voltage(double value) { mg0_input_voltage = mppt_mg0_status_mg0_input_voltage_encode(value); }
+
+    bool mg0_input_voltage_in_range() const { return mppt_mg0_status_mg0_input_voltage_is_in_range(mg0_input_voltage); }
+
     bool has_active_fault() {
         return 0; // this message has no fault signals
     }
@@ -57,6 +69,18 @@ typedef struct MG1Status : CanMessage, mppt_mg1_status_t {
             "MG1Status: "
             );
     }
+
+    double get_mg1_input_current() const { return mppt_mg1_status_mg1_input_current_decode(mg1_input_current); }
+
+    void set_mg1_input_current(double value) { mg1_input_current = mppt_mg1_status_mg1_input_current_encode(value); }
+
+    bool mg1_input_current_in_range() const { return mppt_mg1_status_mg1_input_current_is_in_range(mg1_input_current); }
+
+    double get_mg1_input_voltage() const { return mppt_mg1_status_mg1_input_voltage_decode(mg1_input_voltage); }
+
+    void set_mg1_input_voltage(double value) { mg1_input_voltage = mppt_mg1_status_mg1_input_voltage_encode(value); }
+
+    bool mg1_input_voltage_in_range() const { return mppt_mg1_status_mg1_input_voltage_is_in_range(mg1_input_voltage); }
 
     bool has_active_fault() {
         return 0; // this message has no fault signals
@@ -87,6 +111,18 @@ typedef struct MG0OutputVoltageInputPower : CanMessage, mppt_mg0_output_voltage_
             );
     }
 
+    double get_mg0_output_voltage() const { return mppt_mg0_output_voltage_input_power_mg0_output_voltage_decode(mg0_output_voltage); }
+
+    void set_mg0_output_voltage(double value) { mg0_output_voltage = mppt_mg0_output_voltage_input_power_mg0_output_voltage_encode(value); }
+
+    bool mg0_output_voltage_in_range() const { return mppt_mg0_output_voltage_input_power_mg0_output_voltage_is_in_range(mg0_output_voltage); }
+
+    double get_mg0_input_power() const { return mppt_mg0_output_voltage_input_power_mg0_input_power_decode(mg0_input_power); }
+
+    void set_mg0_input_power(double value) { mg0_input_power = mppt_mg0_output_voltage_input_power_mg0_input_power_encode(value); }
+
+    bool mg0_input_power_in_range() const { return mppt_mg0_output_voltage_input_power_mg0_input_power_is_in_range(mg0_input_power); }
+
     bool has_active_fault() {
         return 0; // this message has no fault signals
     }
@@ -115,6 +151,18 @@ typedef struct MG1OutputVoltageInputPower : CanMessage, mppt_mg1_output_voltage_
             "MG1OutputVoltageInputPower: "
             );
     }
+
+    double get_mg1_output_voltage() const { return mppt_mg1_output_voltage_input_power_mg1_output_voltage_decode(mg1_output_voltage); }
+
+    void set_mg1_output_voltage(double value) { mg1_output_voltage = mppt_mg1_output_voltage_input_power_mg1_output_voltage_encode(value); }
+
+    bool mg1_output_voltage_in_range() const { return mppt_mg1_output_voltage_input_power_mg1_output_voltage_is_in_range(mg1_output_voltage); }
+
+    double get_mg1_input_power() const { return mppt_mg1_output_voltage_input_power_mg1_input_power_decode(mg1_input_power); }
+
+    void set_mg1_input_power(double value) { mg1_input_power = mppt_mg1_output_voltage_input_power_mg1_input_power_encode(value); }
+
+    bool mg1_input_power_in_range() const { return mppt_mg1_output_voltage_input_power_mg1_input_power_is_in_range(mg1_input_power); }
 
     bool has_active_fault() {
         return 0; // this message has no fault signals
@@ -145,6 +193,18 @@ typedef struct MG0PCBMOSFETTemperature : CanMessage, mppt_mg0_pcbmosfet_temperat
             mg0_pcb_temperature, mg0_mosfet_temperature);
     }
 
+    double get_mg0_pcb_temperature() const { return mppt_mg0_pcbmosfet_temperature_mg0_pcb_temperature_decode(mg0_pcb_temperature); }
+
+    void set_mg0_pcb_temperature(double value) { mg0_pcb_temperature = mppt_mg0_pcbmosfet_temperature_mg0_pcb_temperature_encode(value); }
+
+    bool mg0_pcb_temperature_in_range() const { return mppt_mg0_pcbmosfet_temperature_mg0_pcb_temperature_is_in_range(mg0_pcb_temperature); }
+
+    double get_mg0_mosfet_temperature() const { return mppt_mg0_pcbmosfet_temperature_mg0_mosfet_temperature_decode(mg0_mosfet_temperature); }
+
+    void set_mg0_mosfet_temperature(double value) { mg0_mosfet_temperature = mppt_mg0_pcbmosfet_temperature_mg0_mosfet_temperature_encode(value); }
+
+    bool mg0_mosfet_temperature_in_range() const { return mppt_mg0_pcbmosfet_temperature_mg0_mosfet_temperature_is_in_range(mg0_mosfet_temperature); }
+
     bool has_active_fault() {
         return 0; // this message has no fault signals
     }
@@ -173,6 +233,18 @@ typedef struct MG1PCBMOSFETTemperature : CanMessage, mppt_mg1_pcbmosfet_temperat
             "MG1PCBMOSFETTemperature: MG1PCBTemperature %u, MG1MOSFETTemperature %u",
             mg1_pcb_temperature, mg1_mosfet_temperature);
     }
+
+    double get_mg1_pcb_temperature() const { return mppt_mg1_pcbmosfet_temperature_mg1_pcb_temperature_decode(mg1_pcb_temperature); }
+
+    void set_mg1_pcb_temperature(double value) { mg1_pcb_temperature = mppt_mg1_pcbmosfet_temperature_mg1_pcb_temperature_encode(value); }
+
+    bool mg1_pcb_temperature_in_range() const { return mppt_mg1_pcbmosfet_temperature_mg1_pcb_temperature_is_in_range(mg1_pcb_temperature); }
+
+    double get_mg1_mosfet_temperature() const { return mppt_mg1_pcbmosfet_temperature_mg1_mosfet_temperature_decode(mg1_mosfet_temperature); }
+
+    void set_mg1_mosfet_temperature(double value) { mg1_mosfet_temperature = mppt_mg1_pcbmosfet_temperature_mg1_mosfet_temperature_encode(value); }
+
+    bool mg1_mosfet_temperature_in_range() const { return mppt_mg1_pcbmosfet_temperature_mg1_mosfet_temperature_is_in_range(mg1_mosfet_temperature); }
 
     bool has_active_fault() {
         return 0; // this message has no fault signals
