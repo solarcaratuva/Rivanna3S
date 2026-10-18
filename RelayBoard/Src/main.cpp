@@ -61,11 +61,17 @@ Thread auxbattery_thread;
 Precharge motor_precharge(motor_main_en, motor_precharge_en, cont12_voltage, motor_hal_effect_voltage, true);
 Precharge mppt_precharge(mppt_main_en, mppt_precharge_en, cont12_voltage, mppt_hal_effect_voltage);
 
+
+
+
+
+
+
 void handle_bps_status(const SerializedCanMessage &msg)
 {
     BpsStatus status{};
     status.deserialize(&msg);
-    pack_voltage = status.pack_voltage / 10; // scaling (BMS units is 10th of a volt)
+    pack_voltage = bps_bps_status_pack_voltage_decode(status.pack_voltage); // volts, scale from DBC
 }
 
 void run_precharge()
@@ -129,14 +135,66 @@ void monitor_auxbattery(){
     }
 }
 
+void send_bps_test_fault()
+{
+Clock::sleep_for(2000);
+Clock test_clock;
+
+while (true) {
+    BpsError fault{};
+    fault.high_voltage_isolation_fault = 1;
+    main_can.write(&fault);
+    test_clock.sleep_since(1000);
+}
+}
+
+void send_contactor_test_fault()
+{
+Clock::sleep_for(2000);
+Clock test_clock;
+
+while (true) {
+    Contactor12Error fault{};
+    fault.cont12_went_low = 1;
+    main_can.write(&fault);
+    test_clock.sleep_since(1000);
+}
+}
+
+void send_motor_controller_test_fault()
+{
+Clock::sleep_for(2000);
+Clock test_clock;
+
+while (true) {
+    MotorControllerError fault{};
+    fault.overcurrent_err = 1;
+    main_can.write(&fault);
+    test_clock.sleep_since(1000);
+}
+}
 
 void app_main()
 {
+
+
     log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Relay Board starting up...");
 
+    
+
     main_can.register_callback(BpsStatus::get_message_ID(), handle_bps_status);
-    main_can.register_always_callback(FaultHandler::check_for_any_faults);
+main_can.register_always_callback(FaultHandler::check_for_any_faults);
+
+static Thread fault_test_thread;
+
+// Enable exactly one per test:
+fault_test_thread.start(send_bps_test_fault);
+// fault_test_thread.start(send_contactor_test_fault);
+// fault_test_thread.start(send_motor_controller_test_fault);
+
+precharge_thread.start(run_precharge);
+auxbattery_thread.start(monitor_auxbattery);
     precharge_thread.start(run_precharge);
     auxbattery_thread.start(monitor_auxbattery);
 
