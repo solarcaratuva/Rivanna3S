@@ -15,6 +15,7 @@
 DigitalOut left_turn_signal(LEFT_TURN_EN);
 DigitalOut right_turn_signal(RIGHT_TURN_EN);
 DigitalOut drl(DRL_EN);
+DigitalOut init_indicator(PA_5);
 AnalogIn throttle_pedal(THROTTLE_WIPER);
 ScaledAnalogIn brake_pedal(BRAKE_WIPER, 0.5f / 5.0f * 3.27f, 4.5f / 5.0f * 3.27f, 0, 1500);
 
@@ -32,6 +33,7 @@ CanInterface main_can(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
 
 Thread signal_thread;
 Thread pedal_thread;
+Thread test_thread;
 
 void handle_dashboard_commands(const SerializedCanMessage &msg)
 {
@@ -98,18 +100,35 @@ void send_pedal_status()
     }
 }
 
+void send_test_pedal_status()
+{
+    Clock test_clock;
+
+    while (true) {
+        PedalStatus msg{};
+        msg.throttle_pedal = 5;
+        msg.brake_pedal = 5;
+
+        // blink the debug LED on each successful CAN transmission
+        if (main_can.write(&msg) == 0) {
+            init_indicator.write(!init_indicator.read());
+        }
+        test_clock.sleep_since(PEDAL_STATUS);
+    }
+}
+
 void app_main()
 {   
-    DigitalOut init_indicator(PC_1);
     init_indicator.write(PIN_ON);
 
-    log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
+    log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Bottom Distance Board starting up...");
 
     drl.write(PIN_ON);
 
-    signal_thread.start(signal_flash_handler);
-    pedal_thread.start(send_pedal_status);
+    // signal_thread.start(signal_flash_handler);
+    // pedal_thread.start(send_pedal_status);
+    test_thread.start(send_test_pedal_status);
 
     main_can.register_callback(DashboardCommands::get_message_ID(), handle_dashboard_commands);
     main_can.register_always_callback(FaultHandler::check_for_any_faults);

@@ -6,17 +6,21 @@
 #define LEFT_TURN_EN PA_1
 #define RIGHT_TURN_EN PA_0
 // #define STROBE_EN NC
-#define DRL_EN PA_2
+// TEMP (Nucleo bring-up): PA_2/PA_3 are reassigned to the ST-LINK virtual COM
+// port so monitor.py can read the log. On NUCLEO-G474RE those pins reach the
+// ST-LINK through solder bridges SB17/SB23. DRL_EN and THROTTLE_WIPER are
+// parked on NC for now; restore them to PA_2/PA_3 for the real PCB.
+#define DRL_EN NC
 
-#define THROTTLE_WIPER PA_3
+#define THROTTLE_WIPER NC
 #define BRAKE_WIPER PA_4
 
 #define CAN_TX PB_6
 #define CAN_RX PB_5
 #define CAN_STANDBY PB_4
 
-#define LOG_TX PC_12
-#define LOG_RX PD_2
+#define LOG_TX PA_2
+#define LOG_RX PA_3
 
 #elif defined(STM32H743xx)
 
