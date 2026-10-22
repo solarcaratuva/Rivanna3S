@@ -266,4 +266,207 @@ typedef struct UpdateData : CanMessage, rivanna3_s_update_data_t {
     }
 } UpdateData;
 
+
+typedef struct OdometryData : CanMessage, rivanna3_s_odometry_data_t {
+    void serialize(SerializedCanMessage *message) {
+        rivanna3_s_odometry_data_pack(message->data, this,
+            RIVANNA3_S_ODOMETRY_DATA_LENGTH);
+        message->len = RIVANNA3_S_ODOMETRY_DATA_LENGTH;
+        message->id = RIVANNA3_S_ODOMETRY_DATA_FRAME_ID;
+    }
+
+    void deserialize(const SerializedCanMessage *message) {
+        rivanna3_s_odometry_data_unpack(this, message->data,
+            RIVANNA3_S_ODOMETRY_DATA_LENGTH);
+    }
+
+    static uint16_t get_message_ID() { return RIVANNA3_S_ODOMETRY_DATA_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_ODOMETRY_DATA_FRAME_ID; }
+
+    void log_msg(LogLevel level) const {
+        log(level, __FILE__, __LINE__,
+            "OdometryData: distance %u",
+            distance);
+    }
+
+    bool has_active_fault() {
+        return 0; // this message has no fault signals
+    }
+} OdometryData;
+
+
+typedef struct VN200Attitude : CanMessage, rivanna3_s_vn200_attitude_t {
+    void serialize(SerializedCanMessage *message) {
+        rivanna3_s_vn200_attitude_pack(message->data, this,
+            RIVANNA3_S_VN200_ATTITUDE_LENGTH);
+        message->len = RIVANNA3_S_VN200_ATTITUDE_LENGTH;
+        message->id = RIVANNA3_S_VN200_ATTITUDE_FRAME_ID;
+    }
+
+    void deserialize(const SerializedCanMessage *message) {
+        rivanna3_s_vn200_attitude_unpack(this, message->data,
+            RIVANNA3_S_VN200_ATTITUDE_LENGTH);
+    }
+
+    static uint16_t get_message_ID() { return RIVANNA3_S_VN200_ATTITUDE_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_VN200_ATTITUDE_FRAME_ID; }
+
+    void log_msg(LogLevel level) const {
+        log(level, __FILE__, __LINE__,
+            "VN200Attitude: yaw %u, pitch %u, roll %u, sequence %u",
+            yaw, pitch, roll, sequence);
+    }
+
+    bool has_active_fault() {
+        return 0; // this message has no fault signals
+    }
+} VN200Attitude;
+
+
+typedef struct VN200AngularRate : CanMessage, rivanna3_s_vn200_angular_rate_t {
+    void serialize(SerializedCanMessage *message) {
+        rivanna3_s_vn200_angular_rate_pack(message->data, this,
+            RIVANNA3_S_VN200_ANGULAR_RATE_LENGTH);
+        message->len = RIVANNA3_S_VN200_ANGULAR_RATE_LENGTH;
+        message->id = RIVANNA3_S_VN200_ANGULAR_RATE_FRAME_ID;
+    }
+
+    void deserialize(const SerializedCanMessage *message) {
+        rivanna3_s_vn200_angular_rate_unpack(this, message->data,
+            RIVANNA3_S_VN200_ANGULAR_RATE_LENGTH);
+    }
+
+    static uint16_t get_message_ID() { return RIVANNA3_S_VN200_ANGULAR_RATE_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_VN200_ANGULAR_RATE_FRAME_ID; }
+
+    void log_msg(LogLevel level) const {
+        log(level, __FILE__, __LINE__,
+            "VN200AngularRate: gyro_x %u, gyro_y %u, gyro_z %u, sequence %u",
+            gyro_x, gyro_y, gyro_z, sequence);
+    }
+
+    bool has_active_fault() {
+        return 0; // this message has no fault signals
+    }
+} VN200AngularRate;
+
+
+typedef struct VN200Acceleration : CanMessage, rivanna3_s_vn200_acceleration_t {
+    void serialize(SerializedCanMessage *message) {
+        rivanna3_s_vn200_acceleration_pack(message->data, this,
+            RIVANNA3_S_VN200_ACCELERATION_LENGTH);
+        message->len = RIVANNA3_S_VN200_ACCELERATION_LENGTH;
+        message->id = RIVANNA3_S_VN200_ACCELERATION_FRAME_ID;
+    }
+
+    void deserialize(const SerializedCanMessage *message) {
+        rivanna3_s_vn200_acceleration_unpack(this, message->data,
+            RIVANNA3_S_VN200_ACCELERATION_LENGTH);
+    }
+
+    static uint16_t get_message_ID() { return RIVANNA3_S_VN200_ACCELERATION_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_VN200_ACCELERATION_FRAME_ID; }
+
+    void log_msg(LogLevel level) const {
+        log(level, __FILE__, __LINE__,
+            "VN200Acceleration: accel_x %u, accel_y %u, accel_z %u, sequence %u",
+            accel_x, accel_y, accel_z, sequence);
+    }
+
+    bool has_active_fault() {
+        return 0; // this message has no fault signals
+    }
+} VN200Acceleration;
+
+
+typedef struct VN200Position : CanMessage, rivanna3_s_vn200_position_t {
+    void serialize(SerializedCanMessage *message) {
+        rivanna3_s_vn200_position_pack(message->data, this,
+            RIVANNA3_S_VN200_POSITION_LENGTH);
+        message->len = RIVANNA3_S_VN200_POSITION_LENGTH;
+        message->id = RIVANNA3_S_VN200_POSITION_FRAME_ID;
+    }
+
+    void deserialize(const SerializedCanMessage *message) {
+        rivanna3_s_vn200_position_unpack(this, message->data,
+            RIVANNA3_S_VN200_POSITION_LENGTH);
+    }
+
+    static uint16_t get_message_ID() { return RIVANNA3_S_VN200_POSITION_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_VN200_POSITION_FRAME_ID; }
+
+    void log_msg(LogLevel level) const {
+        log(level, __FILE__, __LINE__,
+            "VN200Position: latitude %u, longitude %u",
+            latitude, longitude);
+    }
+
+    bool has_active_fault() {
+        return 0; // this message has no fault signals
+    }
+} VN200Position;
+
+
+typedef struct VN200Velocity : CanMessage, rivanna3_s_vn200_velocity_t {
+    void serialize(SerializedCanMessage *message) {
+        rivanna3_s_vn200_velocity_pack(message->data, this,
+            RIVANNA3_S_VN200_VELOCITY_LENGTH);
+        message->len = RIVANNA3_S_VN200_VELOCITY_LENGTH;
+        message->id = RIVANNA3_S_VN200_VELOCITY_FRAME_ID;
+    }
+
+    void deserialize(const SerializedCanMessage *message) {
+        rivanna3_s_vn200_velocity_unpack(this, message->data,
+            RIVANNA3_S_VN200_VELOCITY_LENGTH);
+    }
+
+    static uint16_t get_message_ID() { return RIVANNA3_S_VN200_VELOCITY_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_VN200_VELOCITY_FRAME_ID; }
+
+    void log_msg(LogLevel level) const {
+        log(level, __FILE__, __LINE__,
+            "VN200Velocity: vel_n %u, vel_e %u, vel_d %u, num_sats %u, gnss_fix %u",
+            vel_n, vel_e, vel_d, num_sats, gnss_fix);
+    }
+
+    bool has_active_fault() {
+        return 0; // this message has no fault signals
+    }
+} VN200Velocity;
+
+
+typedef struct VN200Status : CanMessage, rivanna3_s_vn200_status_t {
+    void serialize(SerializedCanMessage *message) {
+        rivanna3_s_vn200_status_pack(message->data, this,
+            RIVANNA3_S_VN200_STATUS_LENGTH);
+        message->len = RIVANNA3_S_VN200_STATUS_LENGTH;
+        message->id = RIVANNA3_S_VN200_STATUS_FRAME_ID;
+    }
+
+    void deserialize(const SerializedCanMessage *message) {
+        rivanna3_s_vn200_status_unpack(this, message->data,
+            RIVANNA3_S_VN200_STATUS_LENGTH);
+    }
+
+    static uint16_t get_message_ID() { return RIVANNA3_S_VN200_STATUS_FRAME_ID; }
+
+    uint16_t ID() const { return RIVANNA3_S_VN200_STATUS_FRAME_ID; }
+
+    void log_msg(LogLevel level) const {
+        log(level, __FILE__, __LINE__,
+            "VN200Status: altitude %u, ins_status %u, time_status %u, sequence %u",
+            altitude, ins_status, time_status, sequence);
+    }
+
+    bool has_active_fault() {
+        return 0; // this message has no fault signals
+    }
+} VN200Status;
+
 #endif

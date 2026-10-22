@@ -23,9 +23,10 @@
 #include "Timeout.h"
 #include "lock.h"
 #include "UartCobs.h"
+#include "FaultHandler.h"
 
 
-#define LOG_LEVEL INFO_LVL
+#define LOG_LEVEL DEBUG_LVL
 
 CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
 static SdCard* global_sd_card = nullptr;
@@ -61,6 +62,8 @@ void radio_send(const SerializedCanMessage &msg)
 }
 
 void handle_all_messages(const SerializedCanMessage &msg) {
+    // Check for faults
+    FaultHandler::check_for_any_faults(msg);
     // 1. send message over radio
     radio_send(msg);
     // 2. send message over LTE
@@ -81,7 +84,6 @@ void app_main() {
     static SPI sd_spi(SPI2_MOSI, SPI2_MISO, SPI2_SCK, 400000);
     static SdCard sd_card(&sd_spi);
     global_sd_card = &sd_card;
-    sd_card.attach_to_log();
     sd_card.attach_to_log();
     
     main_can.register_always_callback(handle_all_messages);
