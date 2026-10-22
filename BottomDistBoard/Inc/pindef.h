@@ -13,6 +13,10 @@
 #define LOG_TX PC_12
 #define LOG_RX PD_2
 
+#define DEBUG_IN PC_13
+#define DEBUG_OUT PC_1
+#define ID PC_5
+
 // #define LEFT_TURN_EN NC
 // #define RIGHT_TURN_EN NC
 // //#define STROBE_EN NC

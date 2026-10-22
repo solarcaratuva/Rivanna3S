@@ -9,7 +9,6 @@ HOST_DIR = "$(pwd)"
 CONTAINER_DIR = "/root/code"
 DEFAULT_MCU = "STM32G474RET6"
 TESTING_MCU = "STM32H743ZITX"
-HIL_MCU = "STM32U5A9NJH6Q" # drivers not done for this yet
 
 def container_exists(name):
     result = subprocess.run(f"docker ps -a --format '{{{{.Names}}}}'", shell=True, capture_output=True, text=True)
@@ -36,9 +35,7 @@ arg_parser.add_argument("--install", action="store_true", help="Create the Docke
 args = arg_parser.parse_args()
 
 
-if "hil" in args.args:
-    mcu = HIL_MCU
-elif "testing" in args.args:
+if "testing" in args.args:
     mcu = TESTING_MCU
 else:
     mcu = DEFAULT_MCU

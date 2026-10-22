@@ -16,6 +16,9 @@
 #define PRECHARGE_EN       PC_6
 #define MPPT_PWR_ON        PC_7
 #define PRECHARGE_MPPT_EN  PC_8
+#define DEBUG_IN           PC_13
+#define DEBUG_OUT          PC_1
+#define ID                 PC_5
 
 // #define LOG_TX             NC
 // #define LOG_RX             NC
