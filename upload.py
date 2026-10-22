@@ -18,7 +18,11 @@ BOARD_MAP = {
     "topdist": "build/bin/TopDistBoard.elf",
 }
 
-HIL_BOARD_MAP = {} # board path map specific to the HIL testing system server
+HIL_BOARD_MAP = {
+    "bottomdist": "build/bin/BottomDistBoard.elf",
+    "motor": "build/bin/MotorBoard.elf",
+    "topdist": "build/bin/TopDistBoard.elf",
+}
 CMD_ARGS_ERASE = "-c port=SWD mode=UR -e all"
 CMD_ARGS_FLASH = "-c port=SWD mode=UR -w {} -rst"
 OS = platform.system()
@@ -52,26 +56,28 @@ def is_wsl() -> bool:
 def main() -> None:
     args = get_args()
     board = args.board.lower().replace("board", "")
-    if board not in BOARD_MAP:
-        print(f"ERROR: '{args.board}' is not a valid board. Valid boards are [{', '.join(BOARD_MAP)}]")
+    board_map = HIL_BOARD_MAP if args.hil else BOARD_MAP
+    if board not in board_map:
+        print(f"ERROR: '{args.board}' is not a valid board. Valid boards are [{', '.join(board_map)}]")
         sys.exit(1)
-    if not os.path.exists(BOARD_MAP[board]):
+    image = board_map[board]
+    if not os.path.exists(image):
         print("ERROR: Firmware file does not exist. You need to compile.")
         sys.exit(4)
 
     match OS:
         case "Linux":
             if not is_wsl():  # non-WSL linux
-                path = BOARD_MAP[board]
+                path = image
                 cmd_erase = f"STM32_Programmer_CLI {CMD_ARGS_ERASE}"
                 cmd_flash = f"STM32_Programmer_CLI {CMD_ARGS_FLASH.format(path)}"
             else:  # actually WSL in Windows
-                copy_file_to_windows(BOARD_MAP[board])
+                copy_file_to_windows(image)
                 cmd_erase = f"powershell.exe \"& '{EXE_PATH}' {CMD_ARGS_ERASE}\""
                 firmware_path = "C:\\Windows\\Temp\\firmware.elf"
                 cmd_flash = f"powershell.exe \"& '{EXE_PATH}' {CMD_ARGS_FLASH.format(firmware_path)}\""
         case "Darwin":  # Mac:
-            path = BOARD_MAP[board]
+            path = image
             cmd_erase = f"STM32_Programmer_CLI {CMD_ARGS_ERASE}"
             cmd_flash = f"STM32_Programmer_CLI {CMD_ARGS_FLASH.format(path)}"
         case "Windows":
