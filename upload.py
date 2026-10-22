@@ -18,11 +18,8 @@ BOARD_MAP = {
     "topdist": "build/bin/TopDistBoard.elf",
 }
 
-HIL_BOARD_MAP = {
-    "bottomdist": "build/bin/BottomDistBoard.elf",
-    "motor": "build/bin/MotorBoard.elf",
-    "topdist": "build/bin/TopDistBoard.elf",
-}
+# ponytail: HIL images are the BOARD_MAP elves. Split paths if a HIL build dir diverges.
+HIL_BOARDS = ("bottomdist", "motor", "topdist")
 CMD_ARGS_ERASE = "-c port=SWD mode=UR -e all"
 CMD_ARGS_FLASH = "-c port=SWD mode=UR -w {} -rst"
 OS = platform.system()
@@ -56,7 +53,7 @@ def is_wsl() -> bool:
 def main() -> None:
     args = get_args()
     board = args.board.lower().replace("board", "")
-    board_map = HIL_BOARD_MAP if args.hil else BOARD_MAP
+    board_map = {name: BOARD_MAP[name] for name in HIL_BOARDS} if args.hil else BOARD_MAP
     if board not in board_map:
         print(f"ERROR: '{args.board}' is not a valid board. Valid boards are [{', '.join(board_map)}]")
         sys.exit(1)
