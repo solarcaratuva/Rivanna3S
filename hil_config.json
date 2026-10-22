@@ -1,0 +1,15 @@
+{
+    "containerName": "Rivanna3S_compile",
+    "compileCmd": "cd /root/code && cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake/arm-gcc.cmake -DCMAKE_BUILD_TYPE=Debug -DBOARD=STM32G474RET6 && cmake --build build",
+    "boards": {
+        "TopDist": {
+            "uploadCmd": "python3 upload.py TopDist --hil"
+        },
+        "BottomDist": {
+            "uploadCmd": "python3 upload.py BottomDist --hil"
+        },
+        "MotorBoard": {
+            "uploadCmd": "python3 upload.py MotorBoard --hil"
+        }
+    }
+}
