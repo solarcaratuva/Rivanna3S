@@ -7,6 +7,10 @@
 
 int main(void)
 {
+  // Report these faults separately instead of escalating them to HardFault.
+  SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk
+              | SCB_SHCSR_USGFAULTENA_Msk;
+
   startup_init();
 
   Thread main;

@@ -1,37 +1,25 @@
 #ifndef LED_FAULT_H
 #define LED_FAULT_H
 
-#include <stdint.h>
-#include "stm32_hal.h"
-
-// A pattern uses bits 0..3 for slow pulses and bits 4..7 for fast pulses
-// on all configured fault LEDs together. A pause separates complete patterns.
+// The fault code is the number of blinks on PC1. A pause separates groups.
 enum LedFault_Faults {
-    LedFault_HardFault     = 0x01, // one slow pulse
-    LedFault_StackOverflow = 0x02, // two slow pulses
-    LedFault_MallocFailed  = 0x03, // three slow pulses
-    LedFault_MemManage     = 0x04, // four slow pulses
-    LedFault_BusFault      = 0x05, // five slow pulses
-    LedFault_UsageFault    = 0x06, // six slow pulses
-    LedFault_NMI           = 0x07, // seven slow pulses
-    LedFault_SecureFault   = 0x08, // eight slow pulses (U5)
-    LedFault_RTOSAssert    = 0x11, // one slow pulse, then one fast pulse
+    LedFault_HardFault     = 1,
+    LedFault_StackOverflow = 2,
+    LedFault_MallocFailed  = 3,
+    LedFault_MemManage     = 4,
+    LedFault_BusFault      = 5,
+    LedFault_UsageFault    = 6,
+    LedFault_NMI           = 7,
+    LedFault_SecureFault   = 8, // U5
+    LedFault_RTOSAssert    = 9,
 };
-
-#define LED_FAULT_SLOW_BLINK_MS 500U
-#define LED_FAULT_FAST_BLINK_MS 200U
-#define LED_FAULT_PATTERN_PAUSE_MS 1500U
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// Emit one pattern on already configured, active-high outputs in one port.
-void LedFault_fault_signal_blink(GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin, uint8_t pattern);
-
-// Configure the board-defined LEDs directly, then repeat forever. The vendor
-// HAL_Delay runs from a polled SysTick time base with interrupts disabled.
-// All configured LEDs are ON before timing starts, even if the timer cannot run.
+// Turn on PC1 before the first delay, then repeat the fault code forever.
+// Busy-wait timing works with interrupts disabled and does not use HAL/RTOS ticks.
 __attribute__((noreturn)) void LedFault_halt(enum LedFault_Faults fault);
 
 #ifdef __cplusplus

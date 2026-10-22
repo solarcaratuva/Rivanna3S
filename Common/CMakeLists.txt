@@ -5,9 +5,6 @@ file(GLOB COMMON_DRIVERS_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/Src/*.c
   ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/Src/*.cpp
 )
-# Fault LED mappings are board-specific; add_board() compiles this driver once
-# into each firmware target instead of the shared library.
-list(REMOVE_ITEM COMMON_DRIVERS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/Drivers/Src/LedFault.cpp)
 
 # Collect common application support libraries.
 file(GLOB COMMON_LIBS_SOURCES
