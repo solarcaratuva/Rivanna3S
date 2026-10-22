@@ -16,6 +16,13 @@
 #define LOG_TX PC_12
 #define LOG_RX PD_2
 
+#define DEBUG_IN PC_13
+#define DEBUG_OUT PC_1
+#define ID PC_5
+
+#define IMU_TX PC_10
+#define IMU_RX PC_11
+
 #elif defined(STM32H743xx)
 
 #define LEFT_TURN_EN NC
@@ -30,6 +37,13 @@
 
 #define LOG_TX PD_8 // ST-LINK virtual COM port (USART3)
 #define LOG_RX PD_9
+
+#define DEBUG_IN NC
+#define DEBUG_OUT NC
+#define ID NC
+
+#define IMU_TX NC
+#define IMU_RX NC
 
 #else
 #error "TopDistBoard has no pin definitions for this target."

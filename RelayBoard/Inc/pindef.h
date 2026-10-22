@@ -18,6 +18,9 @@
 #define PRECHARGE_EN       PC_6
 #define MPPT_PWR_ON        PC_7
 #define PRECHARGE_MPPT_EN  PC_8
+#define DEBUG_IN           PC_13
+#define DEBUG_OUT          PC_1
+#define ID                 PC_5
 
 #elif defined(STM32H743xx)
 
@@ -36,6 +39,9 @@
 #define PRECHARGE_EN       NC
 #define MPPT_PWR_ON        NC
 #define PRECHARGE_MPPT_EN  NC
+#define DEBUG_IN           NC
+#define DEBUG_OUT          NC
+#define ID                 NC
 
 #else
 #error "RelayBoard has no pin definitions for this target."
