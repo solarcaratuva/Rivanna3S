@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 
+# Export the exact per-file compiler options for IDE IntelliSense.
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Configure cross-compilation toolchain when one is not provided by the caller.
 if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/arm-gcc.cmake" CACHE FILEPATH "Toolchain file")
