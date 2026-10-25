@@ -24,7 +24,10 @@ def is_wsl() -> bool:
     return False
 
 
-if not (OS == "Linux" and is_wsl()):
+RUNNING_IN_WSL = OS == "Linux" and is_wsl()
+
+# WSL delegates to Windows Python, which uses its own pyserial installation.
+if not RUNNING_IN_WSL:
     try:
         from serial import Serial
         import serial.tools.list_ports
@@ -153,7 +156,7 @@ def log(args, port: str) -> None:
 def main() -> None:
     args = get_args()
 
-    if OS == "Linux" and is_wsl(): # WSL, actually Windows
+    if RUNNING_IN_WSL: # WSL, actually Windows
         copy_file_to_windows(os.path.abspath(__file__))
         args_str = compress_args(args)
         subprocess.run(f"cmd.exe /c start \"\" cmd /k python C:\\\\Windows\\\\Temp\\\\monitor.py {args_str}", capture_output=True, shell=True, check=True)
