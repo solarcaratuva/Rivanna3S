@@ -74,12 +74,16 @@ public:
      */
     int read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms);
 
+    // Allows margin above the maximum framed radio packet's ~270 ms at 9600 baud.
     static constexpr uint32_t DEFAULT_WRITE_TIMEOUT_MS = 500U;
 
     /**
-     * @brief Writes data to the UART (blocking call).
+     * @brief Writes data to the UART with a transmit-completion timeout.
      * @param buffer Pointer to the data buffer to be transmitted.
      * @param length Number of bytes to transmit.
+     * @param timeout_ms Transmit-completion wait in milliseconds; portMAX_DELAY waits forever.
+     * @return 0 on success, HAL error flags on UART error, -1 if uninitialized or
+     *         unable to start, -2 on timeout, or -3 if the mutex cannot be acquired.
      */
     int write(uint8_t *buffer, uint16_t length, uint32_t timeout_ms = DEFAULT_WRITE_TIMEOUT_MS);
 

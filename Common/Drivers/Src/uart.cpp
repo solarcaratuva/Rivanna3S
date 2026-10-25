@@ -134,6 +134,7 @@ int UART::write(uint8_t* buffer, uint16_t length, uint32_t timeout_ms) {
         if (notified == 0) {
             HAL_UART_Abort_IT(huart);
             txTask = nullptr;
+            // Discard a late completion so it cannot satisfy the next write's wait.
             ulTaskNotifyTake(pdTRUE, 0);
             xSemaphoreGive(mutex);
             return -2;
