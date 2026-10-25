@@ -4,7 +4,7 @@
 #include "task.h"
 
 namespace {
-// Busy-wait delay used in fault handlers where SysTick/RTOS interrupts are disabled.
+// Busy-wait delay (~4 CPU cycles per loop) since SysTick/RTOS interrupts are disabled.
 void spin_ms(uint32_t ms)
 {
     uint32_t loops = (SystemCoreClock / 4000U) * ms;
@@ -38,16 +38,13 @@ void LedFault_halt(enum LedFault_Faults fault)
     }
 }
 
-// FreeRTOS hook invoked when pvPortMalloc() fails.
+// FreeRTOS hooks for heap allocation failures and task stack overflows.
 extern "C" void vApplicationMallocFailedHook(void)
 {
     LedFault_halt(LedFault_MallocFailed);
 }
 
-// FreeRTOS hook invoked when a task overflows its stack (configCHECK_FOR_STACK_OVERFLOW).
-extern "C" void vApplicationStackOverflowHook(TaskHandle_t task, char *task_name)
+extern "C" void vApplicationStackOverflowHook(TaskHandle_t, char *)
 {
-    (void)task;
-    (void)task_name;
     LedFault_halt(LedFault_StackOverflow);
 }
