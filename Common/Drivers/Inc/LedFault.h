@@ -1,7 +1,12 @@
 #ifndef LED_FAULT_H
 #define LED_FAULT_H
 
-// The fault code is the number of blinks on PC1. A pause separates groups.
+/**
+ * @brief Fault codes signaled on the board debug LED (PC1).
+ *
+ * Each value corresponds to the number of LED blinks per cycle
+ * before a pause and repeat.
+ */
 enum LedFault_Faults {
     LedFault_HardFault     = 1,
     LedFault_StackOverflow = 2,
@@ -10,7 +15,7 @@ enum LedFault_Faults {
     LedFault_BusFault      = 5,
     LedFault_UsageFault    = 6,
     LedFault_NMI           = 7,
-    LedFault_SecureFault   = 8, // U5
+    LedFault_SecureFault   = 8, // STM32U5 only
     LedFault_RTOSAssert    = 9,
 };
 
@@ -18,8 +23,10 @@ enum LedFault_Faults {
 extern "C" {
 #endif
 
-// Turn on PC1 before the first delay, then repeat the fault code forever.
-// Busy-wait timing works with interrupts disabled and does not use HAL/RTOS ticks.
+/**
+ * @brief Disable interrupts and blink the fault code on PC1 indefinitely.
+ * @param fault Fault code determining the number of blinks per cycle.
+ */
 __attribute__((noreturn)) void LedFault_halt(enum LedFault_Faults fault);
 
 #ifdef __cplusplus
