@@ -74,12 +74,14 @@ public:
      */
     int read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms);
 
+    static constexpr uint32_t DEFAULT_WRITE_TIMEOUT_MS = 500U;
+
     /**
      * @brief Writes data to the UART (blocking call).
      * @param buffer Pointer to the data buffer to be transmitted.
      * @param length Number of bytes to transmit.
      */
-    int write(uint8_t *buffer, uint16_t length);
+    int write(uint8_t *buffer, uint16_t length, uint32_t timeout_ms = DEFAULT_WRITE_TIMEOUT_MS);
 
 
     /**

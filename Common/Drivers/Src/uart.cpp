@@ -112,7 +112,7 @@ int UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
     return -1; //unitialized
 }
 
-int UART::write(uint8_t* buffer, uint16_t length) {
+int UART::write(uint8_t* buffer, uint16_t length, uint32_t timeout_ms) {
 	if(initialized) {
         if (xSemaphoreTake(mutex, portMAX_DELAY) != pdTRUE) return -3;
         last_error = HAL_UART_ERROR_NONE;
@@ -124,7 +124,21 @@ int UART::write(uint8_t* buffer, uint16_t length) {
             return -1;
         }
 
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        TickType_t timeoutTicks =
+        (timeout_ms == portMAX_DELAY)
+            ? portMAX_DELAY
+            : pdMS_TO_TICKS(timeout_ms);
+
+        uint32_t notified = ulTaskNotifyTake(pdTRUE, timeoutTicks);
+
+        if (notified == 0) {
+            HAL_UART_Abort_IT(huart);
+            txTask = nullptr;
+            ulTaskNotifyTake(pdTRUE, 0);
+            xSemaphoreGive(mutex);
+            return -2;
+        }
+
         xSemaphoreGive(mutex);
 
         return last_error;
