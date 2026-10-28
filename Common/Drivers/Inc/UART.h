@@ -47,6 +47,13 @@
 class UART {
 public:
     /**
+     * @brief Default transmit-completion timeout for write(), in milliseconds.
+     *
+     * Allows margin above the maximum framed radio packet's ~270 ms at 9600 baud.
+     */
+    static constexpr uint32_t DEFAULT_WRITE_TIMEOUT_MS = 500U;
+
+    /**
      * @brief Indicates whether the UART peripheral was successfully initialized.
      */
     bool initialized = false;
@@ -73,9 +80,6 @@ public:
      * @param timeout_ms Timeout in milliseconds before aborting the read.
      */
     int read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms);
-
-    // Allows margin above the maximum framed radio packet's ~270 ms at 9600 baud.
-    static constexpr uint32_t DEFAULT_WRITE_TIMEOUT_MS = 500U;
 
     /**
      * @brief Writes data to the UART with a transmit-completion timeout.
