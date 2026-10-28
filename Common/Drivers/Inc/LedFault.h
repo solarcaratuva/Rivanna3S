@@ -24,17 +24,17 @@ extern "C" {
 #endif
 
 /**
- * Disable interrupts and blink the fault code on the debug LED forever.
+ * @brief Disable interrupts and blink the fault code on the debug LED forever.
  *
  * Pin selected by the DEBUG_LED_* defines in LedFault.cpp. Best-effort after a
  * stack overflow: a blown SP can re-fault in the prologue and lock up instead.
  *
- * Fault code determining the number of blinks per cycle.
+ * @param fault Fault code determining the number of blinks per cycle.
  */
 __attribute__((noreturn)) void LedFault_halt(enum LedFault_Faults fault);
 
 /**
- * LedFault_halt(LedFault_RTOSAssert), as a plain void(void) entry point
+ * @brief LedFault_halt(LedFault_RTOSAssert), as a plain void(void) entry point
  *        so configASSERT() does not need this header's enum.
  */
 __attribute__((noreturn)) void LedFault_halt_assert(void);
