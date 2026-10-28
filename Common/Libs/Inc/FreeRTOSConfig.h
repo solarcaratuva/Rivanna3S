@@ -165,9 +165,14 @@ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
 /* USER CODE BEGIN 1 */
-#include "LedFault.h"
+/* Declared here, not via LedFault.h, to keep the kernel off Common/Drivers. */
+#ifdef __cplusplus
+extern "C"
+#endif
+__attribute__((noreturn)) void LedFault_halt_assert(void);
+
 #define configASSERT(x) do { \
-    if ((x) == 0) { LedFault_halt(LedFault_RTOSAssert); } \
+    if ((x) == 0) { LedFault_halt_assert(); } \
 } while (0)
 /* USER CODE END 1 */
 
