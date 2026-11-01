@@ -2,7 +2,8 @@
 
 import subprocess
 import argparse
-import sys
+import json
+from pathlib import Path
 
 CONTAINER = "Rivanna3S_compile"
 HOST_DIR = "$(pwd)"
@@ -26,6 +27,17 @@ def create_container():
         check=True
     )
     print("Container created successfully.")
+
+
+def normalize_compile_commands():
+    source_database = Path(build_dir) / "compile_commands.json"
+    commands = json.loads(source_database.read_text())
+    workspace_dir = str(Path.cwd())
+    for entry in commands:
+        for key in ("directory", "file", "command"):
+            if key in entry:
+                entry[key] = entry[key].replace(CONTAINER_DIR, workspace_dir)
+    Path("compile_commands.json").write_text(json.dumps(commands, indent=2) + "\n")
 
 
 arg_parser = argparse.ArgumentParser(description="Compile Rivanna3S code in the Docker container.")
@@ -67,6 +79,8 @@ command = (
 process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=args.silent, text=True)
 if args.silent and process.returncode != 0:
     print("CMake configuration failed.")
+if process.returncode == 0:
+    normalize_compile_commands()
 
 command = f"cd {CONTAINER_DIR} && cmake --build {build_dir} {' '.join(args.args)}"
 compile_process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=args.silent, text=True)

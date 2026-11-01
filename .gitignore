@@ -5,7 +5,9 @@
 .launch
 .cproject
 .mxproject
-.vscode
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/settings.json
 .project
 Drivers/code_generation/peripheralmap.cpp
 Drivers/code_generation/pinmap.h
@@ -13,6 +15,7 @@ Drivers/code_generation/pinmap.h
 Drivers/code_generation/input
 build
 build*
+compile_commands.json
 Drivers/code_generation/test_dst/
 Drivers/code_generation/test_src/
 .DS_Store
