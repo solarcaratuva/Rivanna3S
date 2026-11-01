@@ -40,6 +40,7 @@ void FirmwareUploader::handle_uart_mock()
 {
     char command[64];
     if (read_line(command, sizeof(command), 100) < 0) return;
+    if (std::strncmp(command, "UPLOAD ", 7) != 0) return;
     unsigned board, expected_crc;
     unsigned long image_size;
     char extra;
