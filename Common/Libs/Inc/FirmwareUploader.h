@@ -98,10 +98,10 @@ private:
     //--------------------------------------------------
 
     /** @brief Handle UpdateControl CAN messsage */
-    void receive_update_control(SerializedCanMessage &msg);
+    void receive_update_control(const SerializedCanMessage &msg);
 
     /** @brief Handle UpdateData CAN message */
-    void receive_update_data(SerializedCanMessage &msg);
+    void receive_update_data(const SerializedCanMessage &msg);
 
     /**
      * @brief Begin mass erase after SETUP command.

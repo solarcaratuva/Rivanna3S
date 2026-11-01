@@ -17,10 +17,15 @@ file(GLOB COMMON_STM_LIBS_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/STM_Libs/*.c
 )
 
+file(GLOB COMMON_CAN_STRUCTS
+  ${CMAKE_CURRENT_SOURCE_DIR}/can_structs/Src/*.c
+)
+
 set(COMMON_SOURCES
   ${COMMON_DRIVERS_SOURCES}
   ${COMMON_LIBS_SOURCES}
   ${COMMON_STM_LIBS_SOURCES}
+  ${COMMON_CAN_STRUCTS}
   ${CMAKE_CURRENT_SOURCE_DIR}/startup.cpp
 )
 
@@ -41,6 +46,7 @@ target_include_directories(common PUBLIC
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/${FREERTOS_PORT}
   ${CMAKE_SOURCE_DIR}/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
+  ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 # Inherit architecture/build flags from parent scope if provided.

@@ -7,12 +7,13 @@
 #include "thread.h"
 #include "Clock.h"
 #include "DigitalOut.h"
+#include "FiniteQueue.h"
 
 /**
  * @brief Callback function type for CAN message reception
  * 
  * User-defined callbacks receive a const reference to the received raw CAN frame.
- * The callback should process the message quickly to avoid blocking the receiver thread.
+ * The callback should process the message quickly to avoid blocking the handler thread.
  */
 using CanCallback = void (*)(const SerializedCanMessage &msg);
 
@@ -33,8 +34,9 @@ static inline const char* CanNetworkToString(CanNetwork net) {
  * @brief High-level CAN interface with automatic message dispatching
  * 
  * This class provides a callback-based interface for CAN communication. It manages:
- * - A background receiver thread that continuously polls for incoming messages
- * - Automatic dispatching of messages to registered ID-specific callbacks
+ * - A background receiver thread that continuously drains the hardware CAN FIFO
+ *   into a software queue
+ * - A background handler thread that dispatches queued messages to registered callbacks
  * - Optional "always" callback invoked for every received message
  * - Thread-safe message transmission
  * - Multiple independent CAN networks (Main, Motor, etc.) via the CanNetwork enum
@@ -63,11 +65,12 @@ class CanInterface
 {
 public:
     /**
-     * @brief Construct a new CanInterface object and start the receiver thread
+     * @brief Construct a new CanInterface object and start the receiver/handler threads
      * 
      * This constructor initializes the underlying CAN peripheral with the given TX/RX pins
-     * and baudrate, and immediately starts a background thread that continuously receives
-     * CAN messages and dispatches them to registered callbacks.
+     * and baudrate, and immediately starts background threads that:
+     *   1. Receive CAN messages into a software queue
+     *   2. Dispatch queued messages to registered callbacks
      * 
      * The network parameter specifies which CAN network this interface belongs to (Main or Motor).
      * Multiple CanInterface instances can exist simultaneously, each serving a different network.
@@ -122,7 +125,7 @@ public:
      * 
      * When a CAN frame with the given @p msg_id is received, the corresponding
      * callback will be invoked with the deserialized message as its argument.
-     * The callback is executed in the context of the receiver thread.
+     * The callback is executed in the context of the handler thread.
      * 
      * @warning Only one callback per CAN ID is supported. Registering multiple callbacks
      *          for the same ID will result in only the first registered callback being invoked.
@@ -162,28 +165,29 @@ public:
     int register_always_callback(CanCallback callback);
 
     /**
-     * @brief Pause the receiver thread's message processing
+     * @brief Pause the CAN receive thread's message processing
      * 
-     * After calling this function, the background receiver thread will stop processing
-     * incoming messages until restart_receiver_execution() is called. The thread itself
-     * continues running but enters a sleep loop and will not invoke any callbacks.
+     * After calling this function, the background receiver and handler threads will stop
+     * processing incoming messages until restart_receiver_execution() is called. The
+     * threads themselves continue running but enter a sleep loop.
      * 
      * This is useful when you need to temporarily disable CAN message processing without
      * destroying the CanInterface object.
      * 
-     * @note Messages that arrive while paused will remain in the CAN hardware FIFO
-     *       and will be processed when the receiver is restarted (FIFO capacity permitting)
+     * @note Messages already present in the software queue will remain queued while paused.
+     *       Messages arriving after the receiver pauses will remain in the CAN hardware FIFO
+     *       until reception resumes (FIFO capacity permitting).
      */
     void stop_receiver_execution();
 
     /**
-     * @brief Resume the receiver thread's message processing
+     * @brief Resume the CAN receive thread's message processing
      * 
      * This function re-enables processing of incoming CAN messages by the background
      * receiver thread after it has been paused with stop_receiver_execution().
      * 
-     * @note Any messages that accumulated in the hardware FIFO while paused will be
-     *       processed once reception is resumed
+     * @note Any messages that accumulated in the hardware FIFO or software queue while
+     *       paused will be processed once reception is resumed
      */
     void restart_receiver_execution();
 
@@ -191,13 +195,17 @@ private:
     CAN     my_can;                              ///< Underlying CAN peripheral driver
     DigitalOut standby_pin;                      ///< Standby pin for controlling CAN transceiver power state
     bool    receiverRunning;                      ///< Flag to control receiver thread execution
-    Thread  interface_thread;                     ///< Background thread for message reception
+    Thread  receiver_thread_handle;               ///< Background thread for hardware CAN reception
+    Thread  handler_thread_handle;                ///< Background thread for queued message dispatch
+    FiniteQueue receive_queue;                    ///< Software queue decoupling hardware RX from callback execution
     Lock    callback_lock;                        ///< Mutex protecting callback arrays and registration
     CanNetwork network;                        ///< CAN network type (Main or Motor)
+    uint32_t last_queue_drop_warn_time_ms = 0;    ///< Timestamp of last software RX queue overflow warning
 
     int num_callbacks = 0;                        ///< Current number of registered ID-specific callbacks
 
     static constexpr int max_callbacks = 16;      ///< Maximum number of ID-specific callbacks
+    static constexpr int receive_queue_depth = 16;///< Number of queued raw CAN frames pending dispatch
 
     uint16_t      CANid_arr[max_callbacks];      ///< Array of registered CAN IDs
     CanCallback callback_arr[max_callbacks];     ///< Array of callbacks corresponding to CAN IDs
@@ -206,10 +214,9 @@ private:
     /**
      * @brief Background receiver loop entry point (runs in dedicated thread)
      * 
-     * This function continuously polls the CAN interface for new messages, dispatching
-     * them to the appropriate per-ID callback and the "always" callback (if registered).
-     * When reception is paused via stop_receiver_execution(), the loop sleeps briefly
-     * instead of processing messages.
+     * This function continuously polls the CAN interface for new messages and pushes
+     * them into the software queue. When reception is paused via
+     * stop_receiver_execution(), the loop sleeps briefly instead of polling CAN.
      * 
      * @note This function is intended to run indefinitely in a dedicated thread and
      *       should not be called directly by user code.
@@ -217,19 +224,28 @@ private:
     void receiver_thread();
 
     /**
-     * @brief Receive a single CAN message and dispatch to registered callbacks
+     * @brief Receive a single CAN message and enqueue it for later dispatch
      * 
-     * Attempts to read a single CAN message from the underlying driver. If a message
-     * is successfully received, the function:
-     *   1. Looks up any registered per-ID callback and invokes it (if present)
-     *   2. Invokes the "always" callback, if registered
-     * 
-     * This function is normally called repeatedly from receiver_thread().
-     * 
-     * @note Callbacks are executed synchronously in the receiver thread context,
-     *       so they should execute quickly to avoid blocking message processing.
+     * Attempts to read a single CAN message from the underlying driver and push it
+     * into the software queue. Callback dispatch happens separately in handle().
      */
     void receive();
+
+    /**
+     * @brief Background handler loop entry point (runs in dedicated thread)
+     *
+     * Continuously waits for queued CAN messages and dispatches them to the registered
+     * per-ID and always callbacks.
+     */
+    void handle_thread();
+
+    /**
+     * @brief Handle a single queued CAN message
+     *
+     * Blocks waiting for the next queued CAN frame, then dispatches it to any matching
+     * callback registrations.
+     */
+    void handle();
 
     /**
      * @brief Convert a byte array to a hexadecimal string representation

@@ -9,6 +9,8 @@ import sys
 
 OS = platform.system()
 
+last_exception = None
+
 if OS != "Linux" or True:
     try:
         from serial import Serial
@@ -113,8 +115,12 @@ def log(args, port: str) -> None:
                 text = ser.readline().decode("utf-8").strip()
                 messageCount += 1
             except Exception as e:
-                text = f"EXCEPTION THROWN: {e}"
                 errorCount += 1
+                if e != last_exception:
+                    text = f"EXCEPTION THROWN: {e}"
+                    last_exception = e
+                else:
+                    continue
 
             # handle the log level (if there is one)
             if args.level and not in_level(text, args.level): # if there is a level and the text does not pass it, skip it

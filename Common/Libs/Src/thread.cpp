@@ -16,6 +16,7 @@ BaseType_t Thread::start(void (*fn)()) {
                 // Run the function in a loop for continuous execution
                 while(1) {
                     fn();
+                    taskYIELD();
                 }
                 // This should never be reached, but just in case
                 vTaskDelete(NULL);

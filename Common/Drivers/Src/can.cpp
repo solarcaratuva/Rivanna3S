@@ -5,9 +5,13 @@
 #include "peripheralmap.h"
 #include "lock.h"
 #include "fdcan.h"
+#include "Clock.h"
+#include "DigitalOut.h"
 
 // extern "C" void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef* fdcanHandle, Pin pin, uint8_t af);
 // extern "C" FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* fdcan, uint32_t baudrate);
+
+DigitalOut light(PC_1);
 
 
 CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
@@ -89,19 +93,22 @@ int CAN::read(SerializedCanMessage *msg)
         return 1;
     }
 
-    instance_lock.lock();
-
-    // Check how many frames are pending in FIFO0
+    // Wait for at least one frame without holding the shared CAN lock.
+    // Holding the lock here can block writers indefinitely on a quiet bus.
     uint32_t pending = 0;
     while (pending == 0) {
+        Clock::sleep_for(1);
         pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
     }
 
+    instance_lock.lock();
+
     // Check if the RX queue is full (field name differs across STM32 families).
 #if defined(STM32G474xx)
-    if (pending > 0) {
+    if (pending > 2) {
         // G4 HAL does not expose FIFO element count in the init struct.
-        log_warn("CAN RX pending=%lu; monitor for dropped frames", pending);
+       log_warn("CAN RX pending=%lu; monitor for dropped frames", pending);
+       //light.write(!light.read());
     }
 #else
     if (pending == hfdcan->Init.RxFifo0ElmtsNbr) {
@@ -110,6 +117,41 @@ int CAN::read(SerializedCanMessage *msg)
 #endif
     
     uint8_t rxData[64] = {0};
+
+    HAL_StatusTypeDef status =
+        HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rxData);
+
+    if (status != HAL_OK)
+    {
+        log_warn("CAN read failed: status %d, error code %lx", status, hfdcan->ErrorCode);
+        instance_lock.unlock();
+        return 2;
+    }
+
+    msg->id = static_cast<uint16_t>(rxHeader.Identifier);
+    msg->len = dlcToBytes(rxHeader.DataLength);
+    memcpy(msg->data, rxData, msg->len);
+
+    instance_lock.unlock();
+
+    return 0;
+}
+
+int CAN::try_read(SerializedCanMessage *msg)
+{
+    if (!initialized) {
+        log_warn("CAN read failed: CAN not initialized");
+        return 1;
+    }
+
+    uint32_t pending = HAL_FDCAN_GetRxFifoFillLevel(hfdcan, FDCAN_RX_FIFO0);
+    if (pending == 0) {
+        return 3;
+    }
+
+    instance_lock.lock();
+
+    uint8_t rxData[8] = {0};
 
     HAL_StatusTypeDef status =
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rxData);

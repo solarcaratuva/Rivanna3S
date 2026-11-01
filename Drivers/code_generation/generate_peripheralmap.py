@@ -20,6 +20,14 @@ SIGNAL_MAP = {
 }
 
 
+def get_hal_include(family: str) -> str:
+    family = family.lower()
+    match = re.match(r"^(stm32[a-z])(\d)", family)
+    if match:
+        return f'{match.group(1)}{match.group(2)}xx_hal.h'
+    return f'{family}xx_hal.h'
+
+
 def parse_XML_peripheralmap(dir: str) -> dict:
     tree = ET.parse(dir)
     root = tree.getroot()
@@ -61,6 +69,9 @@ def parse_XML_peripheralmap(dir: str) -> dict:
                 if peripheral == "ADC":
                     if sig_type.startswith("INP"):
                         channel = int(sig_type[3:])
+                        instances[instance].setdefault(channel, []).append(pin_name)
+                    elif sig_type.startswith("IN"):
+                        channel = int(sig_type[2:])
                         instances[instance].setdefault(channel, []).append(pin_name)
 
                 # For other peripherals, check if signal type is valid
@@ -308,7 +319,7 @@ def write_adc_array(f, peripheral_map: dict) -> None:
 def create_cpp_file(file_path: str, peripheral_map: dict, pin_map: dict, af_map: dict, family: str) -> None:
     with open(file_path, 'w') as f:
         # Includes
-        f.write(f'#include "peripheralmap.h"\n#include "{family.lower()}xx_hal.h"\n\n')
+        f.write(f'#include "peripheralmap.h"\n#include "{get_hal_include(family)}"\n\n')
 
         # Peripheral arrays
         write_uart_array(f, peripheral_map)

@@ -10,7 +10,9 @@
 // Construction & lifecycle
 // ---------------------------------------------------------------------------
 
-FirmwareUploader::FirmwareUploader(UART &uart, CanInterface &can, uint32_t queue_depth, uint32_t current_board)
+FirmwareUploader* FirmwareUploader::s_instance_ = nullptr;
+
+FirmwareUploader::FirmwareUploader(UART &uart, CanInterface &can, uint32_t current_board, uint32_t queue_depth)
     : uart_(uart),
       can_(can),
       queue_(queue_depth, FW_BLOCK_SIZE),
@@ -29,11 +31,11 @@ void FirmwareUploader::start()
     //
     // If your Thread class only accepts a plain function pointer (no arg),
     // store `this` in a file-scope pointer and call it from a wrapper lambda:
-    static FirmwareUploader* s_instance = this;
-    consumer_thread_.start([]{ s_instance->consumer_task(s_instance); });
-    UART_listener_thread_.start([]{ s_instance->uart_listener_task(s_instance); });
-    can_.register_callback(UpdateControl::get_message_ID(), [](SerializedCanMessage &msg){ s_instance_->receive_update_control(msg); });
-    can_.register_callback(UpdateData::get_message_ID(), [](SerializedCanMessage &msg){ s_instance_->receive_update_data(msg); });
+    s_instance_ = this;
+    consumer_thread_.start([]{ s_instance_->consumer_task(s_instance_); });
+    UART_listener_thread_.start([]{ s_instance_->uart_listener_task(s_instance_); });
+    can_.register_callback(UpdateControl::get_message_ID(), [](const SerializedCanMessage &msg){ s_instance_->receive_update_control(msg); });
+    can_.register_callback(UpdateData::get_message_ID(), [](const SerializedCanMessage &msg){ s_instance_->receive_update_data(msg); });
 }
 
 // ---------------------------------------------------------------------------
@@ -152,11 +154,10 @@ void FirmwareUploader::consumer_task(void *arg)
             if (self->queue_.get(block, FW_BLOCK_SIZE))
             {
                 // Send block over CAN to target board
-                UpdateData data_msg{};
-                // Copy block data into message structure 
-                for(int i = 0; i < FW_BLOCK_SIZE; i++){
-                    data_msg.data[i] = block[i];
-                }
+                SerializedCanMessage data_msg{};
+                data_msg.id = UpdateData::get_message_ID();
+                data_msg.len = FW_BLOCK_SIZE;
+                std::memcpy(data_msg.data, block, FW_BLOCK_SIZE);
                 self->can_.write(&data_msg);
 
             }
@@ -251,7 +252,7 @@ void FirmwareUploader::set_flash_bank(uint8_t bank)
 // Flash writing logic (STM32H7 example)
 // ---------------------------------------------------------------------------
 
-bool FirmwareUploader::write_flash(uint32_t address, uint8_t *data, size_t len)
+bool FirmwareUploader::write_flash(uint32_t address, const uint8_t *data, size_t len)
 {
     if (len % 32 != 0)
     {
@@ -321,7 +322,7 @@ uint16_t FirmwareUploader::crc16_hqx(const uint8_t* data, uint16_t len, uint16_t
 // Target board CAN handlers
 // ---------------------------------------------------------------------------
 
-void FirmwareUploader::receive_update_control(SerializedCanMessage &msg) {
+void FirmwareUploader::receive_update_control(const SerializedCanMessage &msg) {
     UpdateControl control{};
     control.deserialize(&msg);
 
@@ -367,7 +368,7 @@ void FirmwareUploader::receive_update_control(SerializedCanMessage &msg) {
     }
 }
 
-void FirmwareUploader::receive_update_data(SerializedCanMessage &msg) {
+void FirmwareUploader::receive_update_data(const SerializedCanMessage &msg) {
     // No need to deserialize into a struct since it's just raw data blocks. Just forward to flash write.
     if (target_state_ == TargetUpdateState::RECEIVING_DATA) {
         // Update the running CRC with the new block of data

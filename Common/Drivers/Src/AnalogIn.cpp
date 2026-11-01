@@ -3,10 +3,13 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "log.h"
+#include "lock.h"
 
 // function declarations for init functions in a hardware-specific adc.c file
-extern "C" ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, uint32_t rank);
+extern "C" ADC_HandleTypeDef* ADC_init(ADC_TypeDef* hadc, uint32_t channel, bool first_use);
 extern "C" void HAL_ADC_MspInit_custom(ADC_TypeDef* adcHandle, Pin pin);
+
+Lock AnalogIn::lock_;
 
 
 AnalogIn::AnalogIn(Pin pin) {
@@ -22,8 +25,8 @@ AnalogIn::AnalogIn(Pin pin) {
 
     HAL_ADC_MspInit_custom(adc_periph_->instance, pin);
 
-    uint32_t rank = adc_get_rank(adc_periph_);
-    hadc_ = ADC_init(adc_periph_->instance, adc_periph_->channel, rank);
+    bool first_use = use_adc(adc_periph_->instance);
+    hadc_ = ADC_init(adc_periph_->instance, adc_periph_->channel, first_use);
     
     initialized = true;
 }
@@ -33,11 +36,14 @@ uint16_t AnalogIn::read_u12() {
         log_warn("AnalogIn read failed: AnalogIn not initialized");
         return 10.0f;
     }
+    lock_.lock();
+    ADC_init(adc_periph_->instance, adc_periph_->channel, false);
 
     // Start ADC conversion
     HAL_StatusTypeDef check = HAL_ADC_Start(hadc_);
     if (check != HAL_OK) {
         log_warn("AnalogIn read failed: HAL_ADC_Start status %d", check);
+        lock_.unlock();
         return 11.0f;
     }
 
@@ -45,6 +51,7 @@ uint16_t AnalogIn::read_u12() {
     check = HAL_ADC_PollForConversion(hadc_, HAL_MAX_DELAY);
     if (check != HAL_OK) {
         log_warn("AnalogIn read failed: HAL_ADC_PollForConversion status %d", check);
+        lock_.unlock();
         return 12.0f;
     }
 
@@ -55,9 +62,11 @@ uint16_t AnalogIn::read_u12() {
     check = HAL_ADC_Stop(hadc_);
     if (check != HAL_OK) {
         log_warn("AnalogIn read failed: HAL_ADC_Stop status %d", check);
+        lock_.unlock();
         return 13.0f;
     }
 
+    lock_.unlock();
     return value;
 }
 
@@ -69,6 +78,14 @@ float AnalogIn::read() {
 
 float AnalogIn::read_voltage(){
 	return read() * 3.3f;
+}
+
+uint8_t AnalogIn::read_hex_percent() {
+    float voltage = read_voltage();
+    float percent = (voltage / 3.3f) * 255.0f;
+    if (percent < 0.0f) percent = 0.0f;
+    if (percent > 255.0f) percent = 255.0f;
+    return static_cast<uint8_t>(percent);
 }
 
 
@@ -83,26 +100,4 @@ ADC_Peripheral* AnalogIn::findADCPin(Pin pin) {
         }
     }
     return nullptr; // No matching ADC peripheral found
-}
-
-uint32_t AnalogIn::adc_get_rank(const ADC_Peripheral* peripheral) {
-	uint8_t index = peripheral->instance_num;
-
-	uint32_t rank;
-	switch (adc_channels_claimed[index]) {
-		case 0: rank = ADC_REGULAR_RANK_1; break;
-		case 1: rank = ADC_REGULAR_RANK_2; break;
-		case 2: rank = ADC_REGULAR_RANK_3; break;
-		case 3: rank = ADC_REGULAR_RANK_4; break;
-		case 4: rank = ADC_REGULAR_RANK_5; break;
-		case 5: rank = ADC_REGULAR_RANK_6; break;
-		case 6: rank = ADC_REGULAR_RANK_7; break;
-		case 7: rank = ADC_REGULAR_RANK_8; break;
-		case 8: rank = ADC_REGULAR_RANK_9; break;
-		case 9: rank = ADC_REGULAR_RANK_10; break;
-		default: rank = ADC_REGULAR_RANK_1; break;
-	}
-
-	adc_channels_claimed[index] += 1;
-	return rank;
 }

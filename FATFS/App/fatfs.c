@@ -17,6 +17,7 @@
   */
 /* USER CODE END Header */
 #include "fatfs.h"
+#include <string.h>
 
 uint8_t retUSER;    /* Return value for USER */
 char USERPath[4];   /* USER logical drive path */
@@ -50,7 +51,6 @@ DWORD get_fattime(void)
 }
 
 /* USER CODE BEGIN Application */
-#include <string.h>
 
 uint8_t FATFS_SD_TestWrite(void) {
     FRESULT res;

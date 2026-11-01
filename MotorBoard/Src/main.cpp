@@ -1,62 +1,156 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-#include "semphr.h"
-#include "timers.h"
-#include "pinmap.h"
-#include "peripheralmap.h"
+#include <cmath>
+
+#include "AnalogIn.h"
+#include "BPSCanStructs.h"
+#include "CanInterface.h"
+#include "Clock.h"
 #include "DigitalIn.h"
 #include "DigitalOut.h"
-#include "UART.h"
-#include "AnalogIn.h"
-#include "Timeout.h"
-#include "Clock.h"
-#include "thread.h"
-#include "Timeout.h"
-#include "lock.h"
+#include "../../Common/Drivers/Inc/I2C.h"
+#include "MotorControllerCanStructs.h"
+#include "MotorInterface.h"
+#include "Rivanna3SCanStructs.h"
 #include "log.h"
-#include "can.h"
-#include "BPSCanStructs.h"
-#include "Rivanna3CanStructs.h"
-#include "FiniteQueue.h"
-#include "CanInterface.h"
-#include "FirmwareUploader.h"
+#include "pindef.h"
+#include "thread.h"
+#include "FaultHandler.h"
 
+bool regen_enabled = false;
+uint16_t throttle = 0;
+bool brake = false;
 
+#define MOTOR_CONTROL_PERIOD 100
+
+I2C motor_control_serial_bus(MTR_SDA, MTR_SCL, I2C::STANDARD);
+MotorInterface motor_interface(&motor_control_serial_bus);
+
+CanInterface main_can(CAN_TX, CAN_RX, CAN_STANDBY, 250000, CanNetwork::Main);
+CanInterface motor_can(MOTOR_CAN_TX, MOTOR_CAN_RX, MOTOR_CAN_STANDBY, 250000, CanNetwork::Motor);
+
+Thread motor_control_thread;
+
+void handle_dashboard_commands(const SerializedCanMessage &msg)
+{
+    DashboardCommands cmd{};
+    cmd.deserialize(&msg);
+    regen_enabled = cmd.regen_en;
+}
+
+void handle_pedal_status(const SerializedCanMessage &msg)
+{
+    PedalStatus pedal_can_struct{};
+    pedal_can_struct.deserialize(&msg);
+    throttle = pedal_can_struct.throttle_pedal;
+    brake = pedal_can_struct.brake_pedal;
+}
+
+void regen_drive(uint16_t *throttle_value, uint16_t *regen_value)
+{
+    uint16_t pedal_value = *throttle_value;
+
+    if (pedal_value <= 50)
+    {
+        *throttle_value = 0;
+        *regen_value = 79.159 * std::pow(50 - pedal_value, 0.3);
+    }
+    else if (pedal_value < 100)
+    {
+        *throttle_value = 0;
+        *regen_value = 0;
+    }
+    else
+    {
+        *throttle_value = -56.27610464 * std::pow(156 - (pedal_value - 100), 0.3) + 256;
+        *regen_value = 0;
+    }
+}
+
+void set_motor_status()
+{
+    MotorCommands motor_can_struct{};
+    Clock motor_control_clock;
+
+    while (true)
+    {
+        uint16_t current_throttle = throttle;
+        uint16_t regen = 0;
+        motor_can_struct = MotorCommands();
+
+        if (FaultHandler::has_any_fault())
+        {
+            current_throttle = 0;
+            regen = 0;
+        }
+        else if (brake)
+        {
+            current_throttle = 0;
+            if (regen_enabled)
+            {
+                regen = 256;
+            }
+        }
+        else if (regen_enabled)
+        {
+            regen_drive(&current_throttle, &regen);
+            motor_can_struct.regen_drive = true;
+        }
+        else
+        {
+            motor_can_struct.manual_drive = true;
+        }
+
+        motor_interface.sendThrottle(current_throttle);
+        motor_interface.sendRegen(regen);
+
+        motor_can_struct.throttle = current_throttle;
+        motor_can_struct.regen_braking = regen;
+        main_can.write(&motor_can_struct);
+        motor_control_clock.sleep_since(MOTOR_CONTROL_PERIOD);
+    }
+}
+
+void forward_motor_can_message(const SerializedCanMessage &msg)
+{
+    FaultHandler::check_for_any_faults(msg); //can't see the fowarding messages in the maincan callback
+
+    SerializedCanMessage forwarded_msg = msg;
+    main_can.write(&forwarded_msg);
+}
 
 void app_main()
 {
-    UART USB_UART(PC_12, PD_2, 115200);
-    CanInterface main_can = CanInterface(PA_12, PA_11, PA_10, 250000, CanNetwork::Main);
-    FirmwareUploader uploader(USB_UART, main_can, 1); // current_board=1 for MotorBoard
-    uploader.start();
+    log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
+    log_info("Motor Board starting up...");
 
-    while (1) {
-        uploader.run_once();   // blocks until one full upload completes
-    }
+    motor_control_thread.start(set_motor_status);
 
+    main_can.register_callback(DashboardCommands::get_message_ID(), handle_dashboard_commands);
+    main_can.register_callback(PedalStatus::get_message_ID(), handle_pedal_status);
+    motor_can.register_always_callback(forward_motor_can_message);
+    main_can.register_always_callback(FaultHandler::check_for_any_faults);
+
+    log_info("Motor Board initialized");
+    Clock::sleep_forever();
 }
-
-

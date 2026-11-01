@@ -98,6 +98,7 @@ typedef struct {
 
 
 void gpio_clock_enable(const GPIO_TypeDef* port);
+bool use_adc(const ADC_TypeDef* handle);
 uint8_t get_UART_AF(const USART_TypeDef* handle, const Pin* pin, uint8_t mode);
 uint8_t get_I2C_AF(const I2C_TypeDef* handle, const Pin* pin, uint8_t mode);
 uint8_t get_FDCAN_AF(const FDCAN_GlobalTypeDef* handle, const Pin* pin, uint8_t mode);

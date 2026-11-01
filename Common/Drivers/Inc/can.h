@@ -42,7 +42,7 @@ struct CanMessage {
      * @brief Convert raw CAN frame to logical message structure
      * @param[in] message Pointer to SerializedCanMessage to deserialize
      */
-    virtual void deserialize(SerializedCanMessage *message) = 0;
+    virtual void deserialize(const SerializedCanMessage *message) = 0;
 
     /**
      * @brief Log the message contents for debugging
@@ -159,6 +159,22 @@ public:
      *       until a message arrives.
      */
     int read(SerializedCanMessage* msg);
+
+    /**
+     * @brief Attempt to read a raw CAN message from the receive FIFO without blocking
+     *
+     * Polls the FDCAN RX FIFO0 once and returns immediately if no message is available.
+     *
+     * @param[out] msg Pointer to SerializedCanMessage to populate with received data
+     * @return int Status code:
+     *         - 0: Message successfully received
+     *         - 1: CAN peripheral not initialized
+     *         - 2: HAL reception error
+     *         - 3: No message available
+     *
+     * @note This method is thread-safe and NON-BLOCKING.
+     */
+    int try_read(SerializedCanMessage* msg);
 
 private:
     FDCAN_HandleTypeDef* hfdcan;        ///< Handle to the STM32 HAL FDCAN peripheral
