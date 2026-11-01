@@ -37,12 +37,12 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     hfdcan = FDCAN_init(fdcan_periph->handle, baudrate);
     HAL_FDCAN_Start(hfdcan);
 
-    // Set txHeader so that it can support FD 64-byte frames
-    txHeader.IdType = FDCAN_EXTENDED_ID;
+    // Preserve classic standard-ID traffic; only long update payloads need FD.
+    txHeader.IdType = FDCAN_STANDARD_ID;
     txHeader.TxFrameType = FDCAN_DATA_FRAME;
     txHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
     txHeader.BitRateSwitch = FDCAN_BRS_OFF;
-    txHeader.FDFormat = FDCAN_FD_CAN;
+    txHeader.FDFormat = FDCAN_CLASSIC_CAN;
     txHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
     txHeader.MessageMarker = 0;
 
@@ -60,6 +60,7 @@ int CAN::write(const SerializedCanMessage *msg)
     instance_lock.lock();
     txHeader.Identifier = msg->id;
     txHeader.DataLength = bytesToDlc(msg->len);
+    txHeader.FDFormat = msg->len > 8 ? FDCAN_FD_CAN : FDCAN_CLASSIC_CAN;
 
     // HAL expects a uint8_t* to data
     HAL_StatusTypeDef status =

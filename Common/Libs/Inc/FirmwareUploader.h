@@ -25,22 +25,12 @@ public:
     FirmwareUploader(UART &uart, CanInterface &can, uint32_t current_board, uint32_t queue_depth = 100);
 
     /**
-     * @brief Start the background consumer thread that drains received blocks.
-     *        Call once before entering the main command loop.
+     * @brief Start the single UART listener and streaming consumer once.
+     *        uart_mock=true exercises #129 without CAN callbacks or flash writes.
+     *        The legacy CAN/flash path still requires #130 hardware validation.
      */
-    void start();
+    void start(bool uart_mock = false);
 
-
-    /**
-     * @brief Block until a valid board-ID command line arrives, then receive
-     *        the firmware stream for that board.
-     *
-     *        The function reads a single-character board ID (0–4) followed by
-     *        '\n', then calls handle_upload() internally.
-     *
-     *        Returns the board_id that was uploaded to, or -1 on parse error.
-     */
-    int run_once();
 
     /**
      * @brief CRC-16/HQXA (matches Python's binascii.crc_hqx).
@@ -55,6 +45,14 @@ public:
     void set_flash_bank(uint8_t bank);
 
 private:
+    struct UploadBlock {
+        uint8_t data[FW_BLOCK_SIZE];
+        uint16_t length; // zero marks the end of a mock transfer
+    };
+    struct UploadResult { uint32_t bytes; uint16_t crc; };
+    void handle_uart_mock();
+    bool uart_mock_ = false;
+    FiniteQueue result_queue_{1, sizeof(UploadResult)};
     UART &uart_;
     CanInterface &can_;
     FiniteQueue queue_;
@@ -144,7 +142,7 @@ private:
         FAILED
     };
 
-    TargetUpdateState target_state_;
+    TargetUpdateState target_state_ = TargetUpdateState::IDLE;
 
     HostBoardState host_board_state_ = HostBoardState::NONE;
 

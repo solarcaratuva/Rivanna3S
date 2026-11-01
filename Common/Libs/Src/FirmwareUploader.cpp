@@ -3,6 +3,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include <cstring>
+#include <cstdio>
 #include "Rivanna3SCanStructs.h"
 #include "stm32_hal.h"
 
@@ -15,49 +16,89 @@ FirmwareUploader* FirmwareUploader::s_instance_ = nullptr;
 FirmwareUploader::FirmwareUploader(UART &uart, CanInterface &can, uint32_t current_board, uint32_t queue_depth)
     : uart_(uart),
       can_(can),
-      queue_(queue_depth, FW_BLOCK_SIZE),
+      queue_(queue_depth, sizeof(UploadBlock)),
       current_board_(current_board)
 {
 }
 
-void FirmwareUploader::start()
+void FirmwareUploader::start(bool uart_mock)
 {
-    // Pass `this` so the static trampoline can reach instance members.
-    // consumer_thread_.start([]() {
-    //     // FreeRTOS tasks must not return; loop handled inside consumer_task.
-    // });
-    // Re-implement with proper argument passing via your Thread API:
-    // consumer_thread_.start(consumer_task, this);
-    //
-    // If your Thread class only accepts a plain function pointer (no arg),
-    // store `this` in a file-scope pointer and call it from a wrapper lambda:
+    if (s_instance_) return; // The callback/Thread API supports one uploader.
     s_instance_ = this;
+    uart_mock_ = uart_mock;
     consumer_thread_.start([]{ s_instance_->consumer_task(s_instance_); });
     UART_listener_thread_.start([]{ s_instance_->uart_listener_task(s_instance_); });
-    can_.register_callback(UpdateControl::get_message_ID(), [](const SerializedCanMessage &msg){ s_instance_->receive_update_control(msg); });
-    can_.register_callback(UpdateData::get_message_ID(), [](const SerializedCanMessage &msg){ s_instance_->receive_update_data(msg); });
+    if (!uart_mock_) {
+        can_.register_callback(UpdateControl::get_message_ID(), [](const SerializedCanMessage &msg){ s_instance_->receive_update_control(msg); });
+        can_.register_callback(UpdateData::get_message_ID(), [](const SerializedCanMessage &msg){ s_instance_->receive_update_data(msg); });
+    }
 }
 
-// ---------------------------------------------------------------------------
-// Public command loop helper
-// ---------------------------------------------------------------------------
-
-int FirmwareUploader::run_once()
+// #129: keep the block/CRC/REQ/ACK exchange; size and image CRC make completion
+// explicit. FW-prefixed response lines can coexist with ordinary log lines.
+void FirmwareUploader::handle_uart_mock()
 {
-    char cmd_buf[32];
+    char command[64];
+    if (read_line(command, sizeof(command), 100) < 0) return;
+    unsigned board, expected_crc;
+    unsigned long image_size;
+    char extra;
+    if (std::sscanf(command, "UPLOAD %u %lu %x %c", &board, &image_size, &expected_crc, &extra) != 3 ||
+        board > 7 || !image_size || image_size > FW_MAX_FIRMWARE_SIZE || expected_crc > 0xffff) {
+        uart_.write((uint8_t*)"FW FAIL\n", 8);
+        return;
+    }
 
-    if (read_line(cmd_buf, sizeof(cmd_buf), portMAX_DELAY) < 0)
-        return -1;
+    uint32_t offset = 0;
+    unsigned retries = 0;
+    bool ok = true;
+    UploadBlock block{};
+    while (offset < image_size) {
+        uint8_t packet[FW_BLOCK_SIZE + 2];
+        if (uart_.write((uint8_t*)"FW REQ\n", 7) != 0 || !read_exact(packet, sizeof(packet), 1000)) {
+            ok = false;
+            break; // A timeout is a failed transfer, never end-of-file.
+        }
+        const uint16_t received_crc = (uint16_t(packet[FW_BLOCK_SIZE]) << 8) | packet[FW_BLOCK_SIZE + 1];
+        if (crc16_hqx(packet, FW_BLOCK_SIZE) != received_crc) {
+            if (++retries > 3 || uart_.write((uint8_t*)"FW NACK\n", 8) != 0) {
+                ok = false;
+                break;
+            }
+            continue;
+        }
+        retries = 0;
+        std::memcpy(block.data, packet, FW_BLOCK_SIZE);
+        block.length = (image_size - offset < FW_BLOCK_SIZE) ? image_size - offset : FW_BLOCK_SIZE;
+        if (queue_.append_to_back(&block, 1000) != 0) {
+            ok = false;
+            break;
+        }
+        offset += block.length;
+        if (uart_.write((uint8_t*)"FW ACK\n", 7) != 0) { ok = false; break; }
+    }
 
-    int board_id = cmd_buf[0];
-    if (board_id >= '0' && board_id <= '9')
-        board_id -= '0';
-
-    if (board_id < 0 || board_id > 9)
-        return -1;
-
-    handle_upload(); // board_id available here for future CAN routing
-    return board_id;
+    // The end marker is ordered after accepted blocks, including on failure.
+    // Wait for the consumer's count/CRC before reporting and reusing its queue.
+    block.length = 0;
+    UploadResult result{};
+    if (queue_.append_to_back(&block, 1000) != 0 || result_queue_.get(&result, 2000) != 0) {
+        uart_.write((uint8_t*)"FW FAIL\n", 8);
+        Clock::sleep_forever(); // Infrastructure failure: don't mix later uploads with undrained data.
+        return;
+    }
+    ok = ok && offset == image_size && result.bytes == image_size && result.crc == expected_crc;
+    char response[48];
+    const int length = ok ? std::snprintf(response, sizeof(response), "FW DONE %lu %04x\n",
+                                         static_cast<unsigned long>(result.bytes), result.crc)
+                          : std::snprintf(response, sizeof(response), "FW FAIL\n");
+    uart_.write(reinterpret_cast<uint8_t*>(response), length);
+    if (!ok) {
+        // Discard a late/partial packet until the link is quiet, with a bound.
+        uint8_t byte;
+        const uint32_t started = Clock::get_current_time();
+        while (uint32_t(Clock::get_current_time() - started) < 1000 && uart_.read(&byte, 1, 100) == 0) {}
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -98,7 +139,7 @@ bool FirmwareUploader::handle_upload()
         uint16_t received_crc =
             ((uint16_t)packet[FW_BLOCK_SIZE] << 8) | packet[FW_BLOCK_SIZE + 1];
         uint16_t computed_crc = crc16_hqx(packet, FW_BLOCK_SIZE);
-        host_running_crc_ = crc16_hqx(packet, FW_BLOCK_SIZE, host_running_crc_);
+
 
         if (computed_crc != received_crc)
         {
@@ -114,7 +155,10 @@ bool FirmwareUploader::handle_upload()
         }
 
         // Push into queue
-        int result = queue_.append_to_back(packet, portMAX_DELAY);
+        UploadBlock block{};
+        std::memcpy(block.data, packet, FW_BLOCK_SIZE);
+        block.length = FW_BLOCK_SIZE;
+        int result = queue_.append_to_back(&block, portMAX_DELAY);
         if (result != 0)
         {
             if (result == -2)
@@ -126,6 +170,7 @@ bool FirmwareUploader::handle_upload()
             continue;
         }
 
+        host_running_crc_ = crc16_hqx(packet, FW_BLOCK_SIZE, host_running_crc_);
         offset += FW_BLOCK_SIZE;
         uart_.write((uint8_t *)"ACK\n", 4);
     }
@@ -141,7 +186,20 @@ bool FirmwareUploader::handle_upload()
 void FirmwareUploader::consumer_task(void *arg)
 {
     FirmwareUploader *self = static_cast<FirmwareUploader *>(arg);
-    uint8_t block[FW_BLOCK_SIZE];
+    UploadBlock block{};
+    if (self->uart_mock_) {
+        UploadResult result{0, FW_CRC16_INIT};
+        while (true) {
+            if (self->queue_.get(&block, 1000) != 0) { Clock::sleep_for(1); continue; }
+            if (block.length == 0) {
+                self->result_queue_.append_to_back(&result, 1000);
+                result = {0, FW_CRC16_INIT};
+            } else {
+                result.crc = crc16_hqx(block.data, block.length, result.crc);
+                result.bytes += block.length;
+            }
+        }
+    }
     uint32_t flash_addr = self->flash_base_addr_;
     bool targetstate_finished = false; // This should be set externally when the target state is finished
     if(self->is_host_){
@@ -151,13 +209,13 @@ void FirmwareUploader::consumer_task(void *arg)
             self->clock_.sleep_for(1);
         }
         while (true){
-            if (self->queue_.get(block, FW_BLOCK_SIZE))
+            if (self->queue_.get(&block, FW_BLOCK_SIZE) == 0)
             {
                 // Send block over CAN to target board
                 SerializedCanMessage data_msg{};
                 data_msg.id = UpdateData::get_message_ID();
                 data_msg.len = FW_BLOCK_SIZE;
-                std::memcpy(data_msg.data, block, FW_BLOCK_SIZE);
+                std::memcpy(data_msg.data, block.data, FW_BLOCK_SIZE);
                 self->can_.write(&data_msg);
 
             }
@@ -177,10 +235,10 @@ void FirmwareUploader::consumer_task(void *arg)
     
         while (true)
         {
-            if (self->queue_.get(block, FW_BLOCK_SIZE))
+            if (self->queue_.get(&block, FW_BLOCK_SIZE) == 0)
             {
                 // Write block to flash
-                if (!self->write_flash(flash_addr, block, FW_BLOCK_SIZE))
+                if (!self->write_flash(flash_addr, block.data, FW_BLOCK_SIZE))
                 {
                     log_fault("Flash write failed at 0x%08lX", flash_addr);
                 }
@@ -213,6 +271,7 @@ void FirmwareUploader::uart_listener_task(void* arg) {
     char cmd_buf[32];
 
     while (true) {
+        if (self->uart_mock_) { self->handle_uart_mock(); continue; }
         if (self->read_line(cmd_buf, sizeof(cmd_buf), 10) > 0) {
             int board_id = cmd_buf[0];
             if (board_id >= '0' && board_id <= '9')
@@ -370,11 +429,14 @@ void FirmwareUploader::receive_update_control(const SerializedCanMessage &msg) {
 
 void FirmwareUploader::receive_update_data(const SerializedCanMessage &msg) {
     // No need to deserialize into a struct since it's just raw data blocks. Just forward to flash write.
-    if (target_state_ == TargetUpdateState::RECEIVING_DATA) {
+    if (target_state_ == TargetUpdateState::RECEIVING_DATA && msg.len == FW_BLOCK_SIZE) {
         // Update the running CRC with the new block of data
         target_running_crc_ = crc16_hqx(msg.data, msg.len, target_running_crc_);
 
-        queue_.append_to_back((void *)msg.data, portMAX_DELAY); // Push raw data into queue for flash writing
+        UploadBlock block{};
+        std::memcpy(block.data, msg.data, FW_BLOCK_SIZE);
+        block.length = FW_BLOCK_SIZE;
+        queue_.append_to_back(&block, portMAX_DELAY);
     }
 }
 

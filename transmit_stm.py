@@ -5,7 +5,6 @@ import shutil
 import os
 import sys
 import binascii
-import serial.tools.list_ports
 import time
 
 OS = platform.system()
@@ -41,6 +40,7 @@ def crc16(data: bytes) -> int:
     return binascii.crc_hqx(data, 0xFFFF)
 
 def get_correct_port() -> str:
+    import serial.tools.list_ports
     ports = serial.tools.list_ports.comports()
     for port in ports:
         if "stlink" in port.description.lower() or "st-link" in port.description.lower():
@@ -49,73 +49,70 @@ def get_correct_port() -> str:
     print("ERROR: ST-Link could not be found")
     sys.exit(1)
 
-def wait_for(ser, token: bytes):
+def read_response(ser, timeout=3):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        line = ser.readline(256).strip()
+        if line.startswith(b"FW "):
+            if line == b"FW FAIL":
+                raise RuntimeError("Board rejected or failed the transfer")
+            return line
+        # The same UART continues to carry ordinary log lines.
+    raise TimeoutError("Timed out waiting for the board; restart the upload")
+
+
+def transmit_stream(ser, firmware, board_id):
+    # One size/CRC header replaces timeout-as-EOF. Keep the existing 64+2-byte
+    # block format and retry only explicit NACKs; a lost ACK aborts unambiguously.
+    size, image_crc = 0, 0xFFFF
+    start = firmware.tell()
     while True:
-        data = ser.read(len(token))
-        if data == token:
-            return
-        else:
-            print(f"Received unexpected data: {data} - expected: {token}")
+        chunk = firmware.read(4096)
+        if not chunk:
+            break
+        size += len(chunk)
+        image_crc = binascii.crc_hqx(chunk, image_crc)
+    firmware.seek(start)
+    if board_id not in BOARD_ID_MAP.values() or not 0 < size <= 4 * 1024 * 1024:
+        raise ValueError("Invalid board or file size (mock accepts 1 byte through 4 MiB)")
 
-def upload_file(port: str, filepath: str, board_id: int):
-    with serial.Serial(port, BAUD, timeout=2) as ser:
+    command = f"UPLOAD {board_id} {size} {image_crc:04x}\n".encode()
+    ser.reset_input_buffer()
+    if ser.write(command) != len(command):
+        raise OSError("Short serial write")
+    blocks = 0
+    while True:
+        data = firmware.read(BLOCK_SIZE)
+        if not data:
+            break
+        padded = data.ljust(BLOCK_SIZE, b"\xff")
+        packet = padded + crc16(padded).to_bytes(2, "big")
+        for attempt in range(4):
+            if read_response(ser) != b"FW REQ":
+                raise RuntimeError("Expected a request for the next block")
+            if ser.write(packet) != len(packet):
+                raise OSError("Short serial write")
+            response = read_response(ser)
+            if response == b"FW ACK":
+                break
+            if response != b"FW NACK" or attempt == 3:
+                raise RuntimeError("Block rejected or acknowledgement missing; restart the upload")
+            # Keep this exact packet, including a short final block, for retry.
+        blocks += 1
 
-        print(f"Connected to {port}")
+    response = read_response(ser).split()
+    if (len(response) != 4 or response[:2] != [b"FW", b"DONE"] or
+            int(response[2]) != size or int(response[3], 16) != image_crc):
+        raise RuntimeError("Consumer's final byte count or CRC does not match the file")
+    return size, blocks
 
-        # --- Send command to select board ---
-        print(f"Selecting board {board_id}...")
-        cmd = f"{board_id}\n".encode()
-        ser.write(cmd)
-        
 
-        with open(filepath, "rb") as f:
-            block_num = 0
-
-            while True:
-                data = f.read(BLOCK_SIZE)
-                if not data:
-                    print("End of file reached")
-                    break
-                
-                # print("Waiting for REQ...")
-                wait_for(ser, b"REQ")
-
-                if len(data) < BLOCK_SIZE:
-                    data = data.ljust(BLOCK_SIZE, b"\xFF")
-
-                crc = crc16(data)
-
-                packet = data + crc.to_bytes(2, "big")
-                ser.write(packet)
-
-                resp = ser.read(4)
-
-                if resp == b"ACK\n":
-                    block_num += 1
-                    print(f"Block {block_num} OK")
-
-                elif resp == b"NACK":
-                    print("Resending block...")
-                    f.seek(-BLOCK_SIZE, 1)
-
-                else:
-                    print(f"Unexpected response: {resp}")
-                    raise RuntimeError("Unexpected response")
-
-        print("Waiting for DONE...")
-        wait_for(ser, b"REQ") #Board sends REQ before DONE
-        wait_for(ser, b"DONE")
-
-        #check if "SUCCESS" or "FAILED" is sent after DONE
-        result = ser.read(7)
-        if result == b"SUCCESS":
-            print("Upload successful!")
-        elif result == b"FAILED":
-            print("Upload failed: CRC mismatch")
-        else:
-            print(f"Unexpected result after DONE: {result}")
-
-        print("Upload complete")
+def upload_file(port: str, filepath: str, board_id: int, baud=BAUD):
+    import serial
+    with serial.Serial(port, baud, timeout=0.2, write_timeout=1) as ser, open(filepath, "rb") as firmware:
+        print(f"Connected to {port}; uploading to mock board {board_id}...")
+        size, blocks = transmit_stream(ser, firmware, board_id)
+        print(f"Mock consumer verified {size} bytes in {blocks} blocks. No firmware was flashed.")
 
 def get_args():
     import argparse
@@ -242,11 +239,16 @@ def main() -> None:
     upload_file(
         port=port,
         filepath=args.filepath,
-        board_id=BOARD_ID_MAP[args.board]   
+        board_id=BOARD_ID_MAP[args.board],
+        baud=args.baud
     )
 
 
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as error:
+        print(f"Upload failed: {error}", file=sys.stderr)
+        sys.exit(1)

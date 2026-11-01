@@ -8,6 +8,8 @@
 volatile LogLevel global_log_level;
 
 static UART* log_uart = nullptr;
+
+UART* log_get_uart() { return log_uart; }
 static LogOutputCallback log_sd_callback = nullptr;
 
 void log_set_output_callback(LogOutputCallback cb) {
