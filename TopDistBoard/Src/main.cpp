@@ -67,7 +67,7 @@ void handle_pedal_status(const SerializedCanMessage &msg)
     PedalStatus status{};
     status.deserialize(&msg);
 
-    brake_from_pedal = status.brake_pedal;
+    brake_from_pedal = status.get_brake_pedal(); // brake_from_pedal = status.brake_pedal;
     brake_light.write(brake_from_pedal || brake_from_motor);
 }
 

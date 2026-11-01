@@ -65,7 +65,8 @@ void handle_bps_status(const SerializedCanMessage &msg)
 {
     BpsStatus status{};
     status.deserialize(&msg);
-    pack_voltage = status.pack_voltage / 10; // scaling (BMS units is 10th of a volt)
+    // pack_voltage = status.pack_voltage / 10; // scaling (BMS units is 10th of a volt)
+    pack_voltage = status.get_pack_voltage();
 }
 
 void run_precharge()
@@ -100,14 +101,14 @@ void run_precharge()
 
         // fill and send precharge status as a CAN message
         PrechargeStatus status{};
-        status.motor_stage = motor_precharge.stage_uint();
-        status.mppt_stage = mppt_precharge.stage_uint();
+        status.set_motor_stage(motor_precharge.stage_uint()); //status.motor_stage = motor_precharge.stage_uint();
+        status.set_mppt_stage(mppt_precharge.stage_uint()); // status.mppt_stage = mppt_precharge.stage_uint();
         status.cont12_fault = has_cont12_fault ? 1 : 0;
-        status.other_fault = has_other_fault ? 1 : 0;
-        status.threshold = motor_precharge.threshold();
+        status.set_other_fault(has_other_fault ? 1 : 0);  // status.other_fault = has_other_fault ? 1 : 0;
+        status.set_threshold(motor_precharge.threshold()); // status.threshold = motor_precharge.threshold();
         status.cont12 = motor_precharge.cont12_high() ? 1 : 0;
-        status.hal_effect_motor = motor_precharge.hal_effect_millivolts();
-        status.hal_effect_mppt = mppt_precharge.hal_effect_millivolts();
+        status.set_hal_effect_motor(motor_precharge.hal_effect_millivolts()); // status.hal_effect_motor = motor_precharge.hal_effect_millivolts();
+        status.set_hal_effect_mppt(mppt_precharge.hal_effect_millivolts());  // status.hal_effect_mppt = mppt_precharge.hal_effect_millivolts();
         main_can.write(&status);
 
         // sleep until the next loop iteration
@@ -121,8 +122,8 @@ void monitor_auxbattery(){
         float voltage_scaled = aux_battery.read_voltage() * 13.3f / 3.3f; // scale back up to real voltage using the voltage divider ratio
 
         AuxBatteryStatus status{};
-        status.aux_voltage = static_cast<uint16_t>(voltage_scaled * 1000.0f); // convert to millivolts for logging
-        status.percent_full = aux_battery.read_hex_percent();
+        status.set_aux_voltage(static_cast<uint16_t>(voltage_scaled * 1000.0f)); //status.aux_voltage = static_cast<uint16_t>(voltage_scaled * 1000.0f); // convert to millivolts for logging
+        status.set_percent_full(aux_battery.read_hex_percent()); // status.percent_full = aux_battery.read_hex_percent();
 
         main_can.write(&status);
         auxbattery_clock.sleep_since(AUXBATTERY_CONTROL_PERIOD_MS);

@@ -89,9 +89,9 @@ void send_pedal_status()
         const uint16_t current_throttle = read_throttle();
 
         PedalStatus msg{};
-        msg.throttle_pedal = current_throttle;
+        msg.set_throttle_pedal(current_throttle); //msg.throttle_pedal = current_throttle;
 
-        msg.brake_pedal = static_cast<uint16_t>(brake_pedal.read()); //brake pedal is analog signal which needs to be scaled.
+        msg.set_brake_pedal(brake_pedal.read());   // msg.brake_pedal = static_cast<uint16_t>(brake_pedal.read()); //brake pedal is analog signal which needs to be scaled.
         
         main_can.write(&msg);
         pedal_status_clock.sleep_since(PEDAL_STATUS);
