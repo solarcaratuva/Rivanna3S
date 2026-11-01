@@ -40,13 +40,56 @@ def crc16(data: bytes) -> int:
     return binascii.crc_hqx(data, 0xFFFF)
 
 def get_correct_port() -> str:
+    import glob
     import serial.tools.list_ports
+
+    # 1. On Linux, check /dev/serial/by-id/ symlinks created by udev
+    if os.path.isdir("/dev/serial/by-id"):
+        for path in sorted(glob.glob("/dev/serial/by-id/*")):
+            name = os.path.basename(path).lower()
+            if any(k in name for k in ["stlink", "st-link", "stmicroelectronics", "stm32"]):
+                real_device = os.path.realpath(path)
+                print(f"Detected ST-Link via /dev/serial/by-id: {os.path.basename(path)} -> {real_device}")
+                return real_device
+
+    # 2. Search pySerial comports with robust matching (VID, manufacturer, product, description)
     ports = serial.tools.list_ports.comports()
+    st_ports = []
+    generic_usb_ports = []
+
     for port in ports:
-        if "stlink" in port.description.lower() or "st-link" in port.description.lower():
-            return port.device
-    
-    print("ERROR: ST-Link could not be found")
+        desc = (port.description or "").lower()
+        mfg = (port.manufacturer or "").lower()
+        prod = (port.product or "").lower()
+        hwid = (port.hwid or "").lower()
+        vid = getattr(port, "vid", None)
+
+        # STMicroelectronics Vendor ID is 0x0483 (1155)
+        is_st = (vid == 0x0483 or 
+                 any(k in desc or k in mfg or k in prod or k in hwid 
+                     for k in ["stlink", "st-link", "stmicroelectronics", "stm32"]))
+
+        if is_st:
+            st_ports.append(port.device)
+        elif port.device.startswith(("/dev/ttyACM", "/dev/ttyUSB", "COM")):
+            generic_usb_ports.append(port.device)
+
+    if st_ports:
+        return st_ports[0]
+
+    # 3. Fallback: if exactly one USB CDC-ACM / USB serial port is present, use it
+    if len(generic_usb_ports) == 1:
+        print(f"No explicit ST-Link label found, using sole USB serial device: {generic_usb_ports[0]}")
+        return generic_usb_ports[0]
+
+    # 4. Error reporting with candidate listing
+    print("ERROR: ST-Link could not be auto-detected.", file=sys.stderr)
+    active_ports = [p.device for p in ports if not p.device.startswith("/dev/ttyS")]
+    if active_ports:
+        print(f"Available serial ports: {', '.join(active_ports)}", file=sys.stderr)
+        print("Specify the port manually with -p / --port (e.g. -p /dev/ttyACM0)", file=sys.stderr)
+    else:
+        print("No USB serial devices detected. Ensure the board's ST-Link USB is plugged in.", file=sys.stderr)
     sys.exit(1)
 
 def read_response(ser, timeout=3):
@@ -109,10 +152,19 @@ def transmit_stream(ser, firmware, board_id):
 
 def upload_file(port: str, filepath: str, board_id: int, baud=BAUD):
     import serial
-    with serial.Serial(port, baud, timeout=0.2, write_timeout=1) as ser, open(filepath, "rb") as firmware:
-        print(f"Connected to {port}; uploading to mock board {board_id}...")
-        size, blocks = transmit_stream(ser, firmware, board_id)
-        print(f"Mock consumer verified {size} bytes in {blocks} blocks. No firmware was flashed.")
+    try:
+        with serial.Serial(port, baud, timeout=0.2, write_timeout=1) as ser, open(filepath, "rb") as firmware:
+            print(f"Connected to {port}; uploading to mock board {board_id}...")
+            size, blocks = transmit_stream(ser, firmware, board_id)
+            print(f"Mock consumer verified {size} bytes in {blocks} blocks. No firmware was flashed.")
+    except serial.SerialException as err:
+        err_msg = str(err).lower()
+        if "permission denied" in err_msg or "errno 13" in err_msg:
+            print(f"\nERROR: Permission denied opening serial port '{port}'.\n"
+                  f"On Linux, add your user to the 'dialout' group to access serial ports without root:\n"
+                  f"  sudo usermod -aG dialout $USER\n"
+                  f"Then log out and log back in, or run with appropriate permissions.\n", file=sys.stderr)
+        raise
 
 def get_args():
     import argparse
@@ -162,6 +214,12 @@ def get_args():
         type=str,
         default=None,
         help="Filter output"
+    )
+
+    parser.add_argument(
+        "--native",
+        action="store_true",
+        help="Force native Linux serial communication even in WSL"
     )
 
     args = parser.parse_args()
@@ -226,8 +284,11 @@ def compress_args(args, windows_firmware_path: str = None):
 def main() -> None:
     args = get_args()
 
-    #Check OS
-    if OS == "Linux" and is_wsl():
+    # Check for WSL bridging to Windows
+    # If running on native Linux, or if the user explicitly provided a Linux device (e.g. /dev/ttyACM0)
+    # or passed --native, run natively without launching Windows cmd.exe.
+    is_linux_port = bool(args.port and args.port.startswith("/dev/"))
+    if OS == "Linux" and is_wsl() and not args.native and not is_linux_port:
         copy_file_to_windows(os.path.abspath(__file__))
         windows_firmware_path = copy_firmware_to_windows(args.filepath)
         args_str = compress_args(args, windows_firmware_path)
