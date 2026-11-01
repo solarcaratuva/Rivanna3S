@@ -42,7 +42,7 @@ int I2C::write(uint16_t address, uint8_t *buffer, uint16_t length){
 	    return 1;
 	}
 
-	HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(hi2c, address, buffer, length, HAL_MAX_DELAY);
+	HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(hi2c, address, buffer, length, 50);
 	if (status != HAL_OK) {
 		log_warn("I2C write failed: status %d, error code %lx", status, hi2c->ErrorCode);
 		return 2;
@@ -58,7 +58,7 @@ int I2C::read(uint16_t address, uint8_t *buffer, uint16_t length){
 		return 1;
 	}
 
-	HAL_StatusTypeDef status = HAL_I2C_Master_Receive(hi2c, address, buffer, length, HAL_MAX_DELAY);
+	HAL_StatusTypeDef status = HAL_I2C_Master_Receive(hi2c, address, buffer, length, 50);
 	if (status != HAL_OK) {
 		log_warn("I2C read failed: status %d, error code %lx", status, hi2c->ErrorCode);
 		return 2;
