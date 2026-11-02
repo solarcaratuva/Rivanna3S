@@ -13,8 +13,6 @@ BLOCK_SIZE = 64
 BAUD = 115200
 
 BOARD_MAP = {
-    # "power": "cmake_build/NUCLEO_F413ZH/develop/GCC_ARM/PowerBoard/PowerBoard.bin",
-    # "telemetry": "cmake_build/POWER_BOARD/develop/GCC_ARM/TelemetryBoard/TelemetryBoard.bin",
     "bottomdist": "build/bin/BottomDistBoard.bin",
     "motor": "build/bin/MotorBoard.bin",
     "relay": "build/bin/RelayBoard.bin",
@@ -203,20 +201,6 @@ def get_args():
     )
 
     parser.add_argument(
-        "--save",
-        type=str,
-        default=None,
-        help="Save output to file"
-    )
-
-    parser.add_argument(
-        "--filter",
-        type=str,
-        default=None,
-        help="Filter output"
-    )
-
-    parser.add_argument(
         "--native",
         action="store_true",
         help="Force native Linux serial communication even in WSL"
@@ -271,14 +255,6 @@ def compress_args(args, windows_firmware_path: str = None):
         s += f" --port {args.port}"
     if args.baud != 115200:
         s += f" --baud {args.baud}"
-    if args.save:
-        args.save = os.path.abspath(args.save)
-        process = subprocess.run(f"wslpath -w {args.save}", capture_output=True, shell=True, text=True, check=True)
-        path = process.stdout.strip()
-        path = path.replace("\\", "\\\\")  # Escape backslashes for Windows command line
-        s += f" --save {path}"
-    if args.filter:
-        s += f" --filter {args.filter}"
     return s
 
 def main() -> None:
