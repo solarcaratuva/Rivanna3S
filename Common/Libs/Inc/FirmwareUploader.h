@@ -8,6 +8,7 @@
 #define FW_BLOCK_SIZE 64 // Must match Python sender's block size.
 #define FW_MAX_FIRMWARE_SIZE (4096 * 1024) // Mock transport limit, not flash capacity.
 #define FW_CRC16_INIT 0xFFFF
+#define FW_UPLOAD_BAUD 115200 // Default baud rate matching transmit_stm.py.
 
 // #129 laptop-to-board receiver with a streaming mock consumer.
 // Destination IDs 0–7 are accepted; no CAN routing or flash operations occur.
@@ -36,6 +37,7 @@ private:
     void handle_uart_mock();
     static void consumer_task(void* arg);
     static void uart_listener_task(void* arg);
+    bool send_line(const char *line);
     bool read_exact(uint8_t *buf, uint16_t len, uint32_t timeout_ms);
     int read_line(char *buf, uint16_t max_len, uint32_t timeout_ms);
 };

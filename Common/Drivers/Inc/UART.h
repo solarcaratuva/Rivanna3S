@@ -121,15 +121,14 @@ public:
 
     TaskHandle_t txTask = nullptr; /**< TX direct to task handle. */
     TaskHandle_t rxTask = nullptr; /**< RX direct to task handle. */
-    volatile uint32_t rx_error = HAL_UART_ERROR_NONE;
-    volatile uint32_t tx_error = HAL_UART_ERROR_NONE;
-    volatile uint32_t last_error = HAL_UART_ERROR_NONE; /*Last error code of the UART*/
+    volatile uint32_t rx_error = HAL_UART_ERROR_NONE; /**< Error code copied from ISR for waiting RX task. */
+    volatile uint32_t tx_error = HAL_UART_ERROR_NONE; /**< Error code copied from ISR for waiting TX task. */
+    volatile uint32_t last_error = HAL_UART_ERROR_NONE; /**< Last raw error code captured from UART error ISR. */
 
 private:
     UART_HandleTypeDef* huart;   /**< HAL UART handle used for configuration and I/O. */
-    // A UART can receive upload data while another task writes a log line.
-    SemaphoreHandle_t rx_mutex;
-    SemaphoreHandle_t tx_mutex;
+    SemaphoreHandle_t rx_mutex;  /**< Mutex protecting concurrent read calls. */
+    SemaphoreHandle_t tx_mutex;  /**< Mutex protecting concurrent write calls. */
 
     void init_gpio(UART_Peripheral* uart_periph);
 

@@ -1,5 +1,6 @@
 #include "FirmwareUploader.h"
 #include "Clock.h"
+#include "log.h"
 #include <cstring>
 #include <cstdio>
 
@@ -28,18 +29,25 @@ void FirmwareUploader::start()
     UART_listener_thread_.start([]{ s_instance_->uart_listener_task(s_instance_); });
 }
 
+bool FirmwareUploader::send_line(const char *line)
+{
+    return uart_.write(reinterpret_cast<uint8_t*>(const_cast<char*>(line)), std::strlen(line)) == 0;
+}
+
 // #129: size and image CRC make completion explicit. FW-prefixed responses
 // can coexist with ordinary log lines on the same UART.
 void FirmwareUploader::handle_uart_mock()
 {
     char command[64];
     if (read_line(command, sizeof(command), FW_COMMAND_TIMEOUT_MS) < 0) return;
+    if (std::strncmp(command, "UPLOAD ", 7) != 0) return; // Discard leading stray bytes or blank lines
+
     unsigned board, expected_crc;
     unsigned long image_size;
     char extra;
     if (std::sscanf(command, "UPLOAD %u %lu %x %c", &board, &image_size, &expected_crc, &extra) != 3 ||
         board > FW_MAX_BOARD_ID || !image_size || image_size > FW_MAX_FIRMWARE_SIZE || expected_crc > 0xffff) {
-        uart_.write((uint8_t*)"FW FAIL\n", 8);
+        send_line("FW FAIL\n");
         return;
     }
 
@@ -49,13 +57,13 @@ void FirmwareUploader::handle_uart_mock()
     UploadBlock block{};
     while (offset < image_size) {
         uint8_t packet[FW_BLOCK_SIZE + 2];
-        if (uart_.write((uint8_t*)"FW REQ\n", 7) != 0 || !read_exact(packet, sizeof(packet), FW_BLOCK_TIMEOUT_MS)) {
+        if (!send_line("FW REQ\n") || !read_exact(packet, sizeof(packet), FW_BLOCK_TIMEOUT_MS)) {
             ok = false;
             break; // A timeout is a failed transfer, never end-of-file.
         }
         const uint16_t received_crc = (uint16_t(packet[FW_BLOCK_SIZE]) << 8) | packet[FW_BLOCK_SIZE + 1];
         if (crc16_hqx(packet, FW_BLOCK_SIZE) != received_crc) {
-            if (++retries > FW_MAX_RETRIES || uart_.write((uint8_t*)"FW NACK\n", 8) != 0) {
+            if (++retries > FW_MAX_RETRIES || !send_line("FW NACK\n")) {
                 ok = false;
                 break;
             }
@@ -69,7 +77,7 @@ void FirmwareUploader::handle_uart_mock()
             break;
         }
         offset += block.length;
-        if (uart_.write((uint8_t*)"FW ACK\n", 7) != 0) { ok = false; break; }
+        if (!send_line("FW ACK\n")) { ok = false; break; }
     }
 
     // The end marker is ordered after accepted blocks, including on failure.
@@ -77,16 +85,20 @@ void FirmwareUploader::handle_uart_mock()
     block.length = 0;
     UploadResult result{};
     if (queue_.append_to_back(&block, FW_QUEUE_TIMEOUT_MS) != 0 || result_queue_.get(&result, FW_RESULT_TIMEOUT_MS) != 0) {
-        uart_.write((uint8_t*)"FW FAIL\n", 8);
-        Clock::sleep_forever(); // Infrastructure failure: don't mix later uploads with undrained data.
+        send_line("FW FAIL\n");
+        log_fault("FirmwareUploader: consumer queue failure; listener permanently stopped until reset");
+        Clock::sleep_forever();
         return;
     }
     ok = ok && offset == image_size && result.bytes == image_size && result.crc == expected_crc;
     char response[48];
-    const int length = ok ? std::snprintf(response, sizeof(response), "FW DONE %lu %04x\n",
-                                         static_cast<unsigned long>(result.bytes), result.crc)
-                          : std::snprintf(response, sizeof(response), "FW FAIL\n");
-    uart_.write(reinterpret_cast<uint8_t*>(response), length);
+    if (ok) {
+        std::snprintf(response, sizeof(response), "FW DONE %lu %04x\n",
+                      static_cast<unsigned long>(result.bytes), result.crc);
+    } else {
+        std::snprintf(response, sizeof(response), "FW FAIL\n");
+    }
+    send_line(response);
     if (!ok) {
         // Discard a late/partial packet until the link is quiet, with a bound.
         uint8_t byte;
@@ -101,7 +113,10 @@ void FirmwareUploader::consumer_task(void *arg)
     UploadBlock block{};
     UploadResult result{0, FW_CRC16_INIT};
     while (true) {
-        if (self->queue_.get(&block, FW_QUEUE_TIMEOUT_MS) != 0) { Clock::sleep_for(1); continue; }
+        // Blocks up to FW_QUEUE_TIMEOUT_MS; loop and wait again if queue is empty.
+        if (self->queue_.get(&block, FW_QUEUE_TIMEOUT_MS) != 0) {
+            continue;
+        }
         if (block.length == 0) {
             self->result_queue_.append_to_back(&result, FW_QUEUE_TIMEOUT_MS);
             result = {0, FW_CRC16_INIT};

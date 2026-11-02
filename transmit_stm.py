@@ -63,8 +63,8 @@ def get_correct_port() -> str:
         vid = getattr(port, "vid", None)
 
         # STMicroelectronics Vendor ID is 0x0483 (1155)
-        is_st = (vid == 0x0483 or 
-                 any(k in desc or k in mfg or k in prod or k in hwid 
+        is_st = (vid == 0x0483 or
+                 any(k in desc or k in mfg or k in prod or k in hwid
                      for k in ["stlink", "st-link", "stmicroelectronics", "stm32"]))
 
         if is_st:

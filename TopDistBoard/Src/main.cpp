@@ -123,8 +123,9 @@ void bms_strobe_handler() {
 void app_main()
 {
 #ifdef UART_UPLOAD_MOCK
-    log_configure(INFO_LVL, LOG_TX, LOG_RX, 115200);
-    static FirmwareUploader uploader(*log_get_uart(), 8);
+    // In mock upload mode (#129), configure UART to 115200 baud to match transmit_stm.py.
+    log_configure(INFO_LVL, LOG_TX, LOG_RX, FW_UPLOAD_BAUD);
+    static FirmwareUploader uploader(*log_get_uart());
     uploader.start(); // #129 streaming mock: no CAN update or flash operations.
 #else
     log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
