@@ -23,3 +23,7 @@ For CAN-based advanced logging, debugging, and analysis, see the [CAN Message Lo
     - install the extensions: `Remote Extensionpack`, `C++ Tools Extensionpack`, `Docker`, `Python`
     - Windows Users: use these extensions to *remote* into where this repo is stored in WSL
 
+
+## Build output
+
+`compile.py` shows live build progress and a deduplicated diagnostic summary. Use `--silent` to show only errors and the build result or `--raw` for unfiltered live output. Full compiler output is saved to `build/compile.log`; unrecognized build failures also print raw output automatically.
