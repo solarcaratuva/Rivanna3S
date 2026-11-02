@@ -36,6 +36,9 @@
 #include "pindef.h"
 #include "thread.h"
 #include "FaultHandler.h"
+#ifdef UART_UPLOAD_MOCK
+#include "FirmwareUploader.h"
+#endif
 
 bool regen_enabled = false;
 uint16_t throttle = 0;
@@ -141,7 +144,14 @@ void forward_motor_can_message(const SerializedCanMessage &msg)
 
 void app_main()
 {
+#ifdef UART_UPLOAD_MOCK
+    // In mock upload mode (#129), configure UART to 115200 baud to match transmit_stm.py.
+    log_configure(INFO_LVL, LOG_TX, LOG_RX, FW_UPLOAD_BAUD);
+    static FirmwareUploader uploader(*log_get_uart());
+    uploader.start(); // #129 streaming mock: no CAN update or flash operations.
+#else
     log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
+#endif
     log_info("Motor Board starting up...");
 
     motor_control_thread.start(set_motor_status);

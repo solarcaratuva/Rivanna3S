@@ -23,3 +23,8 @@ For CAN-based advanced logging, debugging, and analysis, see the [CAN Message Lo
     - install the extensions: `Remote Extensionpack`, `C++ Tools Extensionpack`, `Docker`, `Python`
     - Windows Users: use these extensions to *remote* into where this repo is stored in WSL
 
+### UART upload mock (#129)
+
+Build MotorBoard or TopDistBoard with `python3 compile.py --mock -- --target TopDistBoard.elf` and program the resulting image through ST-Link.
+Run `python3 transmit_stm.py topdist --file path/to/payload.bin --port /dev/ttyACM0`.
+The mock verifies streamed bytes and CRC at 115200 baud; it does not flash the payload or forward it over CAN.
