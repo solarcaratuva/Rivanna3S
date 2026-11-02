@@ -41,7 +41,7 @@ SECTION_COLORS = {"Linker errors": "31", "Compiler errors": "31", "Warnings": "3
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
 
-def process_compilation_output(output, color=False):
+def process_compilation_output(output, color=False, errors_only=False):
     sections = {title: [] for title in SECTION_COLORS}
     current = None
     for line in ANSI_ESCAPE.sub("", output).splitlines():
@@ -63,7 +63,7 @@ def process_compilation_output(output, color=False):
 
     result = []
     for title, diagnostics in sections.items():
-        if not diagnostics:
+        if not diagnostics or (errors_only and title in ("Warnings", "Notes")):
             continue
         code = SECTION_COLORS[title]
         result.append(f"\033[1;{code}m{title}\033[0m" if color else title)
@@ -88,7 +88,7 @@ def run_compilation(command, silent=False, raw=False):
         returncode = process.wait()
 
     if not raw:
-        summary, has_errors = process_compilation_output("".join(output), color=sys.stdout.isatty())
+        summary, has_errors = process_compilation_output("".join(output), color=sys.stdout.isatty(), errors_only=silent)
         # Do not hide a failure just because only warnings (or nothing) matched.
         if returncode and not has_errors:
             print("".join(output), end="")
@@ -104,7 +104,7 @@ def main():
     arg_parser.add_argument("args", nargs="*", help="Arguments to pass to `cmake --build`.")
     arg_parser.add_argument("-c", "--clean", action="store_true", help="Clean the build before compiling.")
     output_mode = arg_parser.add_mutually_exclusive_group()
-    output_mode.add_argument("-s", "--silent", action="store_true", help="Hide routine progress; still show diagnostics and the build result.")
+    output_mode.add_argument("-s", "--silent", action="store_true", help="Show only errors and the build result; keep full output in build/compile.log.")
     output_mode.add_argument("--raw", action="store_true", help="Show unfiltered build output live instead of a diagnostic summary.")
     arg_parser.add_argument("--install", action="store_true", help="Create the Docker container for the first time.")
     args = arg_parser.parse_args()
