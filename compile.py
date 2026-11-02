@@ -30,13 +30,14 @@ def create_container():
     )
     print("Container created successfully.")
 
-# Keep location/column and source context; identical diagnostics are shown once.
+# Match explicit severity labels after a file location or tool prefix.
 DIAGNOSTIC = re.compile(r"^.+?:\s*(fatal error|error|warning|note):")
 # GNU ld symbol/library failures and memory overflow messages; collect2 reports linker failure.
 LINKER_ERROR = re.compile(r"undefined reference|multiple definition|cannot find |"
                           r"region .* overflowed|will not fit in region|ld(?:\.exe)?:.*(?:error|failed)|collect2: error:")
 # CMake build progress from Ninja ([12/340]) or Make ([ 50%]).
 PROGRESS_LINE = re.compile(r"^\[\s*\d+(?:/\d+|%)\]")
+# ANSI colors: red errors, yellow warnings, blue notes.
 SECTION_COLORS = {"Linker errors": "31", "Compiler errors": "31", "Warnings": "33", "Notes": "34"}
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
@@ -46,11 +47,13 @@ def process_compilation_output(output, color=False, errors_only=False):
     current = None
     for line in ANSI_ESCAPE.sub("", output).splitlines():
         match = DIAGNOSTIC.match(line)
-        if LINKER_ERROR.search(line):
+        # Explicit warnings/notes take precedence over keywords in their messages.
+        if match and match.group(1) in ("warning", "note"):
+            section = {"warning": "Warnings", "note": "Notes"}[match.group(1)]
+        elif LINKER_ERROR.search(line):
             section = "Linker errors"
         elif match:
-            severity = match.group(1)
-            section = {"warning": "Warnings", "note": "Notes"}.get(severity, "Compiler errors")
+            section = "Compiler errors"
         else:
             # GCC prints the source line and caret beneath a diagnostic.
             if current is not None and re.match(r"^\s*(?:\d+)?\s*\|", line):
@@ -120,19 +123,20 @@ def main():
     process = subprocess.run("docker --help", shell=True, capture_output=True, text=True)
     if process.returncode != 0:
         print("Docker is not running. Please start Docker and try again.")
-        exit(1)
+        return process.returncode
 
     process = subprocess.run(f"docker start {CONTAINER}", shell=True, capture_output=True, text=True)
     if process.returncode != 0:
         print(f"Failed to start {CONTAINER}")
-        exit(1)
+        return process.returncode
 
     if args.clean:
         command = f"rm -rf {CONTAINER_DIR}/{build_dir}/"
         process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=True, text=True)
         if process.returncode != 0:
             print("Failed to clean the build.")
-            exit(1)
+            subprocess.run(["docker", "stop", CONTAINER], capture_output=True)
+            return process.returncode
 
     command = (
         f"cd {CONTAINER_DIR} && cmake -S . -B {build_dir} -G Ninja "
@@ -154,7 +158,7 @@ def main():
     process = subprocess.run(f"docker stop {CONTAINER}", shell=True, capture_output=True, text=True)
     if process.returncode != 0:
         print(f"Failed to stop {CONTAINER}")
-        exit(1)
+        return process.returncode
 
     return compile_returncode
 
