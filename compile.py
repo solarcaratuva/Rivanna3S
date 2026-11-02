@@ -4,6 +4,8 @@ import subprocess
 import argparse
 import re
 import sys
+import shlex
+from pathlib import Path
 
 CONTAINER = "Rivanna3S_compile"
 HOST_DIR = "$(pwd)"
@@ -28,103 +30,129 @@ def create_container():
     )
     print("Container created successfully.")
 
-def process_compilation_output(output):
-    linkerErrors = r"^(?P<path>[^:]+):(?P<line>\d+):\(.*?\):\s*(?P<message>.*)"
-    compiler_ptrn = r"(?P<path>[^:]+):(?P<line>\d+):(?P<column>\d+)?:\s*(?P<severity>error|warning|note):\s*(?P<message>.*)"
-    RED = "\033[1;31m"
-    YELLOW = "\033[1;33m"
-    BLUE = "\033[1;34m"
-    RESET = "\033[0m"
-    linkerList = set()
-    comp_errs = set()
-    comp_warns = set()
-    for line in output.splitlines():
-        #print(line)
-        linker_match = re.search(linkerErrors, line)
-        if linker_match is not None:
-            details = linker_match.groupdict()
-            message = f"{RED}[LINKER ERROR]{RESET} in {details['path']} at line {details['line']}: {details['message']}"
-            linkerList.add(message)
+# Keep location/column and source context; identical diagnostics are shown once.
+DIAGNOSTIC = re.compile(r"^.+?:\s*(fatal error|error|warning|note):")
+LINKER_ERROR = re.compile(r"undefined reference|multiple definition|cannot find |"
+                          r"region .* overflowed|will not fit in region|ld(?:\.exe)?:.*(?:error|failed)|collect2: error:")
+ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+
+
+def process_compilation_output(output, color=False):
+    sections = {"Linker errors": [], "Compiler errors": [], "Warnings": [], "Notes": []}
+    current = None
+    for line in ANSI_ESCAPE.sub("", output).splitlines():
+        match = DIAGNOSTIC.match(line)
+        if LINKER_ERROR.search(line):
+            section = "Linker errors"
+        elif match:
+            severity = match.group(1)
+            section = {"warning": "Warnings", "note": "Notes"}.get(severity, "Compiler errors")
+        else:
+            # GCC prints the source line and caret beneath a diagnostic.
+            if current is not None and re.match(r"^\s*(?:\d+)?\s*\|", line):
+                current.append(line)
+            else:
+                current = None
             continue
+        current = [line]
+        sections[section].append(current)
 
-        c_match = re.search(compiler_ptrn, line)
-        if c_match:
-            d = c_match.groupdict()
-            sev = d['severity'].lower()
-            msg = f"{d['path']}:{d['line']} -> {d['message']}"
-
-            if sev == 'error':
-                comp_errs.add(f"{RED}[COMP ERROR]{RESET} {msg}")
-            elif sev == 'warning':
-                comp_warns.add(f"{YELLOW}[COMP WARNING]{RESET} {msg}")
-            elif sev == 'note':
-                continue
-    print(f"{RED} ___LINKER ERRORS___{RESET}")
-    for err in linkerList:
-        print(err)
-    print(f"{RED} ___COMP ERRORS___{RESET}")
-    for err in comp_errs:
-        print(err)
-    print(f"{YELLOW} ___COMP WARNS___{RESET}")
-    for warn in comp_warns:
-        print(warn)
-    
-
-    return linkerList, comp_errs, comp_warns
+    result = []
+    for title, diagnostics in sections.items():
+        if not diagnostics:
+            continue
+        code = "31" if "errors" in title else "33" if "warnings" in title.lower() else "34"
+        result.append(f"\033[1;{code}m{title}\033[0m" if color else title)
+        result.extend(dict.fromkeys("\n".join(lines) for lines in diagnostics))
+    return "\n".join(result)
 
 
+def run_compilation(command, silent=False, raw=False):
+    log_path = Path("build/compile.log")
+    log_path.parent.mkdir(exist_ok=True)
+    output = []
+    with log_path.open("w") as log_file:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                   text=True, errors="replace", bufsize=1)
+        for line in process.stdout:
+            log_file.write(line)
+            output.append(line)
+            if raw or (not silent and re.match(r"^\[\s*\d+(?:/\d+|%)\]", line)):
+                print(line, end="", flush=True)
+        process.stdout.close()
+        returncode = process.wait()
+
+    if not raw:
+        summary = process_compilation_output("".join(output), color=sys.stdout.isatty())
+        # Do not hide a failure just because only warnings (or nothing) matched.
+        if returncode and not any(title in summary for title in ("Compiler errors", "Linker errors")):
+            print("".join(output), end="")
+        elif summary:
+            print(summary)
+    print("Compilation failed." if returncode else "Compilation succeeded.")
+    print(f"Full output: {log_path}")
+    return returncode
 
 
-arg_parser = argparse.ArgumentParser(description="Compile Rivanna3S code in the Docker container.")
-arg_parser.add_argument("args", nargs="*", help="Arguments to pass to `cmake --build`.")
-arg_parser.add_argument("-c", "--clean", action="store_true", help="Clean the build before compiling.")
-arg_parser.add_argument("-s", "--silent", action="store_true", help="Suppress output from the compilation process.")
-arg_parser.add_argument("--install", action="store_true", help="Create the Docker container for the first time.")
-args = arg_parser.parse_args()
+def main():
+    arg_parser = argparse.ArgumentParser(description="Compile Rivanna3S code in the Docker container.")
+    arg_parser.add_argument("args", nargs="*", help="Arguments to pass to `cmake --build`.")
+    arg_parser.add_argument("-c", "--clean", action="store_true", help="Clean the build before compiling.")
+    output_mode = arg_parser.add_mutually_exclusive_group()
+    output_mode.add_argument("-s", "--silent", action="store_true", help="Hide routine progress; still show diagnostics and the build result.")
+    output_mode.add_argument("--raw", action="store_true", help="Show unfiltered build output live instead of a diagnostic summary.")
+    arg_parser.add_argument("--install", action="store_true", help="Create the Docker container for the first time.")
+    args = arg_parser.parse_args()
 
-testing_mode = "testing" in args.args
-args.args = [arg for arg in args.args if arg != "testing"]
-mcu = TESTING_MCU if testing_mode else DEFAULT_MCU
-build_dir = "build"
+    testing_mode = "testing" in args.args
+    args.args = [arg for arg in args.args if arg != "testing"]
+    mcu = TESTING_MCU if testing_mode else DEFAULT_MCU
+    build_dir = "build"
 
-if args.install:
-    create_container()
+    if args.install:
+        create_container()
 
-process = subprocess.run("docker --help", shell=True, capture_output=True, text=True)
-if process.returncode != 0:
-    print("Docker is not running. Please start Docker and try again.")
-    exit(1)
-
-process = subprocess.run(f"docker start {CONTAINER}", shell=True, capture_output=True, text=True)
-if process.returncode != 0:
-    print(f"Failed to start {CONTAINER}")
-    exit(1)
-
-if args.clean:
-    command = f"rm -rf {CONTAINER_DIR}/{build_dir}/"
-    process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=True, text=True)
+    process = subprocess.run("docker --help", shell=True, capture_output=True, text=True)
     if process.returncode != 0:
-        print("Failed to clean the build.")
+        print("Docker is not running. Please start Docker and try again.")
         exit(1)
 
-command = (
-    f"cd {CONTAINER_DIR} && cmake -S . -B {build_dir} -G Ninja "
-    f"-DCMAKE_TOOLCHAIN_FILE=cmake/arm-gcc.cmake -DCMAKE_BUILD_TYPE=Debug -DBOARD={mcu}"
-)
-process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=args.silent, text=True)
-if args.silent and process.returncode != 0:
-    print("CMake configuration failed.")
+    process = subprocess.run(f"docker start {CONTAINER}", shell=True, capture_output=True, text=True)
+    if process.returncode != 0:
+        print(f"Failed to start {CONTAINER}")
+        exit(1)
 
-command = f"cd {CONTAINER_DIR} && cmake --build {build_dir} {' '.join(args.args)}"
-compile_process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=True, text=True)
-full_output = compile_process.stdout + compile_process.stderr
-process_compilation_output(full_output)
-if args.silent and compile_process.returncode != 0:
-    print("Compilation failed.")
+    if args.clean:
+        command = f"rm -rf {CONTAINER_DIR}/{build_dir}/"
+        process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=True, text=True)
+        if process.returncode != 0:
+            print("Failed to clean the build.")
+            exit(1)
 
-process = subprocess.run(f"docker stop {CONTAINER}", shell=True, capture_output=True, text=True)
-if process.returncode != 0:
-    print(f"Failed to stop {CONTAINER}")
-    exit(1)
+    command = (
+        f"cd {CONTAINER_DIR} && cmake -S . -B {build_dir} -G Ninja "
+        f"-DCMAKE_TOOLCHAIN_FILE=cmake/arm-gcc.cmake -DCMAKE_BUILD_TYPE=Debug -DBOARD={mcu}"
+    )
+    process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=True, text=True)
+    if not args.silent or process.returncode != 0:
+        print(process.stdout + process.stderr, end="")
+    if process.returncode != 0:
+        print("CMake configuration failed.")
+        subprocess.run(["docker", "stop", CONTAINER], capture_output=True)
+        return process.returncode
 
-exit(compile_process.returncode)
+    command = f"cd {CONTAINER_DIR} && cmake --build {build_dir} {shlex.join(args.args)}"
+    compile_returncode = run_compilation(
+        ["docker", "exec", CONTAINER, "/bin/bash", "-c", command],
+        silent=args.silent, raw=args.raw)
+
+    process = subprocess.run(f"docker stop {CONTAINER}", shell=True, capture_output=True, text=True)
+    if process.returncode != 0:
+        print(f"Failed to stop {CONTAINER}")
+        exit(1)
+
+    return compile_returncode
+
+
+if __name__ == "__main__":
+    sys.exit(main())
