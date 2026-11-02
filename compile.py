@@ -32,13 +32,17 @@ def create_container():
 
 # Keep location/column and source context; identical diagnostics are shown once.
 DIAGNOSTIC = re.compile(r"^.+?:\s*(fatal error|error|warning|note):")
+# GNU ld symbol/library failures and memory overflow messages; collect2 reports linker failure.
 LINKER_ERROR = re.compile(r"undefined reference|multiple definition|cannot find |"
                           r"region .* overflowed|will not fit in region|ld(?:\.exe)?:.*(?:error|failed)|collect2: error:")
+# CMake build progress from Ninja ([12/340]) or Make ([ 50%]).
+PROGRESS_LINE = re.compile(r"^\[\s*\d+(?:/\d+|%)\]")
+SECTION_COLORS = {"Linker errors": "31", "Compiler errors": "31", "Warnings": "33", "Notes": "34"}
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
 
 def process_compilation_output(output, color=False):
-    sections = {"Linker errors": [], "Compiler errors": [], "Warnings": [], "Notes": []}
+    sections = {title: [] for title in SECTION_COLORS}
     current = None
     for line in ANSI_ESCAPE.sub("", output).splitlines():
         match = DIAGNOSTIC.match(line)
@@ -61,10 +65,11 @@ def process_compilation_output(output, color=False):
     for title, diagnostics in sections.items():
         if not diagnostics:
             continue
-        code = "31" if "errors" in title else "33" if "warnings" in title.lower() else "34"
+        code = SECTION_COLORS[title]
         result.append(f"\033[1;{code}m{title}\033[0m" if color else title)
         result.extend(dict.fromkeys("\n".join(lines) for lines in diagnostics))
-    return "\n".join(result)
+    has_errors = bool(sections["Compiler errors"] or sections["Linker errors"])
+    return "\n".join(result), has_errors
 
 
 def run_compilation(command, silent=False, raw=False):
@@ -77,15 +82,15 @@ def run_compilation(command, silent=False, raw=False):
         for line in process.stdout:
             log_file.write(line)
             output.append(line)
-            if raw or (not silent and re.match(r"^\[\s*\d+(?:/\d+|%)\]", line)):
+            if raw or (not silent and PROGRESS_LINE.match(line)):
                 print(line, end="", flush=True)
         process.stdout.close()
         returncode = process.wait()
 
     if not raw:
-        summary = process_compilation_output("".join(output), color=sys.stdout.isatty())
+        summary, has_errors = process_compilation_output("".join(output), color=sys.stdout.isatty())
         # Do not hide a failure just because only warnings (or nothing) matched.
-        if returncode and not any(title in summary for title in ("Compiler errors", "Linker errors")):
+        if returncode and not has_errors:
             print("".join(output), end="")
         elif summary:
             print(summary)
