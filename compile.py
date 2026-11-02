@@ -32,14 +32,14 @@ arg_parser = argparse.ArgumentParser(description="Compile Rivanna3S code in the 
 arg_parser.add_argument("args", nargs="*", help="Arguments to pass to `cmake --build`.")
 arg_parser.add_argument("-c", "--clean", action="store_true", help="Clean the build before compiling.")
 arg_parser.add_argument("-s", "--silent", action="store_true", help="Suppress output from the compilation process.")
-arg_parser.add_argument("--mock", action="store_true", help="Enable #129 UART upload streaming mock on MotorBoard.")
+arg_parser.add_argument("--mock", action="store_true", help="Enable #129 UART upload streaming mock on MotorBoard and TopDistBoard.")
 arg_parser.add_argument("--install", action="store_true", help="Create the Docker container for the first time.")
 args = arg_parser.parse_args()
 
 testing_mode = "testing" in args.args
 args.args = [arg for arg in args.args if arg != "testing"]
 mcu = TESTING_MCU if testing_mode else DEFAULT_MCU
-mock_define = "-DUART_UPLOAD_MOCK=ON" if args.mock else ""
+mock_define = "-DUART_UPLOAD_MOCK=ON" if args.mock else "-DUART_UPLOAD_MOCK=OFF"
 build_dir = "build"
 
 if args.install:
@@ -67,8 +67,9 @@ command = (
     f"-DCMAKE_TOOLCHAIN_FILE=cmake/arm-gcc.cmake -DCMAKE_BUILD_TYPE=Debug -DBOARD={mcu} {mock_define}"
 )
 process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=args.silent, text=True)
-if args.silent and process.returncode != 0:
-    print("CMake configuration failed.")
+if process.returncode != 0:
+    print("CMake configuration failed.", file=sys.stderr)
+    sys.exit(process.returncode)
 
 command = f"cd {CONTAINER_DIR} && cmake --build {build_dir} {' '.join(args.args)}"
 compile_process = subprocess.run(f'docker exec -t {CONTAINER} /bin/bash -c "{command}"', shell=True, capture_output=args.silent, text=True)

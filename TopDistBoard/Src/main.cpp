@@ -32,6 +32,9 @@
 #include "pindef.h"
 #include "thread.h"
 #include "FaultHandler.h"
+#ifdef UART_UPLOAD_MOCK
+#include "FirmwareUploader.h"
+#endif
 
 DigitalOut left_turn_signal(LEFT_TURN_EN);
 DigitalOut right_turn_signal(RIGHT_TURN_EN);
@@ -119,7 +122,13 @@ void bms_strobe_handler() {
 
 void app_main()
 {
+#ifdef UART_UPLOAD_MOCK
+    log_configure(INFO_LVL, LOG_TX, LOG_RX, 115200);
+    static FirmwareUploader uploader(*log_get_uart(), main_can, 4, 8);
+    uploader.start(true); // #129 streaming mock: no CAN update or flash operations.
+#else
     log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
+#endif
     log_info("Top Dist Board starting up...");
 
     signal_thread.start(signal_flash_handler);
