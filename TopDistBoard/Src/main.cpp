@@ -124,8 +124,8 @@ void app_main()
 {
 #ifdef UART_UPLOAD_MOCK
     log_configure(INFO_LVL, LOG_TX, LOG_RX, 115200);
-    static FirmwareUploader uploader(*log_get_uart(), main_can, 4, 8);
-    uploader.start(true); // #129 streaming mock: no CAN update or flash operations.
+    static FirmwareUploader uploader(*log_get_uart(), 8);
+    uploader.start(); // #129 streaming mock: no CAN update or flash operations.
 #else
     log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
 #endif

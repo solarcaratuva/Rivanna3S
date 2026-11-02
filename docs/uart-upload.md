@@ -75,3 +75,12 @@ above apply to the reviewed image; they do not establish the cause of those
 timeouts. Recovery was observed after interruption; the disconnected sender did
 not capture the board's timeout response. Concurrent ordinary logging under load
 was not separately exercised. No CAN delivery or flash-update behavior was tested.
+
+## Review cleanup
+
+The subsequent review cleanup removes the unused CAN/flash implementation and
+restores the CAN driver, frame sizes, and FDCAN configuration to main. The earlier
+implementation is preserved at commit `da9a76a` for #130. The uploader now takes
+only its UART and queue depth; the wire format and mock consumer flow are unchanged.
+The hardware results above were collected before this cleanup. The trimmed build
+has passed compilation and host tests but has not yet been revalidated on hardware.
