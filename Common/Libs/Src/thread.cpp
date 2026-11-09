@@ -2,14 +2,11 @@
 #include "task.h"
 #include "thread.h"
 
-#define STACK_SIZE 1000
-#define PRIORITY 1
-
 Thread::Thread() 
     : handle_(NULL)
     {}
 
-BaseType_t Thread::start(void (*fn)()) {
+BaseType_t Thread::start(void (*fn)(), uint16_t stack_words, UBaseType_t priority) {
         return xTaskCreate(
             +[](void* pv) {
                 auto fn = reinterpret_cast<void(*)()>(pv);
@@ -21,9 +18,9 @@ BaseType_t Thread::start(void (*fn)()) {
                 // This should never be reached, but just in case
                 vTaskDelete(NULL);
             },
-            "HELPER", STACK_SIZE,
+            "HELPER", stack_words,
             reinterpret_cast<void*>(fn), // Pass the function pointer as parameter
-            PRIORITY, &handle_);
+            priority, &handle_);
 }
 
 TaskHandle_t Thread::get_task_handle(){
