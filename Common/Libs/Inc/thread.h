@@ -21,14 +21,16 @@ public:
     /**
      * @brief Create and start a FreeRTOS task
      * @param fn Function pointer to the task entry point (void function with no parameters)
+     * @param stack_words Stack capacity in StackType_t words, not bytes (default 1000)
+     * @param priority FreeRTOS task priority (default idle priority plus one)
      * @return BaseType_t pdPASS if task was created successfully, errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY otherwise
      * 
      * Creates a FreeRTOS task that will begin execution immediately.
      * The function should contain an infinite loop for continuous task operation.
      * 
-     * @note Default task priority and stack size are used (defined in implementation)
      */
-    BaseType_t start(void(*fn)());
+    BaseType_t start(void(*fn)(), uint16_t stack_words = 1000,
+                     UBaseType_t priority = tskIDLE_PRIORITY + 1);
 
 
     /**

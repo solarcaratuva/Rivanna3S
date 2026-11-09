@@ -60,13 +60,28 @@ int UART::read(uint8_t *buffer, uint16_t length){
 }
 
 int UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
+    return read_impl(buffer, length, timeout_ms, nullptr);
+}
+
+int UART::read_until_idle(uint8_t *buffer, uint16_t length, uint16_t &received,
+                          uint32_t timeout_ms) {
+    received = 0;
+    return read_impl(buffer, length, timeout_ms, &received);
+}
+
+int UART::read_impl(uint8_t *buffer, uint16_t length, uint32_t timeout_ms,
+                    uint16_t *received) {
 	if(initialized) {
         if (xSemaphoreTake(rx_mutex, portMAX_DELAY) != pdTRUE) return -3;
         rx_error = HAL_UART_ERROR_NONE;
+        rx_received = 0;
 
         rxTask = Thread::get_task_handle();
 
-        if (HAL_UART_Receive_IT(huart, buffer, length) != HAL_OK) {
+        const HAL_StatusTypeDef status = received
+            ? HAL_UARTEx_ReceiveToIdle_IT(huart, buffer, length)
+            : HAL_UART_Receive_IT(huart, buffer, length);
+        if (status != HAL_OK) {
             rxTask = nullptr;
             xSemaphoreGive(rx_mutex);
             return -1;
@@ -89,9 +104,11 @@ int UART::read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms){
         }
 
         rxTask = nullptr;
-        if (rx_error != HAL_UART_ERROR_NONE) HAL_UART_AbortReceive(huart);
+        const int error = rx_error;
+        if (error != HAL_UART_ERROR_NONE) HAL_UART_AbortReceive(huart);
+        if (received && error == HAL_UART_ERROR_NONE) *received = rx_received;
         xSemaphoreGive(rx_mutex);
-        return rx_error;
+        return error;
 	}
 
     return -1; //unitialized
@@ -185,6 +202,16 @@ extern "C"{
 }
 
 extern "C"{
+    void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size) {
+        UART* uart = UART::find_from_handle(huart);
+        if (!uart || !uart->rxTask) return;
+        uart->rx_received = size;
+        BaseType_t woken = pdFALSE;
+        xTaskNotifyFromISR(uart->rxTask, 0, eIncrement, &woken);
+        uart->rxTask = nullptr;
+        portYIELD_FROM_ISR(woken);
+    }
+
     void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
         UART* uart = UART::find_from_handle(huart);
         if (!uart) return;

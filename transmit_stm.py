@@ -92,8 +92,16 @@ def get_correct_port() -> str:
 
 def read_response(ser, timeout=3):
     deadline = time.monotonic() + timeout
+    pending = bytearray()
     while time.monotonic() < deadline:
-        line = ser.readline(256).strip()
+        fragment = ser.readline(256)
+        if not fragment:
+            continue
+        pending.extend(fragment)
+        if not fragment.endswith(b"\n"):
+            continue
+        line = bytes(pending).strip()
+        pending.clear()
         if line.startswith(b"FW "):
             if line == b"FW FAIL":
                 raise RuntimeError("Board rejected or failed the transfer")

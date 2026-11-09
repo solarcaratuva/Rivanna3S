@@ -12,6 +12,13 @@ constexpr uint32_t FW_BLOCK_TIMEOUT_MS = 1000;
 constexpr uint32_t FW_QUEUE_TIMEOUT_MS = 1000;
 constexpr uint32_t FW_RESULT_TIMEOUT_MS = 2000;
 constexpr uint32_t FW_DRAIN_TIMEOUT_MS = 1000;
+// The mock consumer only receives blocks and computes their CRC.
+// Keep the UART listener's existing stack for parsing and fault logging.
+constexpr uint16_t FW_CONSUMER_STACK_WORDS = 256;
+constexpr uint16_t FW_UART_STACK_WORDS = 1000;
+// Rearm command-byte reception before CPU-bound application tasks run again.
+// A 1 ms tick at the application priority can overrun the 115200-baud FIFO.
+constexpr UBaseType_t FW_UART_PRIORITY = tskIDLE_PRIORITY + 2;
 }
 
 FirmwareUploader* FirmwareUploader::s_instance_ = nullptr;
@@ -25,8 +32,12 @@ void FirmwareUploader::start()
 {
     if (s_instance_) return; // The Thread API supports one uploader.
     s_instance_ = this;
-    consumer_thread_.start([]{ s_instance_->consumer_task(s_instance_); });
-    UART_listener_thread_.start([]{ s_instance_->uart_listener_task(s_instance_); });
+    consumer_thread_.start(
+        []{ s_instance_->consumer_task(s_instance_); },
+        FW_CONSUMER_STACK_WORDS);
+    UART_listener_thread_.start(
+        []{ s_instance_->uart_listener_task(s_instance_); },
+        FW_UART_STACK_WORDS, FW_UART_PRIORITY);
 }
 
 bool FirmwareUploader::send_line(const char *line)
@@ -98,13 +109,14 @@ void FirmwareUploader::handle_uart_mock()
     } else {
         std::snprintf(response, sizeof(response), "FW FAIL\n");
     }
-    send_line(response);
     if (!ok) {
-        // Discard a late/partial packet until the link is quiet, with a bound.
+        // Drain late packet bytes before reporting failure so a sender
+        // restarting after FW FAIL does not have its command discarded.
         uint8_t byte;
         const uint32_t started = Clock::get_current_time();
         while (uint32_t(Clock::get_current_time() - started) < FW_DRAIN_TIMEOUT_MS && uart_.read(&byte, 1, FW_COMMAND_TIMEOUT_MS) == 0) {}
     }
+    send_line(response);
 }
 
 void FirmwareUploader::consumer_task(void *arg)
@@ -140,15 +152,21 @@ bool FirmwareUploader::read_exact(uint8_t *buf, uint16_t len, uint32_t timeout_m
 
 int FirmwareUploader::read_line(char *buf, uint16_t max_len, uint32_t timeout_ms)
 {
-    for (uint16_t i = 0; i < max_len - 1; i++)
-    {
-        if (uart_.read((uint8_t *)&buf[i], 1, timeout_ms) != 0)
+    uint16_t used = 0;
+    while (used < max_len - 1) {
+        uint16_t received = 0;
+        // Buffer the command in the ISR instead of rescheduling for each byte.
+        if (uart_.read_until_idle(reinterpret_cast<uint8_t*>(buf + used),
+                                  max_len - used - 1, received, timeout_ms) != 0 || !received)
             return -1;
-        if (buf[i] == '\n')
-        {
-            buf[i + 1] = '\0';
-            return i + 1;
+        const uint16_t end = used + received;
+        for (uint16_t i = used; i < end; ++i) {
+            if (buf[i] == '\n') {
+                buf[i + 1] = '\0';
+                return i + 1;
+            }
         }
+        used = end;
     }
     return -1;
 }
