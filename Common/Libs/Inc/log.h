@@ -41,7 +41,7 @@ extern volatile LogLevel g_log_level;
  */
 void log_configure(LogLevel level, Pin tx, Pin rx, uint32_t baudrate);
 
-// Reuse the configured peripheral for the single upload RX listener (#129).
+// Reuse the configured peripheral for the single upload RX listener.
 UART* log_get_uart();
 
 typedef void (*LogOutputCallback)(const uint8_t* data, uint16_t len);

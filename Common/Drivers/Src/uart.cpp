@@ -47,6 +47,7 @@ UART::UART(Pin tx, Pin rx, uint32_t baud)
         }
     }
 
+    // Waiting for incoming bytes must not prevent outgoing log writes.
     rx_mutex = xSemaphoreCreateMutex();
     tx_mutex = xSemaphoreCreateMutex();
 

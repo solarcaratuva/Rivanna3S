@@ -32,7 +32,7 @@ arg_parser = argparse.ArgumentParser(description="Compile Rivanna3S code in the 
 arg_parser.add_argument("args", nargs="*", help="Arguments to pass to `cmake --build`.")
 arg_parser.add_argument("-c", "--clean", action="store_true", help="Clean the build before compiling.")
 arg_parser.add_argument("-s", "--silent", action="store_true", help="Suppress output from the compilation process.")
-arg_parser.add_argument("--mock", action="store_true", help="Enable #129 UART upload streaming mock on MotorBoard and TopDistBoard.")
+arg_parser.add_argument("--mock", action="store_true", help="Enable UART upload streaming mock on MotorBoard and TopDistBoard.")
 arg_parser.add_argument("--install", action="store_true", help="Create the Docker container for the first time.")
 args = arg_parser.parse_args()
 

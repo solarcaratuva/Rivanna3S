@@ -11,6 +11,10 @@ OS = platform.system()
 
 BLOCK_SIZE = 64
 BAUD = 115200
+# Keep these protocol limits aligned with FirmwareUploader's FW_* constants.
+MAX_FIRMWARE_SIZE = 4 * 1024 * 1024
+CRC_INIT = 0xFFFF
+MAX_RETRIES = 3  # Retries after the initial block attempt.
 
 BOARD_MAP = {
     "bottomdist": "build/bin/BottomDistBoard.bin",
@@ -35,7 +39,7 @@ BOARD_ID_MAP = {
 }
 
 def crc16(data: bytes) -> int:
-    return binascii.crc_hqx(data, 0xFFFF)
+    return binascii.crc_hqx(data, CRC_INIT)
 
 def get_correct_port() -> str:
     import glob
@@ -113,7 +117,7 @@ def read_response(ser, timeout=3):
 def transmit_stream(ser, firmware, board_id):
     # One size/CRC header replaces timeout-as-EOF. Keep the existing 64+2-byte
     # block format and retry only explicit NACKs; a lost ACK aborts unambiguously.
-    size, image_crc = 0, 0xFFFF
+    size, image_crc = 0, CRC_INIT
     start = firmware.tell()
     while True:
         chunk = firmware.read(4096)
@@ -122,7 +126,7 @@ def transmit_stream(ser, firmware, board_id):
         size += len(chunk)
         image_crc = binascii.crc_hqx(chunk, image_crc)
     firmware.seek(start)
-    if board_id not in BOARD_ID_MAP.values() or not 0 < size <= 4 * 1024 * 1024:
+    if board_id not in BOARD_ID_MAP.values() or not 0 < size <= MAX_FIRMWARE_SIZE:
         raise ValueError("Invalid board or file size (mock accepts 1 byte through 4 MiB)")
 
     command = f"UPLOAD {board_id} {size} {image_crc:04x}\n".encode()
@@ -136,7 +140,7 @@ def transmit_stream(ser, firmware, board_id):
             break
         padded = data.ljust(BLOCK_SIZE, b"\xff")
         packet = padded + crc16(padded).to_bytes(2, "big")
-        for attempt in range(4):
+        for attempt in range(MAX_RETRIES + 1):
             if read_response(ser) != b"FW REQ":
                 raise RuntimeError("Expected a request for the next block")
             if ser.write(packet) != len(packet):
@@ -144,7 +148,7 @@ def transmit_stream(ser, firmware, board_id):
             response = read_response(ser)
             if response == b"FW ACK":
                 break
-            if response != b"FW NACK" or attempt == 3:
+            if response != b"FW NACK" or attempt == MAX_RETRIES:
                 raise RuntimeError("Block rejected or acknowledgement missing; restart the upload")
             # Keep this exact packet, including a short final block, for retry.
         blocks += 1
@@ -173,9 +177,6 @@ def upload_file(port: str, filepath: str, board_id: int, baud=BAUD):
         raise
 
 def get_args():
-    import argparse
-    import os
-
     parser = argparse.ArgumentParser(
         description="Upload firmware to STM board over ST-Link VCP"
     )
@@ -204,8 +205,8 @@ def get_args():
     parser.add_argument(
         "--baud",
         type=int,
-        default=115200,
-        help="Baud rate (default: 115200)"
+        default=BAUD,
+        help=f"Baud rate (default: {BAUD})"
     )
 
     parser.add_argument(
@@ -261,7 +262,7 @@ def compress_args(args, windows_firmware_path: str = None):
         s += f" --file \"{firmware_path}\""
     if args.port:
         s += f" --port {args.port}"
-    if args.baud != 115200:
+    if args.baud != BAUD:
         s += f" --baud {args.baud}"
     return s
 
@@ -287,9 +288,6 @@ def main() -> None:
         board_id=BOARD_ID_MAP[args.board],
         baud=args.baud
     )
-
-
-
 
 if __name__ == "__main__":
     try:

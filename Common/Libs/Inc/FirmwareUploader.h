@@ -10,7 +10,7 @@
 #define FW_CRC16_INIT 0xFFFF
 #define FW_UPLOAD_BAUD 115200 // Default baud rate matching transmit_stm.py.
 
-// #129 laptop-to-board receiver with a streaming mock consumer.
+// Laptop-to-board receiver with a streaming mock consumer.
 // Destination IDs 0–7 are accepted; no CAN routing or flash operations occur.
 class FirmwareUploader
 {
@@ -31,13 +31,16 @@ private:
     UART &uart_;
     FiniteQueue queue_;
     Thread consumer_thread_;
-    Thread UART_listener_thread_;
+    Thread uart_listener_thread_;
     static FirmwareUploader* s_instance_;
 
-    void handle_uart_mock();
+    void handle_upload_command();
+    bool parse_upload_command(const char *command, uint32_t &image_size,
+                              uint16_t &expected_crc);
+    bool receive_blocks(uint32_t image_size);
+    void finish_upload(bool ok, uint32_t image_size, uint16_t expected_crc);
     static void consumer_task(void* arg);
     static void uart_listener_task(void* arg);
     bool send_line(const char *line);
-    bool read_exact(uint8_t *buf, uint16_t len, uint32_t timeout_ms);
     int read_line(char *buf, uint16_t max_len, uint32_t timeout_ms);
 };
