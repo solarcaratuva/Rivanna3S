@@ -58,7 +58,7 @@ void MX_FDCAN1_Init(uint32_t baudrate)
 
   /* USER CODE END FDCAN1_Init 1 */
   hfdcan1.Instance = FDCAN1;
-  hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+  hfdcan1.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
   hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
@@ -75,7 +75,7 @@ void MX_FDCAN1_Init(uint32_t baudrate)
   hfdcan1.Init.StdFiltersNbr = 0;
   hfdcan1.Init.ExtFiltersNbr = 0;
   hfdcan1.Init.RxFifo0ElmtsNbr = 8;
-  hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
+  hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_64;
   hfdcan1.Init.RxFifo1ElmtsNbr = 0;
   hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
   hfdcan1.Init.RxBuffersNbr = 0;
@@ -84,7 +84,7 @@ void MX_FDCAN1_Init(uint32_t baudrate)
   hfdcan1.Init.TxBuffersNbr = 0;
   hfdcan1.Init.TxFifoQueueElmtsNbr = 8;
   hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
-  hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
+  hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_64;
   hfdcan1.Init.NominalPrescaler = calculate_prescaler(&hfdcan1, 40000000, baudrate);
   if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
   {
@@ -124,11 +124,20 @@ void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct);
 
     /* USER CODE BEGIN FDCAN1_MspInit 1 */
-
+      /* Priority must be >= configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY (5)
+        so the ISR may call vTaskNotifyGiveFromISR. See Common/Libs/Inc/FreeRTOSConfig.h */
+      HAL_NVIC_SetPriority(FDCAN1_IT0_IRQn, 5, 0);
     /* USER CODE END FDCAN1_MspInit 1 */
+
   }
 }
 
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
+
+// FIFO0 notifications are routed to interrupt line 0 by CAN.
+void FDCAN1_IT0_IRQHandler(void)
+{
+    HAL_FDCAN_IRQHandler(&hfdcan1);
+}

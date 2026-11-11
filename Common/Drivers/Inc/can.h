@@ -5,6 +5,7 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "lock.h"
+#include "task.h"
 #include "log.h"
 
 /**
@@ -15,8 +16,8 @@
  */
 struct SerializedCanMessage {
     uint16_t id;       ///< CAN identifier (11-bit standard ID, range: 0x000 - 0x7FF)
-    uint8_t  len;      ///< Number of data bytes in the payload (0..8)
-    uint8_t  data[8];  ///< Message payload data
+    uint8_t  len;      ///< Payload bytes requested for TX or decoded from the RX DLC (0..64)
+    uint8_t  data[64]; ///< Message payload data
 };
 
 /**
@@ -61,18 +62,15 @@ struct CanMessage {
  * @brief CAN bus driver wrapper for STM32 FDCAN peripheral
  * 
  * This class provides a high-level interface to the STM32 FDCAN (Flexible Data-rate CAN)
- * peripheral operating in Classic CAN mode. It supports both raw frame transmission/reception
+ * peripheral. It supports both raw frame transmission/reception
  * and higher-level message objects through the CanMessage interface.
  * 
  * Features:
  * - Thread-safe operation using FreeRTOS locks
  * - Standard CAN (11-bit identifiers)
- * - Classic CAN frame format (up to 8 bytes)
+ * - Classic CAN frames up to 8 bytes and CAN FD frames up to 64 bytes
  * - Configurable baudrate
  * - Automatic pin mapping and peripheral initialization
- * 
- * @note This driver currently operates in Classic CAN mode only. CAN FD support
- *       requires modifications to support larger data lengths.
  * 
  * Example usage:
  * @code
@@ -98,7 +96,7 @@ public:
      * and baudrate. It performs the following operations:
      * - Finds and claims a suitable FDCAN peripheral matching the pin configuration
      * - Configures GPIO pins with appropriate alternate functions
-     * - Initializes the FDCAN peripheral in Classic CAN mode
+     * - Initializes the FDCAN peripheral in CAN FD mode without bit-rate switching
      * - Starts the CAN peripheral for operation
      * 
      * @param tx Transmit pin (must be a valid FDCAN TX pin)
@@ -122,6 +120,7 @@ public:
      *         - 0: Success
      *         - 1: CAN peripheral not initialized
      *         - 2: HAL transmission error
+     *         - 3: Payload length exceeds 64 bytes
      * 
      * @note This method is thread-safe
      */
@@ -132,12 +131,15 @@ public:
      * 
      * Transmits a raw SerializedCanMessage directly to the CAN bus without
      * additional processing. The message is added to the transmit FIFO/queue.
+     * Lengths not directly representable by a CAN FD DLC are rounded up and
+     * zero-padded on the wire.
      * 
      * @param[in] msg Pointer to the SerializedCanMessage to transmit
      * @return int Status code:
      *         - 0: Success
      *         - 1: CAN peripheral not initialized
      *         - 2: HAL transmission error (FIFO full or peripheral error)
+     *         - 3: Payload length exceeds 64 bytes
      * 
      * @note This method is thread-safe
      */
@@ -146,7 +148,7 @@ public:
     /**
      * @brief Read a raw CAN message from the receive FIFO
      * 
-     * Polls the FDCAN RX FIFO0 for incoming messages. This method will block
+     * Waits for an FDCAN RX FIFO0 interrupt when empty. This method will block
      * until a message is available.
      * 
      * @param[out] msg Pointer to SerializedCanMessage to populate with received data
@@ -170,28 +172,33 @@ public:
      *         - 0: Message successfully received
      *         - 1: CAN peripheral not initialized
      *         - 2: HAL reception error
-     *         - 3: No message available
+     *         - 3: No message available or another reader owns reception
      *
      * @note This method is thread-safe and NON-BLOCKING.
      */
     int try_read(SerializedCanMessage* msg);
+    // HAL callback routing; notify_rx_from_isr() must only be called in an ISR.
+    static CAN* find_from_handle(FDCAN_HandleTypeDef* handle);
+    void notify_rx_from_isr();
 
 private:
-    FDCAN_HandleTypeDef* hfdcan;        ///< Handle to the STM32 HAL FDCAN peripheral
+    TaskHandle_t rxTask = nullptr;       ///< Task waiting for an RX FIFO notification
+    Lock rx_lock;                       ///< Serializes read() and try_read()
+    FDCAN_HandleTypeDef* hfdcan = nullptr;        ///< Handle to the STM32 HAL FDCAN peripheral
     Lock                 instance_lock;  ///< Mutex for thread-safe access
     FDCAN_TxHeaderTypeDef txHeader;     ///< Transmit header (reused for efficiency)
     FDCAN_RxHeaderTypeDef rxHeader;     ///< Receive header (reused for efficiency)
-    bool initialized;                    ///< Initialization status flag
+    bool initialized = false;                    ///< Initialization status flag
 
     FDCAN_Peripheral* fdcan_periph;     ///< Pointer to the claimed FDCAN peripheral descriptor
 
     /**
      * @brief Convert byte count to FDCAN DLC (Data Length Code)
      * 
-     * Converts a byte count (0-8) to the corresponding FDCAN DLC value
-     * used in the hardware registers. Values greater than 8 are clamped.
+     * Converts a byte count (0-64) to the smallest corresponding FDCAN DLC
+     * value that can contain it.
      * 
-     * @param len Number of bytes (0-8)
+     * @param len Number of bytes (0-64)
      * @return uint32_t FDCAN DLC constant (e.g., FDCAN_DLC_BYTES_4)
      */
     uint32_t bytesToDlc(uint8_t len) const;
@@ -203,7 +210,7 @@ private:
      * actual number of data bytes it represents.
      * 
      * @param dlc FDCAN DLC constant from hardware register
-     * @return uint8_t Number of bytes (0-8)
+     * @return uint8_t Number of bytes (0-64)
      */
     uint8_t  dlcToBytes(uint32_t dlc) const;
 

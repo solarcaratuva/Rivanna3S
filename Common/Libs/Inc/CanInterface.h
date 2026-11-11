@@ -97,6 +97,7 @@ public:
      *         - 0: Success
      *         - 1: CAN peripheral not initialized
      *         - 2: HAL transmission error
+     *         - 3: Payload length exceeds 64 bytes
      *         - -1: Invalid argument (msg is nullptr)
      * 
      * @note This method is thread-safe
@@ -114,6 +115,7 @@ public:
      *         - 0: Success
      *         - 1: CAN peripheral not initialized
      *         - 2: HAL transmission error
+     *         - 3: Payload length exceeds 64 bytes
      *         - -1: Invalid argument (msg is nullptr)
      * 
      * @note This method is thread-safe
