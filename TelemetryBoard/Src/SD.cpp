@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SD_QUEUE_BUFFER_BYTES 2048
+#define SD_QUEUE_BUFFER_BYTES 4096
 #define SD_MESSAGE_MAX_BYTES 256
 
 SdCard* SdCard::_SdCard = nullptr;
@@ -89,7 +89,7 @@ char* SdCard::_getFileName() {
 
 int SdCard::write(uint8_t* buffer, uint16_t len) {
     if (!_ready || len == 0 || len > SD_MESSAGE_MAX_BYTES) return 0;
-    int send_status = _mq.send(buffer, len);
+    int send_status = _mq.send(buffer, len, 0);
     return (send_status == 0) ? len : 0;
 }
 

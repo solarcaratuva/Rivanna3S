@@ -1,3 +1,8 @@
+#ifndef TOPDISTBOARD_PINDEF_H
+#define TOPDISTBOARD_PINDEF_H
+
+#ifdef STM32G474xx
+
 #define LEFT_TURN_EN PA_1
 #define RIGHT_TURN_EN PA_0
 #define BMS_STROBE_EN PC_2
@@ -14,15 +19,26 @@
 #define VN200_UART_TX PC_10
 #define VN200_UART_RX PC_11
 
-// #define LEFT_TURN_EN NC
-// #define RIGHT_TURN_EN NC
-// #define BMS_STROBE_EN NC
+#elif defined(STM32H743xx)
 
-// #define BRAKE_EN NC
+#define LEFT_TURN_EN NC
+#define RIGHT_TURN_EN NC
+#define BMS_STROBE_EN NC
 
-// #define CAN_TX NC
-// #define CAN_RX NC
-// #define CAN_STANDBY NC
+#define BRAKE_EN NC
 
-// #define LOG_TX NC
-// #define LOG_RX NC
+#define CAN_TX NC
+#define CAN_RX NC
+#define CAN_STANDBY NC
+
+#define LOG_TX PD_8 // ST-LINK virtual COM port (USART3)
+#define LOG_RX PD_9
+
+#define VN200_UART_TX PC_10
+#define VN200_UART_RX PC_11
+
+#else
+#error "TopDistBoard has no pin definitions for this target."
+#endif
+
+#endif /* TOPDISTBOARD_PINDEF_H */
