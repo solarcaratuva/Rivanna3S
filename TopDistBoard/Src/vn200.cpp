@@ -2,6 +2,7 @@
 #include "log.h"
 #include "vn200.h"
 #include "Clock.h"
+#include <cstdio>
 #include "string.h"
 
 /* ---- Binary packet parser constants ----------------------------------------
@@ -49,12 +50,14 @@
 #define SYNC_TIMEOUT_MS 20
 #define FRAME_TIMEOUT_MS 20
 
-VN200::VN200(Pin tx, Pin rx, uint32_t baud)
-    : serial(tx, rx, baud)
+VN200::VN200(Pin tx, Pin rx, uint32_t initial_baud, uint32_t _target_baud)
+    : serial(tx, rx, initial_baud)
 {
     crc_error = 0;
     header_error = 0;
     sequence = 0;
+
+    target_baud = _target_baud;
 
     // initialize memory to 0
     memset(&ang_rate, 0, sizeof(ang_rate));
@@ -66,13 +69,42 @@ VN200::VN200(Pin tx, Pin rx, uint32_t baud)
 
 bool VN200::init()
 {
-    // step 1: async output enable
+    // Assumes the sensor is at 115200
+
+    // pre step 1: pause the async stream at 115200 so replies aren't buried in it
     if (send_ascii_command("$VNASY,0*XX\r\n") == false)
     {
         return false;
     }
 
-    // step 2: Binary Output Message Configuration #1
+    // pre step 2: tell the sensor to switch baud (Register 5).
+    char baud_cmd[40];
+    snprintf(baud_cmd, sizeof(baud_cmd), "$VNWRG,5,%lu*XX\r\n", (unsigned long)target_baud);
+    if (send_ascii_command(baud_cmd) == false)
+    {
+        return false;
+    }
+
+    // pre step 3: give the sensor time to apply it, then switch the MCU side
+    Clock::sleep_for(50);
+    if (serial.set_baud(target_baud) != 0)
+    {
+        return false; // error when trying to set baud
+    }
+
+    // step 1: pause async output again, now at the new baud
+    if (send_ascii_command("$VNASY,0*XX\r\n") == false)
+    {
+        return false;
+    }
+
+    // step 2: turn off the default ASCII output (Register 6)
+    if (send_ascii_command("$VNWRG,06,0*XX\r\n") == false)
+    {
+        return false;
+    }
+
+    // step 3: Binary Output Message Configuration #1 (Register 75)
     /*
     75     Register 75
     1      UART-1
@@ -87,7 +119,7 @@ bool VN200::init()
         return false;
     }
 
-    // step 3:
+    // step 4: resume async output
     if (send_ascii_command("$VNASY,1*XX\r\n") == false)
     {
         return false;
@@ -139,13 +171,13 @@ bool VN200::poll()
                     return false;
                 }
                 i = 0; // rewind to the new candidate's first byte
-                if(validate_packet(rx_buffer)){
+                if (validate_packet(rx_buffer))
+                {
                     decode_payload(rx_buffer + HEADER_END);
                     return true;
                 }
             }
         }
-
 
         return false;
     }
@@ -227,7 +259,7 @@ bool VN200::validate_packet(const uint8_t *packet)
  * so no swapping is needed. Copy with memcpy.
  */
 void VN200::decode_payload(const uint8_t *payload)
-{ 
+{
     // ---- Common group (ip 0-81) ----
     // ip 0-7     TimeGps      (uint64)  -- no home in the structs; skip or add one
     // ip 8-19    Ypr          (3 floats) -- not stored; yaw/pitch/roll if ever needed
@@ -284,7 +316,7 @@ void VN200::decode_payload(const uint8_t *payload)
     ang_rate.sequence = sequence;
     accel.sequence = sequence;
     status.sequence = sequence;
-    pos.sequence = sequence; 
+    pos.sequence = sequence;
     vel.sequence = sequence;
     sequence++;
 }
@@ -309,26 +341,47 @@ bool VN200::send_ascii_command(const char *cmd)
 {
     serial.write((uint8_t *)cmd, strlen(cmd));
 
-    char errorPrefix[] = "$VNERR"; // errors start with this prefix
-    uint8_t buffer[32] = {};
-    for (size_t i = 0; i < sizeof(buffer) - 1; i++)
-    {
-        int success = serial.read(buffer + i, 1, 1000); // Read one byte at a time with 1s timeout per byte
-        if (success != 0)
-        { // timeout occoured when reading byte
-            return false;
-        }
-        if (buffer[i] == '\n')
-        { // reached end of return message
-            break;
-        }
-    }
+    const char errorPrefix[] = "$VNERR";
+    const size_t PREFIX_LEN = 6; // "$VNERR", "$VNASY", "$VNWRG" are all 6 chars
 
-    if (strncmp(errorPrefix, (const char *)buffer, sizeof(errorPrefix) - 1) == 0)
+    while (true)
     {
-        return false; // error if VN200 returns VNERR
+        char buffer[64] = {};
+        bool got_line = false;
+
+        for (size_t i = 0; i < sizeof(buffer) - 1; i++)
+        {
+            int rc = serial.read((uint8_t *)buffer + i, 1, 1000);
+            if (rc == -2)
+            {
+                return false; // timeout
+            }
+            if (rc != 0)
+            {
+                break; // UART error
+            }
+            if (buffer[i] == '\n')
+            {
+                got_line = true;
+                break;
+            }
+        }
+
+        if (got_line == false)
+        {
+            continue; // new line is junk data so skip the read next iteration
+        }
+
+        if (strncmp(errorPrefix, buffer, PREFIX_LEN) == 0)
+        {
+            return false; // sensor gave an error
+        }
+        if (strncmp(cmd, buffer, PREFIX_LEN) == 0)
+        {
+            return true; // vn200 echos the command on success
+        }
+        // anything else is junk so just read a new line
     }
-    return true;
 }
 
 // getters

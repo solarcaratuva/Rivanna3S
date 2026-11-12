@@ -45,7 +45,7 @@ struct VN200StatusSample {
 //define the VN200 class
 class VN200 {
 public:
-    VN200(Pin tx, Pin rx, uint32_t baud);
+    VN200(Pin tx, Pin rx, uint32_t initial_baud, uint32_t target_baud);
     bool init();
     const VN200AngularRateSample& get_latest_sample_angular_rate();
     const VN200AccelerationSample& get_latest_sample_acceleration();
@@ -69,6 +69,7 @@ private:
     VN200PositionSample pos;
     VN200VelocitySample vel;
     VN200StatusSample status;
+    uint32_t target_baud;
 
     // ---- Binary packet state ----
     // One full packet. poll() hunts VN200_SYNC_BYTE, bulk-reads the remainder,

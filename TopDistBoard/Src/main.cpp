@@ -57,7 +57,7 @@ Thread vn200_poll;
 Thread vn200_can_write;
 
 
-VN200 vn200(VN200_UART_TX, VN200_UART_RX, 921600);
+VN200 vn200(VN200_UART_TX, VN200_UART_RX, 115200, 921600);
 
 void handle_dashboard_commands(const SerializedCanMessage &msg)
 {
@@ -162,13 +162,19 @@ void bms_strobe_handler() {
 }
 
 void vn200_poll_handler() {
+    bool result = vn200.init();
+    if (result == true) {
+        log_info("VN200 initialized");
+    } else {
+        log_info("VN200 failed");
+    }
     Clock vn200_poll_clock;
 
     while (true){
         if (vn200.poll()){
             log_info("Acceleration: %f", vn200.get_latest_sample_acceleration().accel_x);
         }
-        vn200_poll_clock.sleep_since(10);
+        vn200_poll_clock.sleep_since(1);
     }
 }
 
