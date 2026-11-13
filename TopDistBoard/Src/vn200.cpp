@@ -67,6 +67,14 @@ VN200::VN200(Pin tx, Pin rx, uint32_t initial_baud, uint32_t _target_baud)
     memset(&status, 0, sizeof(status));
 }
 
+/*
+11/12
+the send ascii command function always returns false
+the actual switching baud rates and initialize function code does work and can be recieved by the vn200
+the poll function always returns false and doesn't write anything into rxbuffer
+we know that vn200 works so it has to be our fault
+*/
+
 bool VN200::init()
 {
     // Assumes the sensor is at 115200
