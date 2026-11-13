@@ -16,6 +16,9 @@
 #define LOG_TX PC_12
 #define LOG_RX PD_2
 
+#define VN200_UART_TX PC_10
+#define VN200_UART_RX PC_11
+
 #elif defined(STM32H743xx)
 
 #define LEFT_TURN_EN NC
@@ -30,6 +33,9 @@
 
 #define LOG_TX PD_8 // ST-LINK virtual COM port (USART3)
 #define LOG_RX PD_9
+
+#define VN200_UART_TX PC_10
+#define VN200_UART_RX PC_11
 
 #else
 #error "TopDistBoard has no pin definitions for this target."

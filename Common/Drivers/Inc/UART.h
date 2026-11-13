@@ -123,6 +123,8 @@ public:
     TaskHandle_t rxTask = nullptr; /**< RX direct to task handle. */
     volatile uint32_t last_error = HAL_UART_ERROR_NONE; /*Last error code of the UART*/
 
+    int set_baud(uint32_t baud); //alows for setting baud rate after object has been created
+
 private:
     UART_HandleTypeDef* huart;   /**< HAL UART handle used for configuration and I/O. */
     SemaphoreHandle_t mutex;     /**< Mutex for thread-safe access. */
