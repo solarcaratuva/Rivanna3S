@@ -135,6 +135,26 @@ bool VN200::init()
 
     return true;
 }
+bool VN200::init_clean(){
+    log_info("VN200 init clean");
+    send_ascii_command("$VNASY,0*XX\r\n");
+    log_info("VN200 fist command sent");
+    char baud_cmd[40];
+    snprintf(baud_cmd, sizeof(baud_cmd), "$VNWRG,5,%lu*XX\r\n", (unsigned long)target_baud);
+    send_ascii_command(baud_cmd);
+    log_info("VN200 second command sent");
+    send_ascii_command("$VNASY,0*XX\r\n");
+    log_info("VN200 third command sent");
+    send_ascii_command("$VNWRG,06,0*XX\r\n");
+    send_ascii_command("$VNWRG,75,1,8,0B,11EA,0200,0618*XX\r\n");
+    send_ascii_command("$VNASY,1*XX\r\n");
+    return true;
+}
+bool VN200::poll_clean(){
+    serial.read(rx_buffer, PACKET_LEN + 1, SYNC_TIMEOUT_MS);
+    decode_payload(rx_buffer + PACKET_LEN);
+    return true;
+}
 
 bool VN200::poll()
 {

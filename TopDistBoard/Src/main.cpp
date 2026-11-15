@@ -182,6 +182,20 @@ void vn200_can_handler() {
     }
 }
 
+void vn200_poll_handler_clean(){
+    log_info("VN200 initializing cleanly");
+    bool result = vn200.init_clean();
+    log_info("VN200 initialized cleanly");
+    Clock vn200_poll_clock;
+    while(true){
+        vn200.poll_clean();
+        log_info("Acceleration: %f", vn200.get_latest_sample_acceleration().accel_x);
+        vn200_poll_clock.sleep_since(1);
+    }
+}
+
+
+
 void app_main()
 {
     log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
@@ -189,7 +203,7 @@ void app_main()
 
     signal_thread.start(signal_flash_handler);
     fault_thread.start(bms_strobe_handler);
-    vn200_poll.start(vn200_poll_handler);
+    vn200_poll.start(vn200_poll_handler_clean);
     vn200_can_write.start(vn200_can_handler);
 
     main_can.register_callback(DashboardCommands::get_message_ID(), handle_dashboard_commands);

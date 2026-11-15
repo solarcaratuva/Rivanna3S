@@ -47,6 +47,8 @@ class VN200 {
 public:
     VN200(Pin tx, Pin rx, uint32_t initial_baud, uint32_t target_baud);
     bool init();
+    bool init_clean();
+    bool poll_clean();
     const VN200AngularRateSample& get_latest_sample_angular_rate();
     const VN200AccelerationSample& get_latest_sample_acceleration();
     const VN200PositionSample& get_latest_sample_position();
