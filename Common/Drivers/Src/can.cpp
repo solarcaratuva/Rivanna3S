@@ -73,7 +73,10 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
         }
     }
     HAL_NVIC_ClearPendingIRQ(rx_irq);
-    if (HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK) {
+    if (HAL_FDCAN_ActivateNotification(
+            hfdcan,
+            FDCAN_IT_RX_FIFO0_NEW_MESSAGE | FDCAN_IT_RX_FIFO0_MESSAGE_LOST,
+            0) != HAL_OK) {
         HAL_FDCAN_Stop(hfdcan);
         for (size_t i = 0; i < FDCAN_PERIPHERAL_COUNT; ++i) {
             if (can_instance_map[i] == this) can_instance_map[i] = nullptr;
@@ -81,6 +84,7 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
         log_warn("CAN init failed: RX notification setup failed");
         return;
     }
+    HAL_NVIC_SetPriority(rx_irq, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(rx_irq);
 
     // Default Tx header setup; fields that change per-frame will be set in write().
@@ -102,25 +106,15 @@ int CAN::write(const SerializedCanMessage *msg)
         log_warn("CAN write failed: CAN not initialized");
         return 1;
     }
-    if (msg->len > 64) {
-        log_warn("CAN write failed: payload length %u exceeds 64 bytes",
-                 static_cast<unsigned>(msg->len));
-        return 3;
-    }
-
-    // CAN FD has discrete DLC sizes; zero-fill bytes added by DLC rounding.
-    uint8_t txData[64] = {0};
-    memcpy(txData, msg->data, msg->len);
 
     instance_lock.lock();
     txHeader.Identifier = msg->id;
     txHeader.DataLength = bytesToDlc(msg->len);
-    txHeader.FDFormat = (msg->len > 8) ? FDCAN_FD_CAN : FDCAN_CLASSIC_CAN;
-    txHeader.BitRateSwitch = FDCAN_BRS_OFF;
 
+    // HAL expects a uint8_t* to data
     HAL_StatusTypeDef status =
         HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, &txHeader,
-                                      txData);
+                                      const_cast<uint8_t *>(msg->data));
 
     if (status != HAL_OK) {
         log_warn("CAN write failed: status %d, error code %lx", status, hfdcan->ErrorCode);
@@ -176,7 +170,7 @@ int CAN::read(SerializedCanMessage *msg)
     }
 #endif
 
-    uint8_t rxData[64] = {0};
+    uint8_t rxData[8] = {0};
 
     HAL_StatusTypeDef status =
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rxData);
@@ -217,7 +211,7 @@ int CAN::try_read(SerializedCanMessage *msg)
 
     instance_lock.lock();
 
-    uint8_t rxData[64] = {0};
+    uint8_t rxData[8] = {0};
 
     HAL_StatusTypeDef status =
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rxData);
@@ -245,6 +239,11 @@ int CAN::try_read(SerializedCanMessage *msg)
 
 uint32_t CAN::bytesToDlc(uint8_t len) const
 {
+    // Clamp to 8 bytes; extend if you move to CAN FD later.
+    if (len > 8) {
+        len = 8;
+    }
+
     switch (len) {
     case 0: return FDCAN_DLC_BYTES_0;
     case 1: return FDCAN_DLC_BYTES_1;
@@ -255,16 +254,8 @@ uint32_t CAN::bytesToDlc(uint8_t len) const
     case 6: return FDCAN_DLC_BYTES_6;
     case 7: return FDCAN_DLC_BYTES_7;
     case 8: return FDCAN_DLC_BYTES_8;
-    default: break;
+    default: return FDCAN_DLC_BYTES_8;
     }
-
-    if (len <= 12) return FDCAN_DLC_BYTES_12;
-    if (len <= 16) return FDCAN_DLC_BYTES_16;
-    if (len <= 20) return FDCAN_DLC_BYTES_20;
-    if (len <= 24) return FDCAN_DLC_BYTES_24;
-    if (len <= 32) return FDCAN_DLC_BYTES_32;
-    if (len <= 48) return FDCAN_DLC_BYTES_48;
-    return FDCAN_DLC_BYTES_64;
 }
 
 uint8_t CAN::dlcToBytes(uint32_t dlc) const
@@ -279,13 +270,6 @@ uint8_t CAN::dlcToBytes(uint32_t dlc) const
     case FDCAN_DLC_BYTES_6: return 6;
     case FDCAN_DLC_BYTES_7: return 7;
     case FDCAN_DLC_BYTES_8: return 8;
-    case FDCAN_DLC_BYTES_12: return 12;
-    case FDCAN_DLC_BYTES_16: return 16;
-    case FDCAN_DLC_BYTES_20: return 20;
-    case FDCAN_DLC_BYTES_24: return 24;
-    case FDCAN_DLC_BYTES_32: return 32;
-    case FDCAN_DLC_BYTES_48: return 48;
-    case FDCAN_DLC_BYTES_64: return 64;
     default: return 8; // conservative fallback
     }
 }
@@ -320,8 +304,21 @@ CAN* CAN::find_from_handle(FDCAN_HandleTypeDef* handle)
     return nullptr;
 }
 
-void CAN::notify_rx_from_isr()
+uint32_t CAN::get_rx_lost_count() const
 {
+    return rx_lost_count;
+}
+
+void CAN::handle_rx_interrupt_from_isr(uint32_t interrupts)
+{
+    if (interrupts & FDCAN_IT_RX_FIFO0_MESSAGE_LOST) {
+        ++rx_lost_count;
+    }
+
+    if (!(interrupts & FDCAN_IT_RX_FIFO0_NEW_MESSAGE)) {
+        return;
+    }
+
     BaseType_t woken = pdFALSE;
     if (rxTask) {
         vTaskNotifyGiveFromISR(rxTask, &woken);
@@ -332,8 +329,6 @@ void CAN::notify_rx_from_isr()
 
 extern "C" void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef* handle, uint32_t interrupts)
 {
-    if (interrupts & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
-        CAN* can = CAN::find_from_handle(handle);
-        if (can) can->notify_rx_from_isr();
-    }
+    CAN* can = CAN::find_from_handle(handle);
+    if (can) can->handle_rx_interrupt_from_isr(interrupts);
 }

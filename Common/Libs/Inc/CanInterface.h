@@ -97,7 +97,6 @@ public:
      *         - 0: Success
      *         - 1: CAN peripheral not initialized
      *         - 2: HAL transmission error
-     *         - 3: Payload length exceeds 64 bytes
      *         - -1: Invalid argument (msg is nullptr)
      * 
      * @note This method is thread-safe
@@ -115,7 +114,6 @@ public:
      *         - 0: Success
      *         - 1: CAN peripheral not initialized
      *         - 2: HAL transmission error
-     *         - 3: Payload length exceeds 64 bytes
      *         - -1: Invalid argument (msg is nullptr)
      * 
      * @note This method is thread-safe
@@ -203,6 +201,8 @@ private:
     Lock    callback_lock;                        ///< Mutex protecting callback arrays and registration
     CanNetwork network;                        ///< CAN network type (Main or Motor)
     uint32_t last_queue_drop_warn_time_ms = 0;    ///< Timestamp of last software RX queue overflow warning
+    uint32_t last_rx_lost_warn_time_ms = 0;       ///< Timestamp of last hardware RX FIFO loss warning
+    uint32_t last_reported_rx_lost_count = 0;     ///< Last hardware RX FIFO loss count reported
 
     int num_callbacks = 0;                        ///< Current number of registered ID-specific callbacks
 

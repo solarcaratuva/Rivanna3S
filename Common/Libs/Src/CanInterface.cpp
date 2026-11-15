@@ -53,7 +53,7 @@ int CanInterface::write(SerializedCanMessage *msg) {
 
     int status = my_can.write(msg);
     if (status == 0) {
-        char data_hex[129]; // 64 bytes as hex plus null terminator
+        char data_hex[17]; // 16 bytes + null terminator
         bytes_to_hex(msg->data, msg->len, data_hex, sizeof(data_hex));
         log_debug("CanInterface: Sent CAN message with ID %d Length %d Data 0x%s", msg->id, msg->len, data_hex);
     }
@@ -165,6 +165,17 @@ void CanInterface::receive()
 
         enqueue_message(msg);
     }
+
+    uint32_t rx_lost_count = my_can.get_rx_lost_count();
+    if (rx_lost_count != last_reported_rx_lost_count) {
+        uint32_t now_ms = Clock::get_current_time();
+        if ((now_ms - last_rx_lost_warn_time_ms) >= CAN_QUEUE_DROP_WARN_INTERVAL_MS) {
+            last_rx_lost_warn_time_ms = now_ms;
+            last_reported_rx_lost_count = rx_lost_count;
+            log_warn("CanInterface: Hardware RX FIFO0 lost count=%lu on %s CAN",
+                     static_cast<unsigned long>(rx_lost_count), CanNetworkToString(network));
+        }
+    }
 }
 
 void CanInterface::handle_thread()
@@ -186,7 +197,7 @@ void CanInterface::handle()
         return;
     }
 
-    char data_hex[129]; // 64 bytes as hex plus null terminator
+    char data_hex[17]; // 16 bytes + null terminator
     bytes_to_hex(msg.data, msg.len, data_hex, sizeof(data_hex));
     log_debug("CanInterface: Received CAN message with ID %d Length %d Data 0x%s", msg.id, msg.len, data_hex);
 
