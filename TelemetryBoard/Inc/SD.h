@@ -25,7 +25,7 @@ class SPI;
  * @brief Interval between background flush attempts, in milliseconds
  */
 #define SD_FLUSH_INTERVAL_MS 100
-#define SD_SYNC_MESSAGE_COUNT 16
+#define SD_SYNC_MESSAGE_COUNT 128
 
 /**
  * @class SdCard
