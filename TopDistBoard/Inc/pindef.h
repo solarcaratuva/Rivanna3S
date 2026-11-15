@@ -16,8 +16,8 @@
 #define LOG_TX PC_12
 #define LOG_RX PD_2
 
-#define VN200_UART_TX PC_10
-#define VN200_UART_RX PC_11
+#define VN200_UART_TX PA_2
+#define VN200_UART_RX PA_3
 
 #elif defined(STM32H743xx)
 
