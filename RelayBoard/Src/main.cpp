@@ -67,6 +67,7 @@ void handle_bps_status(const SerializedCanMessage &msg)
     status.deserialize(&msg);
     // pack_voltage = status.pack_voltage / 10; // scaling (BMS units is 10th of a volt)
     pack_voltage = status.get_pack_voltage();
+    log_info("Pack voltage: %d", pack_voltage);
 }
 
 void run_precharge()
@@ -133,7 +134,7 @@ void monitor_auxbattery(){
 
 void app_main()
 {
-    log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
+    log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Relay Board starting up...");
 
     main_can.register_callback(BpsStatus::get_message_ID(), handle_bps_status);
