@@ -31,8 +31,13 @@
 CanInterface main_can = CanInterface(CAN_TX, CAN_RX, CAN_STBY, 250000, CanNetwork::Main);
 static SdCard* global_sd_card = nullptr;
 
+#define RADIO_QUEUE_DEPTH 32
+
 static UART radio_uart(RADIO_TX, RADIO_RX, 9600);
 static UartCobs radio(&radio_uart);
+static FiniteQueue radio_queue(RADIO_QUEUE_DEPTH, sizeof(SerializedCanMessage));
+static Thread radio_thread;
+
 
 /**
  * @brief Forward a received CAN message over the radio link via COBS-framed UART
@@ -61,11 +66,26 @@ void radio_send(const SerializedCanMessage &msg)
     radio.write(buf, 2 + data_len);
 }
 
+void radio_forward_thread()
+{
+    SerializedCanMessage msg{};
+    while (true) {
+        if (radio_queue.get(&msg) == 0) {   // blocks until a frame arrives
+            radio_send(msg);
+        }
+    }
+}
+
 void handle_all_messages(const SerializedCanMessage &msg) {
+    SerializedCanMessage copy = msg;
+
     // Check for faults
     FaultHandler::check_for_any_faults(msg);
-    // 1. send message over radio
-    radio_send(msg);
+    // 1. hand the message to the radio thread
+    int queue_ret = radio_queue.append_to_back(&copy, 0);
+    if (queue_ret == -2) {
+        log_warn("Radio queue full; frame not forwarded");
+    }
     // 2. send message over LTE
 
     // SD card is handled automatically through the log system
@@ -87,6 +107,7 @@ void app_main() {
     sd_card.attach_to_log();
     
     main_can.register_always_callback(handle_all_messages);
+    radio_thread.start(radio_forward_thread);
 
     Clock::sleep_forever();
 }
