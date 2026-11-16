@@ -161,30 +161,14 @@ public:
      */
     int read(SerializedCanMessage* msg);
 
-    /**
-     * @brief Attempt to read a raw CAN message from the receive FIFO without blocking
-     *
-     * Polls the FDCAN RX FIFO0 once and returns immediately if no message is available.
-     *
-     * @param[out] msg Pointer to SerializedCanMessage to populate with received data
-     * @return int Status code:
-     *         - 0: Message successfully received
-     *         - 1: CAN peripheral not initialized
-     *         - 2: HAL reception error
-     *         - 3: No message available or another reader owns reception
-     *
-     * @note This method is thread-safe and NON-BLOCKING.
-     */
-    int try_read(SerializedCanMessage* msg);
     uint32_t get_rx_lost_count() const;
-    // HAL callback routing; handle_rx_interrupt_from_isr() must only be called in an ISR.
-    static CAN* find_from_handle(FDCAN_HandleTypeDef* handle);
+    // Called from the FDCAN interrupt only.
     void handle_rx_interrupt_from_isr(uint32_t interrupts);
 
 private:
     TaskHandle_t rxTask = nullptr;       ///< Task waiting for an RX FIFO notification
     volatile uint32_t rx_lost_count = 0; ///< Hardware RX FIFO0 loss count
-    Lock rx_lock;                       ///< Serializes read() and try_read()
+    Lock rx_lock;                       ///< Enforces a single reader: rxTask is one slot
     FDCAN_HandleTypeDef* hfdcan = nullptr;        ///< Handle to the STM32 HAL FDCAN peripheral
     Lock                 instance_lock;  ///< Mutex for thread-safe access
     FDCAN_TxHeaderTypeDef txHeader;     ///< Transmit header (reused for efficiency)
