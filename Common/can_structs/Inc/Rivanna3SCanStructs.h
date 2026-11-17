@@ -496,15 +496,27 @@ typedef struct OdometryData : CanMessage, rivanna3_s_odometry_data_t {
 
     void log_msg(LogLevel level) const {
         log(level, __FILE__, __LINE__,
-            "OdometryData: distance %u",
-            distance);
+            "OdometryData: rpmdistance %u, veldistance %u, gpsdistance %u",
+            rpmdistance, veldistance, gpsdistance);
     }
 
-    double get_distance() const { return rivanna3_s_odometry_data_distance_decode(distance); }
+    double get_rpmdistance() const { return rivanna3_s_odometry_data_rpmdistance_decode(rpmdistance); }
 
-    void set_distance(double value) { distance = rivanna3_s_odometry_data_distance_encode(value); }
+    void set_rpmdistance(double value) { rpmdistance = rivanna3_s_odometry_data_rpmdistance_encode(value); }
 
-    bool distance_in_range() const { return rivanna3_s_odometry_data_distance_is_in_range(distance); }
+    bool rpmdistance_in_range() const { return rivanna3_s_odometry_data_rpmdistance_is_in_range(rpmdistance); }
+
+    double get_veldistance() const { return rivanna3_s_odometry_data_veldistance_decode(veldistance); }
+
+    void set_veldistance(double value) { veldistance = rivanna3_s_odometry_data_veldistance_encode(value); }
+
+    bool veldistance_in_range() const { return rivanna3_s_odometry_data_veldistance_is_in_range(veldistance); }
+
+    double get_gpsdistance() const { return rivanna3_s_odometry_data_gpsdistance_decode(gpsdistance); }
+
+    void set_gpsdistance(double value) { gpsdistance = rivanna3_s_odometry_data_gpsdistance_encode(value); }
+
+    bool gpsdistance_in_range() const { return rivanna3_s_odometry_data_gpsdistance_is_in_range(gpsdistance); }
 
     bool has_active_fault() {
         return 0; // this message has no fault signals
