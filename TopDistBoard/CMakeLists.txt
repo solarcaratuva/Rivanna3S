@@ -2,3 +2,7 @@
 include(${CMAKE_SOURCE_DIR}/cmake/board.cmake)
 # Declare the TopDistBoard firmware target using shared board conventions.
 add_board(TopDistBoard)
+
+if(UART_UPLOAD_MOCK)
+  target_compile_definitions(TopDistBoard_app PRIVATE UART_UPLOAD_MOCK)
+endif()

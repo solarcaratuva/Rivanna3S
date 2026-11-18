@@ -82,6 +82,14 @@ public:
     int read(uint8_t *buffer, uint16_t length, uint32_t timeout_ms);
 
     /**
+     * @brief Receive a burst until an idle gap or the buffer is full.
+     * @param received Number of bytes received on success; zero on failure.
+     * @return Same status codes as read().
+     */
+    int read_until_idle(uint8_t *buffer, uint16_t length, uint16_t &received,
+                        uint32_t timeout_ms);
+
+    /**
      * @brief Writes data to the UART with a transmit-completion timeout.
      * @param buffer Pointer to the data buffer to be transmitted.
      * @param length Number of bytes to transmit.
@@ -121,11 +129,18 @@ public:
 
     TaskHandle_t txTask = nullptr; /**< TX direct to task handle. */
     TaskHandle_t rxTask = nullptr; /**< RX direct to task handle. */
-    volatile uint32_t last_error = HAL_UART_ERROR_NONE; /*Last error code of the UART*/
+    volatile uint32_t rx_error = HAL_UART_ERROR_NONE; /**< Error code copied from ISR for waiting RX task. */
+    volatile uint32_t tx_error = HAL_UART_ERROR_NONE; /**< Error code copied from ISR for waiting TX task. */
+    volatile uint32_t last_error = HAL_UART_ERROR_NONE; /**< Last raw error code captured from UART error ISR. */
+    volatile uint16_t rx_received = 0; /**< Burst length copied from the RX event ISR. */
 
 private:
     UART_HandleTypeDef* huart;   /**< HAL UART handle used for configuration and I/O. */
-    SemaphoreHandle_t mutex;     /**< Mutex for thread-safe access. */
+    SemaphoreHandle_t rx_mutex;  /**< Mutex protecting concurrent read calls. */
+    SemaphoreHandle_t tx_mutex;  /**< Mutex protecting concurrent write calls. */
+
+    int read_impl(uint8_t *buffer, uint16_t length, uint32_t timeout_ms,
+                  uint16_t *received);
 
     void init_gpio(UART_Peripheral* uart_periph);
 

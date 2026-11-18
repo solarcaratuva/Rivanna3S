@@ -10,6 +10,7 @@ project(stm32h743_freertos C CXX ASM)
 
 # Select target board; board.cmake maps this to include paths, defines, and flags.
 set(BOARD "STM32H743ZITX" CACHE STRING "Target board name (Drivers/<board>)")
+option(UART_UPLOAD_MOCK "Enable UART upload with a streaming mock consumer on MotorBoard and TopDistBoard" OFF)
 
 # Shared compile option groups consumed by child targets.
 set(OPT_FLAGS -O0 -g3 -ffunction-sections -fdata-sections -fno-common)
