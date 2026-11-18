@@ -173,6 +173,23 @@ UART* UART::find_from_handle(UART_HandleTypeDef* huart){
     return nullptr;
 }
 
+int UART::set_baud(uint32_t baud)
+{
+    if (!initialized) return -1;
+    if (xSemaphoreTake(mutex, portMAX_DELAY) != pdTRUE) return -3;
+
+    UART_HandleTypeDef* temp = UART_init(uart_periph->handle, baud); // re-runs MX_*_Init with the new rate
+    if (temp == NULL) {
+        xSemaphoreGive(mutex);
+        return -4;
+    }
+    huart = temp;
+    baud_ = baud;
+    __HAL_UART_CLEAR_IT(huart, UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF); //clears old error flags from previous usart
+    xSemaphoreGive(mutex);
+    return 0;
+}
+
 
 // Call Back functions
 extern "C"{
