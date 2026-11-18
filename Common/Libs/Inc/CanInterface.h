@@ -190,6 +190,18 @@ public:
      */
     void restart_receiver_execution();
 
+    /**
+     * @brief Number of frames the hardware RX FIFO dropped since boot
+     *
+     * Counted in the FDCAN interrupt when a frame arrives and RX FIFO0 is
+     * already full. This is the one number that separates "the bus lost it"
+     * from "this board was too slow to drain the FIFO", so a receive test
+     * that does not read it cannot tell you where its missing frames went.
+     *
+     * @return Cumulative count. It never resets; take a baseline and subtract.
+     */
+    uint32_t get_rx_lost_count() const;
+
 private:
     CAN     my_can;                              ///< Underlying CAN peripheral driver
     DigitalOut standby_pin;                      ///< Standby pin for controlling CAN transceiver power state
