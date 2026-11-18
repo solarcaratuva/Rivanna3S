@@ -188,9 +188,7 @@ void HAL_FDCAN_MspInit_custom(FDCAN_GlobalTypeDef *fdcanHandle, Pin pin, uint8_t
     GPIO_InitStruct.Alternate = af; // <-- This line changed when importing
     HAL_GPIO_Init(pin.block, &GPIO_InitStruct); // <-- This line changed when importing
 
-  /* USER CODE BEGIN FDCAN1_MspInit 1 */
 
-  /* USER CODE END FDCAN1_MspInit 1 */
   }
   else if(fdcanHandle == FDCAN2) // <-- This line changed when importing)
   {
@@ -295,4 +293,19 @@ uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_cl
     uint32_t time_quanta = 1 + hfdcan->Init.NominalTimeSeg1 + hfdcan->Init.NominalTimeSeg2;
     return peripheral_clock / (baudrate * time_quanta);
 }
-    
+
+// FIFO0 notifications are routed to interrupt line 0 by CAN.
+void FDCAN1_IT0_IRQHandler(void)
+{
+    HAL_FDCAN_IRQHandler(&hfdcan1);
+}
+
+void FDCAN2_IT0_IRQHandler(void)
+{
+    HAL_FDCAN_IRQHandler(&hfdcan2);
+}
+
+void FDCAN3_IT0_IRQHandler(void)
+{
+    HAL_FDCAN_IRQHandler(&hfdcan3);
+}

@@ -100,9 +100,11 @@ void HAL_FDCAN_MspInit(FDCAN_HandleTypeDef* fdcanHandle)
     GPIO_InitStruct.Alternate = GPIO_AF9_FDCAN1;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /* USER CODE BEGIN FDCAN1_MspInit 1 */
-
-  /* USER CODE END FDCAN1_MspInit 1 */
+    /* USER CODE BEGIN FDCAN1_MspInit 1 */
+      /* Priority must be >= configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY (5)
+        so the ISR may call vTaskNotifyGiveFromISR. See Common/Libs/Inc/FreeRTOSConfig.h */
+      HAL_NVIC_SetPriority(FDCAN1_IT0_IRQn, 5, 0);
+    /* USER CODE END FDCAN1_MspInit 1 */
   }
 }
 
@@ -132,3 +134,9 @@ void HAL_FDCAN_MspDeInit(FDCAN_HandleTypeDef* fdcanHandle)
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
+
+// FIFO0 notifications are routed to interrupt line 0 by CAN.
+void FDCAN1_IT0_IRQHandler(void)
+{
+    HAL_FDCAN_IRQHandler(&hfdcan1);
+}

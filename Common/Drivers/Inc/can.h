@@ -5,6 +5,7 @@
 #include "pinmap.h"
 #include "peripheralmap.h"
 #include "lock.h"
+#include "task.h"
 #include "log.h"
 
 /**
@@ -146,7 +147,7 @@ public:
     /**
      * @brief Read a raw CAN message from the receive FIFO
      * 
-     * Polls the FDCAN RX FIFO0 for incoming messages. This method will block
+     * Waits for an FDCAN RX FIFO0 interrupt when empty. This method will block
      * until a message is available.
      * 
      * @param[out] msg Pointer to SerializedCanMessage to populate with received data
@@ -160,28 +161,19 @@ public:
      */
     int read(SerializedCanMessage* msg);
 
-    /**
-     * @brief Attempt to read a raw CAN message from the receive FIFO without blocking
-     *
-     * Polls the FDCAN RX FIFO0 once and returns immediately if no message is available.
-     *
-     * @param[out] msg Pointer to SerializedCanMessage to populate with received data
-     * @return int Status code:
-     *         - 0: Message successfully received
-     *         - 1: CAN peripheral not initialized
-     *         - 2: HAL reception error
-     *         - 3: No message available
-     *
-     * @note This method is thread-safe and NON-BLOCKING.
-     */
-    int try_read(SerializedCanMessage* msg);
+    uint32_t get_rx_lost_count() const;
+    // Called from the FDCAN interrupt only.
+    void handle_rx_interrupt_from_isr(uint32_t interrupts);
 
 private:
-    FDCAN_HandleTypeDef* hfdcan;        ///< Handle to the STM32 HAL FDCAN peripheral
+    TaskHandle_t rxTask = nullptr;       ///< Task waiting for an RX FIFO notification
+    volatile uint32_t rx_lost_count = 0; ///< Hardware RX FIFO0 loss count
+    Lock rx_lock;                       ///< Enforces a single reader: rxTask is one slot
+    FDCAN_HandleTypeDef* hfdcan = nullptr;        ///< Handle to the STM32 HAL FDCAN peripheral
     Lock                 instance_lock;  ///< Mutex for thread-safe access
     FDCAN_TxHeaderTypeDef txHeader;     ///< Transmit header (reused for efficiency)
     FDCAN_RxHeaderTypeDef rxHeader;     ///< Receive header (reused for efficiency)
-    bool initialized;                    ///< Initialization status flag
+    bool initialized = false;                    ///< Initialization status flag
 
     FDCAN_Peripheral* fdcan_periph;     ///< Pointer to the claimed FDCAN peripheral descriptor
 

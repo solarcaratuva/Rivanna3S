@@ -7,17 +7,13 @@
 // global pointer used by the lambda
 static CanInterface* main_can_interface_instance = nullptr;
 static CanInterface* motor_can_interface_instance = nullptr;
-static constexpr uint32_t CAN_QUEUE_DROP_WARN_INTERVAL_MS = 250;
-static constexpr int CAN_RECEIVE_BURST_LIMIT = 128;
-
+static constexpr uint32_t CAN_RX_LOST_WARN_INTERVAL_MS = 250;
 
 CanInterface::CanInterface(Pin tx, Pin rx, Pin standby, uint32_t baudrate, CanNetwork network)
     : my_can(tx, rx, baudrate),
       standby_pin(standby),
       receiverRunning(true),
       receiver_thread_handle(),
-      handler_thread_handle(),
-      receive_queue(receive_queue_depth, sizeof(SerializedCanMessage)),
       network(network),
       alwayscallback(nullptr)
 {
@@ -27,19 +23,13 @@ CanInterface::CanInterface(Pin tx, Pin rx, Pin standby, uint32_t baudrate, CanNe
         receiver_thread_handle.start(+[]() {
             main_can_interface_instance->receiver_thread();
         });
-        handler_thread_handle.start(+[]() {
-            main_can_interface_instance->handle_thread();
-        });
     } else if (network == CanNetwork::Motor) {
         motor_can_interface_instance = this;
         receiver_thread_handle.start(+[]() {
             motor_can_interface_instance->receiver_thread();
         });
-        handler_thread_handle.start(+[]() {
-            motor_can_interface_instance->handle_thread();
-        });
     } else {
-        log_warn("CanInterface: Unknown network type, receiver/handler threads not started");
+        log_warn("CanInterface: Unknown network type, receiver thread not started");
     }
 
     standby_pin.write(false); // ensure standby is low (transceiver enabled)
@@ -133,59 +123,16 @@ void CanInterface::receiver_thread()
 void CanInterface::receive()
 {
     SerializedCanMessage msg{};
-    auto enqueue_message = [this](const SerializedCanMessage &queued_msg) {
-        SerializedCanMessage msg_copy = queued_msg;
-        int queue_ret = receive_queue.append_to_back(&msg_copy, 0);
-        if (queue_ret == -2) {
-            uint32_t now_ms = Clock::get_current_time();
-            if ((now_ms - last_queue_drop_warn_time_ms) >= CAN_QUEUE_DROP_WARN_INTERVAL_MS) {
-                last_queue_drop_warn_time_ms = now_ms;
-                log_warn("CanInterface: Software RX queue full on %s CAN; dropping frames", CanNetworkToString(network));
-            }
-        }
-    };
-
-    int ret = my_can.read(&msg);
-    if (ret != 0) {
+    if (my_can.read(&msg) != 0) {
         return;
     }
 
-    enqueue_message(msg);
-
-    //try to read burst onto the queue
-    for (int i = 0; i < CAN_RECEIVE_BURST_LIMIT; ++i) {
-        ret = my_can.try_read(&msg);
-        if (ret == 3) {
-            break;
-        }
-
-        if (ret != 0) {
-            break;
-        }
-
-        enqueue_message(msg);
-    }
+    handle(msg);
+    report_lost_frames();
 }
 
-void CanInterface::handle_thread()
+void CanInterface::handle(const SerializedCanMessage &msg)
 {
-    while (true) {
-        if (!receiverRunning) {
-            Clock::sleep_for(10);
-            continue;
-        }
-
-        handle();
-    }
-}
-
-void CanInterface::handle()
-{
-    SerializedCanMessage msg{};
-    if (receive_queue.get(&msg) != 0) {
-        return;
-    }
-
     char data_hex[17]; // 16 bytes + null terminator
     bytes_to_hex(msg.data, msg.len, data_hex, sizeof(data_hex));
     log_debug("CanInterface: Received CAN message with ID %d Length %d Data 0x%s", msg.id, msg.len, data_hex);
@@ -214,7 +161,25 @@ void CanInterface::handle()
     }
 }
 
+void CanInterface::report_lost_frames()
+{
+    /* Frames the peripheral dropped because RX FIFO0 was full when they
+       arrived, counted in the interrupt. A full FIFO is not loss; this is. */
+    const uint32_t lost = my_can.get_rx_lost_count();
+    if (lost == last_reported_rx_lost_count) {
+        return;
+    }
 
+    const uint32_t now = Clock::get_current_time();
+    if (now - last_rx_lost_warn_time_ms < CAN_RX_LOST_WARN_INTERVAL_MS) {
+        return;
+    }
+
+    last_rx_lost_warn_time_ms = now;
+    last_reported_rx_lost_count = lost;
+    log_warn("CanInterface: RX FIFO0 lost %lu frames on %s CAN",
+             static_cast<unsigned long>(lost), CanNetworkToString(network));
+}
 
 void CanInterface::bytes_to_hex(const uint8_t* data, uint8_t len, char* out_str, size_t out_str_size)
 {

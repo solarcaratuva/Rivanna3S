@@ -7,7 +7,6 @@
 #include "thread.h"
 #include "Clock.h"
 #include "DigitalOut.h"
-#include "FiniteQueue.h"
 
 /**
  * @brief Callback function type for CAN message reception
@@ -196,16 +195,14 @@ private:
     DigitalOut standby_pin;                      ///< Standby pin for controlling CAN transceiver power state
     bool    receiverRunning;                      ///< Flag to control receiver thread execution
     Thread  receiver_thread_handle;               ///< Background thread for hardware CAN reception
-    Thread  handler_thread_handle;                ///< Background thread for queued message dispatch
-    FiniteQueue receive_queue;                    ///< Software queue decoupling hardware RX from callback execution
     Lock    callback_lock;                        ///< Mutex protecting callback arrays and registration
     CanNetwork network;                        ///< CAN network type (Main or Motor)
-    uint32_t last_queue_drop_warn_time_ms = 0;    ///< Timestamp of last software RX queue overflow warning
+    uint32_t last_rx_lost_warn_time_ms = 0;     ///< When the RX FIFO loss warning last fired
+    uint32_t last_reported_rx_lost_count = 0;     ///< Last hardware RX FIFO loss count reported
 
     int num_callbacks = 0;                        ///< Current number of registered ID-specific callbacks
 
     static constexpr int max_callbacks = 16;      ///< Maximum number of ID-specific callbacks
-    static constexpr int receive_queue_depth = 16;///< Number of queued raw CAN frames pending dispatch
 
     uint16_t      CANid_arr[max_callbacks];      ///< Array of registered CAN IDs
     CanCallback callback_arr[max_callbacks];     ///< Array of callbacks corresponding to CAN IDs
@@ -224,28 +221,25 @@ private:
     void receiver_thread();
 
     /**
-     * @brief Receive a single CAN message and enqueue it for later dispatch
-     * 
-     * Attempts to read a single CAN message from the underlying driver and push it
-     * into the software queue. Callback dispatch happens separately in handle().
+     * @brief Receive one CAN message and dispatch it
+     *
+     * Blocks until a frame arrives, dispatches it to any matching callbacks,
+     * then reports any frames the peripheral lost while its FIFO was full.
      */
     void receive();
 
     /**
-     * @brief Background handler loop entry point (runs in dedicated thread)
+     * @brief Dispatch one received CAN message to its callbacks
      *
-     * Continuously waits for queued CAN messages and dispatches them to the registered
-     * per-ID and always callbacks.
+     * Runs in the receive thread, so a slow callback stalls reception directly.
      */
-    void handle_thread();
+    void handle(const SerializedCanMessage &msg);
 
     /**
-     * @brief Handle a single queued CAN message
-     *
-     * Blocks waiting for the next queued CAN frame, then dispatches it to any matching
-     * callback registrations.
+     * @brief Warn, at most every CAN_RX_LOST_WARN_INTERVAL_MS, if the
+     *        peripheral has dropped frames because RX FIFO0 was full.
      */
-    void handle();
+    void report_lost_frames();
 
     /**
      * @brief Convert a byte array to a hexadecimal string representation
