@@ -13,6 +13,7 @@ BOARD_MAP = {
     # "telemetry": "cmake_build/POWER_BOARD/develop/GCC_ARM/TelemetryBoard/TelemetryBoard.bin",
     "bottomdist": "build/bin/BottomDistBoard.elf",
     "motor": "build/bin/MotorBoard.elf",
+    "nucleo": "build/bin/NucleoBoard.elf",
     "relay": "build/bin/RelayBoard.elf",
     "telemetry": "build/bin/TelemetryBoard.elf",
     "topdist": "build/bin/TopDistBoard.elf",

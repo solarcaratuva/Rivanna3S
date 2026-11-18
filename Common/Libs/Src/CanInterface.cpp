@@ -107,6 +107,11 @@ void CanInterface::restart_receiver_execution()
     receiverRunning = true;
 }
 
+uint32_t CanInterface::get_rx_lost_count() const
+{
+    return my_can.get_rx_lost_count();
+}
+
 void CanInterface::receiver_thread()
 {
     while (true) {

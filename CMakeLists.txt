@@ -29,6 +29,8 @@ add_subdirectory(Common)
 # Register each board firmware target.
 add_subdirectory(BottomDistBoard)
 add_subdirectory(MotorBoard)
+# Bench target: CAN test receiver for a NUCLEO-G474RE. Not a car board.
+add_subdirectory(NucleoBoard)
 add_subdirectory(RelayBoard)
 add_subdirectory(TelemetryBoard)
 add_subdirectory(TopDistBoard)
