@@ -129,3 +129,66 @@ void SdCard::attach_to_log() {
         if (_SdCard) _SdCard->write(const_cast<uint8_t*>(data), len);
     });
 }
+
+// odometry stuff (thank you Colby)
+bool SdCard::write_odometry_data(uint32_t value) {
+    if (! _ready) {
+        return false;
+    }
+
+    if (f_lseek(&_OdometryFile, f_size(&_OdometryFile)) != FR_OK) {
+        return false;
+    }
+
+    uint8_t buffer[4] = {
+        static_cast<uint8_t>((value >> 24) & 0xFF),
+        static_cast<uint8_t>((value >> 16) & 0xFF),
+        static_cast<uint8_t>((value >> 8) & 0xFF),
+        static_cast<uint8_t>(value & 0xFF)
+    };
+    UINT bytes_written = 0;
+    f_write(&_OdometryFile, buffer, 4, &bytes_written);
+    f_sync(&_OdometryFile);
+    return bytes_written == 4;
+}
+
+uint32_t SdCard::read_odometry_data_file() {
+    if (! _ready) {
+        return 0;
+    }
+
+    const FSIZE_t file_size = f_size(&_OdometryFile);
+
+    // Move the file pointer to the end of the file
+    if (f_lseek(&_OdometryFile, file_size) != FR_OK) {
+        return 0;
+    }
+
+    // If the file is empty, return 0
+    if (file_size < 4) {
+        return 0;
+    }
+
+    // Move the file pointer back by 4 bytes to read the last entry
+    if (f_lseek(&_OdometryFile, file_size - 4) != FR_OK) {
+        return 0;
+    }
+
+    uint8_t buffer[4];
+    UINT bytes_read = 0;
+    FRESULT res = f_read(&_OdometryFile, buffer, 4, &bytes_read);
+
+    // Leave the handle positioned at end-of-file so the next write appends.
+    f_lseek(&_OdometryFile, file_size);
+
+    if (res != FR_OK || bytes_read != 4) {
+        log_warn("SD: failed to read latest odometry data");
+        return 0;
+    }
+
+    uint32_t value = (static_cast<uint32_t>(buffer[0]) << 24) |
+                     (static_cast<uint32_t>(buffer[1]) << 16) |
+                     (static_cast<uint32_t>(buffer[2]) << 8) |
+                     static_cast<uint32_t>(buffer[3]);
+    return value;
+}

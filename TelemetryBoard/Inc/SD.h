@@ -97,6 +97,9 @@ class SdCard {
          * forwarded into the SD card write queue when the card is ready.
          */
         void attach_to_log();
+
+        bool write_odometry_data(uint32_t value);
+        uint32_t read_odometry_data_file();
 };
 
         #endif // SD_H
