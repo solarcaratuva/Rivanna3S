@@ -22,4 +22,5 @@ For CAN-based advanced logging, debugging, and analysis, see the [CAN Message Lo
 - View and edit code using [VSCode](https://code.visualstudio.com/)
     - install the extensions: `Remote Extensionpack`, `C++ Tools Extensionpack`, `Docker`, `Python`
     - Windows Users: use these extensions to *remote* into where this repo is stored in WSL
-
+    - Run `python3 compile.py` to generate the CMake compilation database used by C++ IntelliSense.
+    - Re-run it after adding source files or switching boards; the database reflects the board selected for that build. The script rewrites `/root/code` paths from the Docker container to the local checkout so VS Code can resolve project files.
