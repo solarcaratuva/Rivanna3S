@@ -42,6 +42,10 @@ FDCAN_HandleTypeDef *FDCAN_init(FDCAN_GlobalTypeDef *hadc, uint32_t baudrate)
 
 uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate)
 {
+#ifdef CAN_FIRMWARE_UPDATE
+  // Derive update-bus timing from the selected kernel clock, not a fixed estimate.
+  peripheral_clock = HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_FDCAN);
+#endif
   uint32_t time_quanta = 1 + hfdcan->Init.NominalTimeSeg1 + hfdcan->Init.NominalTimeSeg2;
   return peripheral_clock / (baudrate * time_quanta);
 }
@@ -58,7 +62,11 @@ void MX_FDCAN1_Init(uint32_t baudrate)
 
   /* USER CODE END FDCAN1_Init 1 */
   hfdcan1.Instance = FDCAN1;
+#ifdef CAN_FIRMWARE_UPDATE
+  hfdcan1.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
+#else
   hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+#endif
   hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
@@ -75,7 +83,11 @@ void MX_FDCAN1_Init(uint32_t baudrate)
   hfdcan1.Init.StdFiltersNbr = 0;
   hfdcan1.Init.ExtFiltersNbr = 0;
   hfdcan1.Init.RxFifo0ElmtsNbr = 8;
+#ifdef CAN_FIRMWARE_UPDATE
+  hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_64;
+#else
   hfdcan1.Init.RxFifo0ElmtSize = FDCAN_DATA_BYTES_8;
+#endif
   hfdcan1.Init.RxFifo1ElmtsNbr = 0;
   hfdcan1.Init.RxFifo1ElmtSize = FDCAN_DATA_BYTES_8;
   hfdcan1.Init.RxBuffersNbr = 0;
@@ -84,7 +96,11 @@ void MX_FDCAN1_Init(uint32_t baudrate)
   hfdcan1.Init.TxBuffersNbr = 0;
   hfdcan1.Init.TxFifoQueueElmtsNbr = 8;
   hfdcan1.Init.TxFifoQueueMode = FDCAN_TX_FIFO_OPERATION;
+#ifdef CAN_FIRMWARE_UPDATE
+  hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_64;
+#else
   hfdcan1.Init.TxElmtSize = FDCAN_DATA_BYTES_8;
+#endif
   hfdcan1.Init.NominalPrescaler = calculate_prescaler(&hfdcan1, 40000000, baudrate);
   if (HAL_FDCAN_Init(&hfdcan1) != HAL_OK)
   {

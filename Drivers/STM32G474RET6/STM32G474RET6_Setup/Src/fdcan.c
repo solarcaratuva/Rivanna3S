@@ -46,15 +46,19 @@ void MX_FDCAN1_Init(uint32_t baudrate) // <-- This line changed when importing
   /* USER CODE END FDCAN1_Init 1 */
   hfdcan1.Instance = FDCAN1;
   hfdcan1.Init.ClockDivider = FDCAN_CLOCK_DIV1;
+#ifdef CAN_FIRMWARE_UPDATE
+  hfdcan1.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
+#else
   hfdcan1.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+#endif
   hfdcan1.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan1.Init.AutoRetransmission = DISABLE;
   hfdcan1.Init.TransmitPause = DISABLE;
   hfdcan1.Init.ProtocolException = DISABLE;
-  hfdcan1.Init.NominalPrescaler = calculate_prescaler(&hfdcan1, 4000000, baudrate); // <-- This line changed when importing
   hfdcan1.Init.NominalSyncJumpWidth = 1;
   hfdcan1.Init.NominalTimeSeg1 = 2;
   hfdcan1.Init.NominalTimeSeg2 = 1;
+  hfdcan1.Init.NominalPrescaler = calculate_prescaler(&hfdcan1, 4000000, baudrate);
   hfdcan1.Init.DataPrescaler = 1;
   hfdcan1.Init.DataSyncJumpWidth = 1;
   hfdcan1.Init.DataTimeSeg1 = 1;
@@ -84,15 +88,19 @@ void MX_FDCAN2_Init(uint32_t baudrate) // <-- This line changed when importing
   /* USER CODE END FDCAN2_Init 1 */
   hfdcan2.Instance = FDCAN2;
   hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV1;
+#ifdef CAN_FIRMWARE_UPDATE
+  hfdcan2.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
+#else
   hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+#endif
   hfdcan2.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan2.Init.AutoRetransmission = DISABLE;
   hfdcan2.Init.TransmitPause = DISABLE;
   hfdcan2.Init.ProtocolException = DISABLE;
-  hfdcan2.Init.NominalPrescaler = calculate_prescaler(&hfdcan2, 4000000, baudrate); // <-- This line changed when importing
   hfdcan2.Init.NominalSyncJumpWidth = 1;
   hfdcan2.Init.NominalTimeSeg1 = 2;
   hfdcan2.Init.NominalTimeSeg2 = 1;
+  hfdcan2.Init.NominalPrescaler = calculate_prescaler(&hfdcan2, 4000000, baudrate);
   hfdcan2.Init.DataPrescaler = 1;
   hfdcan2.Init.DataSyncJumpWidth = 1;
   hfdcan2.Init.DataTimeSeg1 = 1;
@@ -122,15 +130,19 @@ void MX_FDCAN3_Init(uint32_t baudrate) // <-- This line changed when importing
   /* USER CODE END FDCAN3_Init 1 */
   hfdcan3.Instance = FDCAN3;
   hfdcan3.Init.ClockDivider = FDCAN_CLOCK_DIV1;
+#ifdef CAN_FIRMWARE_UPDATE
+  hfdcan3.Init.FrameFormat = FDCAN_FRAME_FD_NO_BRS;
+#else
   hfdcan3.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
+#endif
   hfdcan3.Init.Mode = FDCAN_MODE_NORMAL;
   hfdcan3.Init.AutoRetransmission = DISABLE;
   hfdcan3.Init.TransmitPause = DISABLE;
   hfdcan3.Init.ProtocolException = DISABLE;
-  hfdcan3.Init.NominalPrescaler = calculate_prescaler(&hfdcan3, 4000000, baudrate); // <-- This line changed when importing
   hfdcan3.Init.NominalSyncJumpWidth = 1;
   hfdcan3.Init.NominalTimeSeg1 = 2;
   hfdcan3.Init.NominalTimeSeg2 = 1;
+  hfdcan3.Init.NominalPrescaler = calculate_prescaler(&hfdcan3, 4000000, baudrate);
   hfdcan3.Init.DataPrescaler = 1;
   hfdcan3.Init.DataSyncJumpWidth = 1;
   hfdcan3.Init.DataTimeSeg1 = 1;
@@ -292,7 +304,8 @@ FDCAN_HandleTypeDef* FDCAN_init(FDCAN_GlobalTypeDef* inst, uint32_t baudrate) {
 
 
 uint32_t calculate_prescaler(FDCAN_HandleTypeDef *hfdcan, uint32_t peripheral_clock, uint32_t baudrate) {
+  // Derive timing from the selected kernel clock after setting the time segments.
+  peripheral_clock = HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_FDCAN);
     uint32_t time_quanta = 1 + hfdcan->Init.NominalTimeSeg1 + hfdcan->Init.NominalTimeSeg2;
     return peripheral_clock / (baudrate * time_quanta);
 }
-    

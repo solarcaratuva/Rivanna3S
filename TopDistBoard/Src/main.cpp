@@ -32,7 +32,7 @@
 #include "pindef.h"
 #include "thread.h"
 #include "FaultHandler.h"
-#ifdef UART_UPLOAD_MOCK
+#if defined(UART_UPLOAD_MOCK) || defined(CAN_FIRMWARE_UPDATE)
 #include "FirmwareUploader.h"
 #endif
 
@@ -40,6 +40,12 @@ DigitalOut left_turn_signal(LEFT_TURN_EN);
 DigitalOut right_turn_signal(RIGHT_TURN_EN);
 DigitalOut bps_strobe(BMS_STROBE_EN);
 DigitalOut brake_light(BRAKE_EN);
+
+#ifdef NUCLEO_G474RE
+// Time between LED transitions; a complete blink takes twice this interval.
+constexpr uint32_t STATUS_LED_INTERVAL_MS = 100;
+DigitalOut status_led(STATUS_LED);
+#endif
 
 bool flashLeftTurnSignal = false;
 bool flashRightTurnSignal = false;
@@ -122,7 +128,12 @@ void bms_strobe_handler() {
 
 void app_main()
 {
-#ifdef UART_UPLOAD_MOCK
+#ifdef CAN_FIRMWARE_UPDATE
+    log_configure(INFO_LVL, LOG_TX, LOG_RX, FW_UPLOAD_BAUD);
+    static FirmwareUpdate update(main_can, Node::TopDistBoard);
+    static FirmwareUploader uploader(*log_get_uart(), update);
+    uploader.start();
+#elif defined(UART_UPLOAD_MOCK)
     // The upload protocol shares the logging UART at 115200 baud.
     log_configure(INFO_LVL, LOG_TX, LOG_RX, FW_UPLOAD_BAUD);
     static FirmwareUploader uploader(*log_get_uart());
@@ -140,5 +151,13 @@ void app_main()
     main_can.register_callback(MotorCommands::get_message_ID(), handle_motor_commands);
     main_can.register_always_callback(FaultHandler::check_for_any_faults);
     log_info("Top Dist Board initialized");
+#ifdef NUCLEO_G474RE
+    log_info("Status LED toggle interval: %lu ms", static_cast<unsigned long>(STATUS_LED_INTERVAL_MS));
+    while (true) {
+        status_led.write(!status_led.read());
+        Clock::sleep_for(STATUS_LED_INTERVAL_MS);
+    }
+#else
     Clock::sleep_forever();
+#endif
 }

@@ -3,11 +3,17 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-// Debug LED. PC1 matches MotorBoard's DEBUG_OUT (G474 build) and LED1 in
-// log.cpp; unconfirmed on the other boards.
+#if defined(NUCLEO_G474RE)
+// NUCLEO-G474RE user LED LD2.
+#define DEBUG_LED_PORT          GPIOA
+#define DEBUG_LED_PIN           GPIO_PIN_5
+#define DEBUG_LED_CLK_ENABLE()  __HAL_RCC_GPIOA_CLK_ENABLE()
+#else
+// PC1 matches the car board's debug LED.
 #define DEBUG_LED_PORT          GPIOC
 #define DEBUG_LED_PIN           GPIO_PIN_1
 #define DEBUG_LED_CLK_ENABLE()  __HAL_RCC_GPIOC_CLK_ENABLE()
+#endif
 
 namespace {
 

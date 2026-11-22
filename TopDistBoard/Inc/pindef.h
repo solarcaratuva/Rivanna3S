@@ -13,8 +13,14 @@
 #define CAN_RX PB_5
 #define CAN_STANDBY PB_4
 
+#ifdef NUCLEO_G474RE
+#define STATUS_LED PA_5 // Nucleo LD2
+#define LOG_TX PA_2 // ST-Link virtual COM port (USART2)
+#define LOG_RX PA_3
+#else
 #define LOG_TX PC_12
 #define LOG_RX PD_2
+#endif
 
 #elif defined(STM32H743xx)
 

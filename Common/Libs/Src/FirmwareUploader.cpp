@@ -30,16 +30,36 @@ FirmwareUploader::FirmwareUploader(UART &uart, uint32_t queue_depth)
 {
 }
 
+#ifdef CAN_FIRMWARE_UPDATE
+FirmwareUploader::FirmwareUploader(UART &uart, FirmwareUpdate &update)
+    : FirmwareUploader(uart, 1)
+{
+    update_ = &update;
+}
+#endif
+
 void FirmwareUploader::start()
 {
     if (s_instance_) return; // The Thread API supports one uploader.
     s_instance_ = this;
-    consumer_thread_.start(
-        []{ s_instance_->consumer_task(s_instance_); },
-        FW_CONSUMER_STACK_WORDS);
-    uart_listener_thread_.start(
+#ifdef CAN_FIRMWARE_UPDATE
+    if (update_) {
+        if (!update_->start()) {
+            log_fault("FirmwareUploader: CAN worker failed to start");
+            return;
+        }
+    } else
+#endif
+    if (consumer_thread_.start([]{ s_instance_->consumer_task(s_instance_); },
+                               FW_CONSUMER_STACK_WORDS) != pdPASS) {
+        log_fault("FirmwareUploader: mock consumer failed to start");
+        return;
+    }
+    if (uart_listener_thread_.start(
         []{ s_instance_->uart_listener_task(s_instance_); },
-        FW_UART_STACK_WORDS, FW_UART_PRIORITY);
+        FW_UART_STACK_WORDS, FW_UART_PRIORITY) != pdPASS) {
+        log_fault("FirmwareUploader: UART listener failed to start");
+    }
 }
 
 bool FirmwareUploader::send_line(const char *line)
@@ -55,18 +75,36 @@ void FirmwareUploader::handle_upload_command()
     if (read_line(command, sizeof(command), FW_COMMAND_TIMEOUT_MS) < 0) return;
     if (std::strncmp(command, "UPLOAD ", sizeof("UPLOAD ") - 1) != 0) return;
 
+    uint8_t board;
     uint32_t image_size;
     uint16_t expected_crc;
-    if (!parse_upload_command(command, image_size, expected_crc)) {
+    if (!parse_upload_command(command, board, image_size, expected_crc)) {
         send_line("FW FAIL\n");
         return;
     }
+
+#ifdef CAN_FIRMWARE_UPDATE
+    if (update_) {
+        send_line("FW MODE CAN\n");
+        bool ready = update_->begin(board, image_size, expected_crc);
+        if (ready) {
+            send_line("FW SETUP_ACK\n");
+            ready = update_->wait_ready();
+        }
+        if (!ready) {
+            finish_upload(false, image_size, expected_crc);
+            return;
+        }
+        send_line("FW READY\n");
+    } else
+#endif
+    send_line("FW MODE MOCK\n");
 
     const bool ok = receive_blocks(image_size);
     finish_upload(ok, image_size, expected_crc);
 }
 
-bool FirmwareUploader::parse_upload_command(const char *command, uint32_t &size,
+bool FirmwareUploader::parse_upload_command(const char *command, uint8_t &destination, uint32_t &size,
                                             uint16_t &crc)
 {
     unsigned board, expected_crc;
@@ -78,6 +116,7 @@ bool FirmwareUploader::parse_upload_command(const char *command, uint32_t &size,
         return false;
     }
     size = static_cast<uint32_t>(image_size);
+    destination = static_cast<uint8_t>(board);
     crc = static_cast<uint16_t>(expected_crc);
     return true;
 }
@@ -102,6 +141,12 @@ bool FirmwareUploader::receive_blocks(uint32_t image_size)
         retries = 0;
         std::memcpy(block.data, packet, FW_BLOCK_SIZE);
         block.length = (image_size - offset < FW_BLOCK_SIZE) ? image_size - offset : FW_BLOCK_SIZE;
+#ifdef CAN_FIRMWARE_UPDATE
+        if (update_) {
+            // ACK means the remote target wrote and checked this block.
+            if (!update_->write_block(block.data)) return false;
+        } else
+#endif
         if (queue_.append_to_back(&block, FW_QUEUE_TIMEOUT_MS) != 0) {
             return false;
         }
@@ -113,11 +158,34 @@ bool FirmwareUploader::receive_blocks(uint32_t image_size)
 
 void FirmwareUploader::finish_upload(bool ok, uint32_t image_size, uint16_t expected_crc)
 {
+#ifdef CAN_FIRMWARE_UPDATE
+    if (update_) {
+        uint16_t actual_crc = 0;
+        if (ok) {
+            send_line("FW VERIFY\n");
+            ok = update_->finish(actual_crc) && actual_crc == expected_crc;
+        }
+        char response[96];
+        if (ok) {
+            std::snprintf(response, sizeof(response), "FW DONE %lu %04x\n",
+                          static_cast<unsigned long>(image_size), actual_crc);
+        } else {
+            update_->cancel();
+            drain_uart();
+            const char *reason = update_->error();
+            if (!reason) reason = "UART block missing or invalid";
+            std::snprintf(response, sizeof(response), "FW FAIL %s\n", reason);
+        }
+        send_line(response);
+        return;
+    }
+#endif
     // The end marker is ordered after accepted blocks, including on failure.
     // Wait for the consumer's count/CRC before reporting and reusing its queue.
     UploadBlock end_marker{};
     UploadResult result{};
-    if (queue_.append_to_back(&end_marker, FW_QUEUE_TIMEOUT_MS) != 0 || result_queue_.get(&result, FW_RESULT_TIMEOUT_MS) != 0) {
+    if (queue_.append_to_back(&end_marker, FW_QUEUE_TIMEOUT_MS) != 0 ||
+        result_queue_.get(&result, FW_RESULT_TIMEOUT_MS) != 0) {
         send_line("FW FAIL\n");
         log_fault("FirmwareUploader: consumer queue failure; listener permanently stopped until reset");
         Clock::sleep_forever();
@@ -132,13 +200,18 @@ void FirmwareUploader::finish_upload(bool ok, uint32_t image_size, uint16_t expe
         std::snprintf(response, sizeof(response), "FW FAIL\n");
     }
     if (!ok) {
-        // Drain late packet bytes before reporting failure so a sender
-        // restarting after FW FAIL does not have its command discarded.
-        uint8_t byte;
-        const uint32_t started = Clock::get_current_time();
-        while (uint32_t(Clock::get_current_time() - started) < FW_DRAIN_TIMEOUT_MS && uart_.read(&byte, 1, FW_COMMAND_TIMEOUT_MS) == 0) {}
+        drain_uart();
     }
     send_line(response);
+}
+
+void FirmwareUploader::drain_uart()
+{
+    // Drain before reporting failure, so the next UPLOAD command is preserved.
+    uint8_t byte;
+    const uint32_t started = Clock::get_current_time();
+    while (uint32_t(Clock::get_current_time() - started) < FW_DRAIN_TIMEOUT_MS &&
+           uart_.read(&byte, 1, FW_COMMAND_TIMEOUT_MS) == 0) {}
 }
 
 void FirmwareUploader::consumer_task(void *arg)
@@ -192,7 +265,7 @@ uint16_t FirmwareUploader::crc16_hqx(const uint8_t* data, uint16_t len, uint16_t
     for (uint16_t i = 0; i < len; i++) {
         crc ^= (uint16_t)data[i] << 8;
         for (int j = 0; j < 8; j++)
-            crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1;
+            crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1; // CRC-CCITT polynomial.
     }
     return crc;
 }

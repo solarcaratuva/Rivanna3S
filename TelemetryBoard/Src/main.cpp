@@ -1,4 +1,7 @@
 #include "log.h"
+#ifdef CAN_FIRMWARE_UPDATE
+#include "FirmwareUploader.h"
+#endif
 #include "CanInterface.h"
 #include "pindef.h"
 #include "../../Common/Drivers/Inc/SPI.h"
@@ -48,6 +51,7 @@ static UartCobs radio(&radio_uart);
  */
 void radio_send(const SerializedCanMessage &msg)
 {
+    if (msg.len > 8) return; // CAN FD update frames are not radio telemetry.
     uint8_t buf[10];
 
     buf[0] = static_cast<uint8_t>(msg.id >> 8);
@@ -76,7 +80,14 @@ void missed_heartbeat_callback() {
 }
 
 void app_main() {
+#ifdef CAN_FIRMWARE_UPDATE
+    log_configure(INFO_LVL, LOG_TX, LOG_RX, FW_UPLOAD_BAUD);
+    static FirmwareUpdate update(main_can, Node::TelemetryBoard);
+    static FirmwareUploader uploader(*log_get_uart(), update);
+    uploader.start();
+#else
     log_configure(LOG_LEVEL, LOG_TX, LOG_RX, 921600);
+#endif
     log_info("Telemetry Board starting up...");
 
     // HeartbeatSafetySystem::setup(&main_can, missed_heartbeat_callback, Node::TelemetryBoard);

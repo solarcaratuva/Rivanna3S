@@ -7,6 +7,9 @@
 #include "MotorControllerCanStructs.h"
 #include "Rivanna3SCanStructs.h"
 #include "log.h"
+#ifdef CAN_FIRMWARE_UPDATE
+#include "FirmwareUploader.h"
+#endif
 #include "pindef.h"
 #include "thread.h"
 #include "ScaledAnalogIn.h"
@@ -103,7 +106,14 @@ void app_main()
     DigitalOut init_indicator(PC_1);
     init_indicator.write(PIN_ON);
 
+#ifdef CAN_FIRMWARE_UPDATE
+    log_configure(INFO_LVL, LOG_TX, LOG_RX, FW_UPLOAD_BAUD);
+    static FirmwareUpdate update(main_can, Node::BottomDistBoard);
+    static FirmwareUploader uploader(*log_get_uart(), update);
+    uploader.start();
+#else
     log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
+#endif
     log_info("Bottom Distance Board starting up...");
 
     drl.write(PIN_ON);

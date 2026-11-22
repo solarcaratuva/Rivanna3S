@@ -35,7 +35,11 @@ CAN::CAN(Pin tx, Pin rx, uint32_t baudrate)
     HAL_FDCAN_MspInit_custom(fdcan_periph->handle, rx, rx_af);
 
     hfdcan = FDCAN_init(fdcan_periph->handle, baudrate);
-    HAL_FDCAN_Start(hfdcan);
+    if (!hfdcan || HAL_FDCAN_Start(hfdcan) != HAL_OK) {
+        initialized = false;
+        log_warn("CAN init failed: peripheral could not start");
+        return;
+    }
 
     // Default Tx header setup; fields that change per-frame will be set in write().
     txHeader.IdType = FDCAN_STANDARD_ID;
@@ -56,10 +60,16 @@ int CAN::write(const SerializedCanMessage *msg)
         log_warn("CAN write failed: CAN not initialized");
         return 1;
     }
+    if (msg->id > 0x7ff || msg->len > sizeof(msg->data) || bytesToDlc(msg->len) == UINT32_MAX) return 4;
 
     instance_lock.lock();
+    if (HAL_FDCAN_GetTxFifoFreeLevel(hfdcan) == 0) {
+        instance_lock.unlock();
+        return 3; // Caller may retry without holding the CAN lock.
+    }
     txHeader.Identifier = msg->id;
     txHeader.DataLength = bytesToDlc(msg->len);
+    txHeader.FDFormat = msg->len > 8 ? FDCAN_FD_CAN : FDCAN_CLASSIC_CAN;
 
     // HAL expects a uint8_t* to data
     HAL_StatusTypeDef status =
@@ -72,6 +82,7 @@ int CAN::write(const SerializedCanMessage *msg)
         return 2;
     }
 
+    last_transmit_mask_ = HAL_FDCAN_GetLatestTxFifoQRequestBuffer(hfdcan);
     instance_lock.unlock();
     return 0;
 }
@@ -79,10 +90,27 @@ int CAN::write(const SerializedCanMessage *msg)
 
 int CAN::write(CanMessage *msg)
 {
-    SerializedCanMessage scm;
+    SerializedCanMessage scm{};
     msg->serialize(&scm);
 
     return write(&scm);
+}
+
+bool CAN::flush(uint32_t timeout_ms)
+{
+    if (!initialized) return false;
+    instance_lock.lock();
+    const uint32_t started = Clock::get_current_time();
+    while (hfdcan->Instance->TXBRP != 0) {
+        if (uint32_t(Clock::get_current_time() - started) >= timeout_ms) {
+            instance_lock.unlock();
+            return false;
+        }
+        Clock::sleep_for(1);
+    }
+    const bool transmitted = !last_transmit_mask_ || (hfdcan->Instance->TXBTO & last_transmit_mask_);
+    instance_lock.unlock();
+    return transmitted;
 }
 
 
@@ -116,7 +144,7 @@ int CAN::read(SerializedCanMessage *msg)
     }
 #endif
     
-    uint8_t rxData[8] = {0};
+    uint8_t rxData[64] = {0}; // HAL copies the received DLC before we can validate it.
 
     HAL_StatusTypeDef status =
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rxData);
@@ -128,6 +156,11 @@ int CAN::read(SerializedCanMessage *msg)
         return 2;
     }
 
+    if (rxHeader.IdType != FDCAN_STANDARD_ID || rxHeader.RxFrameType != FDCAN_DATA_FRAME ||
+        dlcToBytes(rxHeader.DataLength) > sizeof(msg->data)) {
+        instance_lock.unlock();
+        return 4;
+    }
     msg->id = static_cast<uint16_t>(rxHeader.Identifier);
     msg->len = dlcToBytes(rxHeader.DataLength);
     memcpy(msg->data, rxData, msg->len);
@@ -151,7 +184,7 @@ int CAN::try_read(SerializedCanMessage *msg)
 
     instance_lock.lock();
 
-    uint8_t rxData[8] = {0};
+    uint8_t rxData[64] = {0};
 
     HAL_StatusTypeDef status =
         HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rxHeader, rxData);
@@ -163,6 +196,11 @@ int CAN::try_read(SerializedCanMessage *msg)
         return 2;
     }
 
+    if (rxHeader.IdType != FDCAN_STANDARD_ID || rxHeader.RxFrameType != FDCAN_DATA_FRAME ||
+        dlcToBytes(rxHeader.DataLength) > sizeof(msg->data)) {
+        instance_lock.unlock();
+        return 4;
+    }
     msg->id = static_cast<uint16_t>(rxHeader.Identifier);
     msg->len = dlcToBytes(rxHeader.DataLength);
     memcpy(msg->data, rxData, msg->len);
@@ -177,11 +215,6 @@ int CAN::try_read(SerializedCanMessage *msg)
 
 uint32_t CAN::bytesToDlc(uint8_t len) const
 {
-    // Clamp to 8 bytes; extend if you move to CAN FD later.
-    if (len > 8) {
-        len = 8;
-    }
-
     switch (len) {
     case 0: return FDCAN_DLC_BYTES_0;
     case 1: return FDCAN_DLC_BYTES_1;
@@ -192,7 +225,16 @@ uint32_t CAN::bytesToDlc(uint8_t len) const
     case 6: return FDCAN_DLC_BYTES_6;
     case 7: return FDCAN_DLC_BYTES_7;
     case 8: return FDCAN_DLC_BYTES_8;
-    default: return FDCAN_DLC_BYTES_8;
+#ifdef CAN_FIRMWARE_UPDATE
+    case 12: return FDCAN_DLC_BYTES_12;
+    case 16: return FDCAN_DLC_BYTES_16;
+    case 20: return FDCAN_DLC_BYTES_20;
+    case 24: return FDCAN_DLC_BYTES_24;
+    case 32: return FDCAN_DLC_BYTES_32;
+    case 48: return FDCAN_DLC_BYTES_48;
+    case 64: return FDCAN_DLC_BYTES_64;
+#endif
+    default: return UINT32_MAX;
     }
 }
 
@@ -208,7 +250,14 @@ uint8_t CAN::dlcToBytes(uint32_t dlc) const
     case FDCAN_DLC_BYTES_6: return 6;
     case FDCAN_DLC_BYTES_7: return 7;
     case FDCAN_DLC_BYTES_8: return 8;
-    default: return 8; // conservative fallback
+    case FDCAN_DLC_BYTES_12: return 12;
+    case FDCAN_DLC_BYTES_16: return 16;
+    case FDCAN_DLC_BYTES_20: return 20;
+    case FDCAN_DLC_BYTES_24: return 24;
+    case FDCAN_DLC_BYTES_32: return 32;
+    case FDCAN_DLC_BYTES_48: return 48;
+    case FDCAN_DLC_BYTES_64: return 64;
+    default: return UINT8_MAX;
     }
 }
 

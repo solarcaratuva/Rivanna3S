@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdio>
 #include <cstdint>
 #include "Rivanna3SCanStructs.h"

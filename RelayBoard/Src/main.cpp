@@ -30,6 +30,9 @@
 #include "Precharge.h"
 #include "Rivanna3SCanStructs.h"
 #include "log.h"
+#ifdef CAN_FIRMWARE_UPDATE
+#include "FirmwareUploader.h"
+#endif
 #include "pindef.h"
 #include "thread.h"
 #include "ScaledAnalogIn.h"
@@ -132,7 +135,14 @@ void monitor_auxbattery(){
 
 void app_main()
 {
+#ifdef CAN_FIRMWARE_UPDATE
+    log_configure(INFO_LVL, LOG_TX, LOG_RX, FW_UPLOAD_BAUD);
+    static FirmwareUpdate update(main_can, Node::RelayBoard);
+    static FirmwareUploader uploader(*log_get_uart(), update);
+    uploader.start();
+#else
     log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
+#endif
     log_info("Relay Board starting up...");
 
     main_can.register_callback(BpsStatus::get_message_ID(), handle_bps_status);

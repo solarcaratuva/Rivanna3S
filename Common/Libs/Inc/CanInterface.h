@@ -97,6 +97,8 @@ public:
      *         - 0: Success
      *         - 1: CAN peripheral not initialized
      *         - 2: HAL transmission error
+     *         - 3: TX FIFO full; retry later
+     *         - 4: Invalid identifier or payload length
      *         - -1: Invalid argument (msg is nullptr)
      * 
      * @note This method is thread-safe
@@ -119,6 +121,8 @@ public:
      * @note This method is thread-safe
      */
     int write(CanMessage *msg);
+
+    bool flush(uint32_t timeout_ms) { return my_can.flush(timeout_ms); }
 
     /**
      * @brief Register a callback for a specific CAN message ID

@@ -36,7 +36,7 @@
 #include "pindef.h"
 #include "thread.h"
 #include "FaultHandler.h"
-#ifdef UART_UPLOAD_MOCK
+#if defined(UART_UPLOAD_MOCK) || defined(CAN_FIRMWARE_UPDATE)
 #include "FirmwareUploader.h"
 #endif
 
@@ -144,7 +144,12 @@ void forward_motor_can_message(const SerializedCanMessage &msg)
 
 void app_main()
 {
-#ifdef UART_UPLOAD_MOCK
+#ifdef CAN_FIRMWARE_UPDATE
+    log_configure(INFO_LVL, LOG_TX, LOG_RX, FW_UPLOAD_BAUD);
+    static FirmwareUpdate update(main_can, Node::MotorBoard);
+    static FirmwareUploader uploader(*log_get_uart(), update);
+    uploader.start();
+#elif defined(UART_UPLOAD_MOCK)
     // The upload protocol shares the logging UART at 115200 baud.
     log_configure(INFO_LVL, LOG_TX, LOG_RX, FW_UPLOAD_BAUD);
     static FirmwareUploader uploader(*log_get_uart());

@@ -15,8 +15,12 @@
  */
 struct SerializedCanMessage {
     uint16_t id;       ///< CAN identifier (11-bit standard ID, range: 0x000 - 0x7FF)
-    uint8_t  len;      ///< Number of data bytes in the payload (0..8)
+    uint8_t  len;      ///< Payload length, using a valid CAN DLC.
+#ifdef CAN_FIRMWARE_UPDATE
+    uint8_t  data[64]; ///< CAN FD payload; ordinary messages still use Classic CAN.
+#else
     uint8_t  data[8];  ///< Message payload data
+#endif
 };
 
 /**
@@ -61,7 +65,7 @@ struct CanMessage {
  * @brief CAN bus driver wrapper for STM32 FDCAN peripheral
  * 
  * This class provides a high-level interface to the STM32 FDCAN (Flexible Data-rate CAN)
- * peripheral operating in Classic CAN mode. It supports both raw frame transmission/reception
+ * peripheral operating in Classic CAN mode by default. It supports both raw frame transmission/reception
  * and higher-level message objects through the CanMessage interface.
  * 
  * Features:
@@ -71,8 +75,8 @@ struct CanMessage {
  * - Configurable baudrate
  * - Automatic pin mapping and peripheral initialization
  * 
- * @note This driver currently operates in Classic CAN mode only. CAN FD support
- *       requires modifications to support larger data lengths.
+ * @note CAN_FIRMWARE_UPDATE enables reception of CAN FD frames and transmission
+ *       of payloads over 8 bytes as CAN FD. Short messages remain Classic CAN.
  * 
  * Example usage:
  * @code
@@ -137,11 +141,16 @@ public:
      * @return int Status code:
      *         - 0: Success
      *         - 1: CAN peripheral not initialized
-     *         - 2: HAL transmission error (FIFO full or peripheral error)
+     *         - 2: HAL transmission error
+     *         - 3: TX FIFO full; retry later
+     *         - 4: Invalid identifier or payload length
      * 
      * @note This method is thread-safe
      */
     int write(const SerializedCanMessage *msg);
+
+    // Wait for queued transmissions to finish before resetting the MCU.
+    bool flush(uint32_t timeout_ms);
 
     /**
      * @brief Read a raw CAN message from the receive FIFO
@@ -182,6 +191,7 @@ private:
     FDCAN_TxHeaderTypeDef txHeader;     ///< Transmit header (reused for efficiency)
     FDCAN_RxHeaderTypeDef rxHeader;     ///< Receive header (reused for efficiency)
     bool initialized;                    ///< Initialization status flag
+    uint32_t last_transmit_mask_ = 0;
 
     FDCAN_Peripheral* fdcan_periph;     ///< Pointer to the claimed FDCAN peripheral descriptor
 

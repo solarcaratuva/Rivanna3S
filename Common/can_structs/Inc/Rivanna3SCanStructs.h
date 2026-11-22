@@ -238,6 +238,8 @@ typedef struct UpdateControl : CanMessage, rivanna3_s_update_control_t {
 } UpdateControl;
 
 
+// The DBC's single 512-bit signal cannot be represented by this generated
+// uint64_t wrapper. FirmwareUpdate sends/receives raw 64-byte CAN payloads instead.
 typedef struct UpdateData : CanMessage, rivanna3_s_update_data_t {
     void serialize(SerializedCanMessage *message) {
         rivanna3_s_update_data_pack(message->data, this,

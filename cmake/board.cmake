@@ -115,6 +115,15 @@ set(BOARD_LINK_OPTIONS
   -lsupc++
   -Wl,--end-group
 )
+if(CAN_FIRMWARE_UPDATE)
+  # Keep every loadable application section out of the inactive bank.
+  if(BOARD STREQUAL "STM32G474RET6")
+    set(FIRMWARE_FLASH_LIMIT 262144)
+  else()
+    set(FIRMWARE_FLASH_LIMIT 1048576)
+  endif()
+  list(PREPEND BOARD_LINK_OPTIONS "-Wl,--defsym,FIRMWARE_FLASH_LIMIT=${FIRMWARE_FLASH_LIMIT}")
+endif()
 
 set(BOARD_INCLUDE_DIRS
   ${BOARD_SETUP_INC}
