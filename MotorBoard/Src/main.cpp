@@ -141,7 +141,7 @@ void forward_motor_can_message(const SerializedCanMessage &msg)
 
 void app_main()
 {
-    log_configure(INFO_LVL, LOG_TX, LOG_RX, 921600);
+    log_configure(DEBUG_LVL, LOG_TX, LOG_RX, 921600);
     log_info("Motor Board starting up...");
 
     motor_control_thread.start(set_motor_status);

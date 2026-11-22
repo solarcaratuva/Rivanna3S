@@ -249,4 +249,181 @@ typedef struct BpsError : CanMessage, bps_bps_error_t {
     }
 } BpsError;
 
+
+typedef struct BpsInfo1 : CanMessage, bps_bps_info1_t {
+    void serialize(SerializedCanMessage *message) {
+        bps_bps_info1_pack(message->data, this,
+            BPS_BPS_INFO1_LENGTH);
+        message->len = BPS_BPS_INFO1_LENGTH;
+        message->id = BPS_BPS_INFO1_FRAME_ID;
+    }
+
+    void deserialize(const SerializedCanMessage *message) {
+        bps_bps_info1_unpack(this, message->data,
+            BPS_BPS_INFO1_LENGTH);
+    }
+
+    static uint16_t get_message_ID() { return BPS_BPS_INFO1_FRAME_ID; }
+
+    uint16_t ID() const { return BPS_BPS_INFO1_FRAME_ID; }
+
+    void log_msg(LogLevel level) const {
+        log(level, __FILE__, __LINE__,
+            "BpsInfo1: pack_dcl %u, lowest_cell_voltage %u, highest_cell_voltage %u, lowest_cell_voltage_id %u, highest_cell_voltage_id %u",
+            pack_dcl, lowest_cell_voltage, highest_cell_voltage, lowest_cell_voltage_id, highest_cell_voltage_id);
+    }
+
+    double get_pack_dcl() const { return bps_bps_info1_pack_dcl_decode(pack_dcl); }
+
+    void set_pack_dcl(double value) { pack_dcl = bps_bps_info1_pack_dcl_encode(value); }
+
+    bool pack_dcl_in_range() const { return bps_bps_info1_pack_dcl_is_in_range(pack_dcl); }
+
+    double get_lowest_cell_voltage() const { return bps_bps_info1_lowest_cell_voltage_decode(lowest_cell_voltage); }
+
+    void set_lowest_cell_voltage(double value) { lowest_cell_voltage = bps_bps_info1_lowest_cell_voltage_encode(value); }
+
+    bool lowest_cell_voltage_in_range() const { return bps_bps_info1_lowest_cell_voltage_is_in_range(lowest_cell_voltage); }
+
+    double get_highest_cell_voltage() const { return bps_bps_info1_highest_cell_voltage_decode(highest_cell_voltage); }
+
+    void set_highest_cell_voltage(double value) { highest_cell_voltage = bps_bps_info1_highest_cell_voltage_encode(value); }
+
+    bool highest_cell_voltage_in_range() const { return bps_bps_info1_highest_cell_voltage_is_in_range(highest_cell_voltage); }
+
+    double get_lowest_cell_voltage_id() const { return bps_bps_info1_lowest_cell_voltage_id_decode(lowest_cell_voltage_id); }
+
+    void set_lowest_cell_voltage_id(double value) { lowest_cell_voltage_id = bps_bps_info1_lowest_cell_voltage_id_encode(value); }
+
+    bool lowest_cell_voltage_id_in_range() const { return bps_bps_info1_lowest_cell_voltage_id_is_in_range(lowest_cell_voltage_id); }
+
+    double get_highest_cell_voltage_id() const { return bps_bps_info1_highest_cell_voltage_id_decode(highest_cell_voltage_id); }
+
+    void set_highest_cell_voltage_id(double value) { highest_cell_voltage_id = bps_bps_info1_highest_cell_voltage_id_encode(value); }
+
+    bool highest_cell_voltage_id_in_range() const { return bps_bps_info1_highest_cell_voltage_id_is_in_range(highest_cell_voltage_id); }
+
+    bool has_active_fault() {
+        return 0; // this message has no fault signals
+    }
+} BpsInfo1;
+
+
+typedef struct BpsInfo2 : CanMessage, bps_bps_info2_t {
+    void serialize(SerializedCanMessage *message) {
+        bps_bps_info2_pack(message->data, this,
+            BPS_BPS_INFO2_LENGTH);
+        message->len = BPS_BPS_INFO2_LENGTH;
+        message->id = BPS_BPS_INFO2_FRAME_ID;
+    }
+
+    void deserialize(const SerializedCanMessage *message) {
+        bps_bps_info2_unpack(this, message->data,
+            BPS_BPS_INFO2_LENGTH);
+    }
+
+    static uint16_t get_message_ID() { return BPS_BPS_INFO2_FRAME_ID; }
+
+    uint16_t ID() const { return BPS_BPS_INFO2_FRAME_ID; }
+
+    void log_msg(LogLevel level) const {
+        log(level, __FILE__, __LINE__,
+            "BpsInfo2: highest_temperature %u, lowest_temperature %u, average_temperature %u, highest_thermistor_id %u, lowest_thermistor_id %u, highest_cell_resistance %u, highest_internal_resistance_id %u",
+            highest_temperature, lowest_temperature, average_temperature, highest_thermistor_id, lowest_thermistor_id, highest_cell_resistance, highest_internal_resistance_id);
+    }
+
+    double get_highest_temperature() const { return bps_bps_info2_highest_temperature_decode(highest_temperature); }
+
+    void set_highest_temperature(double value) { highest_temperature = bps_bps_info2_highest_temperature_encode(value); }
+
+    bool highest_temperature_in_range() const { return bps_bps_info2_highest_temperature_is_in_range(highest_temperature); }
+
+    double get_lowest_temperature() const { return bps_bps_info2_lowest_temperature_decode(lowest_temperature); }
+
+    void set_lowest_temperature(double value) { lowest_temperature = bps_bps_info2_lowest_temperature_encode(value); }
+
+    bool lowest_temperature_in_range() const { return bps_bps_info2_lowest_temperature_is_in_range(lowest_temperature); }
+
+    double get_average_temperature() const { return bps_bps_info2_average_temperature_decode(average_temperature); }
+
+    void set_average_temperature(double value) { average_temperature = bps_bps_info2_average_temperature_encode(value); }
+
+    bool average_temperature_in_range() const { return bps_bps_info2_average_temperature_is_in_range(average_temperature); }
+
+    double get_highest_thermistor_id() const { return bps_bps_info2_highest_thermistor_id_decode(highest_thermistor_id); }
+
+    void set_highest_thermistor_id(double value) { highest_thermistor_id = bps_bps_info2_highest_thermistor_id_encode(value); }
+
+    bool highest_thermistor_id_in_range() const { return bps_bps_info2_highest_thermistor_id_is_in_range(highest_thermistor_id); }
+
+    double get_lowest_thermistor_id() const { return bps_bps_info2_lowest_thermistor_id_decode(lowest_thermistor_id); }
+
+    void set_lowest_thermistor_id(double value) { lowest_thermistor_id = bps_bps_info2_lowest_thermistor_id_encode(value); }
+
+    bool lowest_thermistor_id_in_range() const { return bps_bps_info2_lowest_thermistor_id_is_in_range(lowest_thermistor_id); }
+
+    double get_highest_cell_resistance() const { return bps_bps_info2_highest_cell_resistance_decode(highest_cell_resistance); }
+
+    void set_highest_cell_resistance(double value) { highest_cell_resistance = bps_bps_info2_highest_cell_resistance_encode(value); }
+
+    bool highest_cell_resistance_in_range() const { return bps_bps_info2_highest_cell_resistance_is_in_range(highest_cell_resistance); }
+
+    double get_highest_internal_resistance_id() const { return bps_bps_info2_highest_internal_resistance_id_decode(highest_internal_resistance_id); }
+
+    void set_highest_internal_resistance_id(double value) { highest_internal_resistance_id = bps_bps_info2_highest_internal_resistance_id_encode(value); }
+
+    bool highest_internal_resistance_id_in_range() const { return bps_bps_info2_highest_internal_resistance_id_is_in_range(highest_internal_resistance_id); }
+
+    bool has_active_fault() {
+        return 0; // this message has no fault signals
+    }
+} BpsInfo2;
+
+
+typedef struct BpsInfo3 : CanMessage, bps_bps_info3_t {
+    void serialize(SerializedCanMessage *message) {
+        bps_bps_info3_pack(message->data, this,
+            BPS_BPS_INFO3_LENGTH);
+        message->len = BPS_BPS_INFO3_LENGTH;
+        message->id = BPS_BPS_INFO3_FRAME_ID;
+    }
+
+    void deserialize(const SerializedCanMessage *message) {
+        bps_bps_info3_unpack(this, message->data,
+            BPS_BPS_INFO3_LENGTH);
+    }
+
+    static uint16_t get_message_ID() { return BPS_BPS_INFO3_FRAME_ID; }
+
+    uint16_t ID() const { return BPS_BPS_INFO3_FRAME_ID; }
+
+    void log_msg(LogLevel level) const {
+        log(level, __FILE__, __LINE__,
+            "BpsInfo3: pack_resistance %u, pack_amphours %u, pack_dod %u",
+            pack_resistance, pack_amphours, pack_dod);
+    }
+
+    double get_pack_resistance() const { return bps_bps_info3_pack_resistance_decode(pack_resistance); }
+
+    void set_pack_resistance(double value) { pack_resistance = bps_bps_info3_pack_resistance_encode(value); }
+
+    bool pack_resistance_in_range() const { return bps_bps_info3_pack_resistance_is_in_range(pack_resistance); }
+
+    double get_pack_amphours() const { return bps_bps_info3_pack_amphours_decode(pack_amphours); }
+
+    void set_pack_amphours(double value) { pack_amphours = bps_bps_info3_pack_amphours_encode(value); }
+
+    bool pack_amphours_in_range() const { return bps_bps_info3_pack_amphours_is_in_range(pack_amphours); }
+
+    double get_pack_dod() const { return bps_bps_info3_pack_dod_decode(pack_dod); }
+
+    void set_pack_dod(double value) { pack_dod = bps_bps_info3_pack_dod_encode(value); }
+
+    bool pack_dod_in_range() const { return bps_bps_info3_pack_dod_is_in_range(pack_dod); }
+
+    bool has_active_fault() {
+        return 0; // this message has no fault signals
+    }
+} BpsInfo3;
+
 #endif
